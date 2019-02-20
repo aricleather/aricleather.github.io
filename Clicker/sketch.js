@@ -25,6 +25,8 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   imageMode(CENTER);
   frameRate(60);
+  shopState = 1;
+  textFont(gameFont);
 }
 
 function draw() {
@@ -46,7 +48,6 @@ function menu() { // gameState 0
 
   // Game title text
   fill(0);
-  textFont(gameFont);
   textSize(75);
   textAlign(CENTER, CENTER);
   text(titleText , width / 2, height * 0.2);
@@ -101,7 +102,7 @@ function mainGame() { // gameState 1
   // Draws text to screen
   textFont(gameFont);
   textSize(40);
-  textAlign(CENTER);
+  textAlign(CENTER, CENTER);
   text(str(Math.floor(cookies)) + " Cookies" , width / 2, height * 0.9);
 
   if (frameCount % 6 === 0) {
@@ -119,8 +120,22 @@ function mainGame() { // gameState 1
 
 }
 
+// variables used for shop()
+let ovenPrice = 10;
+let ovenOwned = 0;
+let bakeryPrice = 150;
+let bakeryOwned = 0;
+
 function shop() {
-  image(cookie, width * 0.7, height * 0.1, width * 0.06, width * 0.06);
+  // Text in shop() displays name of upgrade, cost, how many cookies per second given, and owned number
+  // Oven
+  image(cookie, width * 0.75, height * 0.1, width * 0.06, width * 0.06);
+  textSize(12);
+  textAlign(CENTER, TOP);
+  text("Oven\nCost: " + str(ovenPrice) + " Cookies\n0.1 CPS\nOwned: " + str(ovenOwned), width * 0.75, height * 0.1 + width * 0.03 * 1.1);
+
+  image(cookie, width * 0.9, height * 0.1, width * 0.06, width * 0.06);
+  text("Bakery\nCost: " + str(bakeryPrice) + " Cookies\n1 CPS\nOwned: " + str(bakeryOwned), width * 0.9, height * 0.1 + width * 0.03 * 1.1);
 }
 
 function cookieFall() {
@@ -146,9 +161,19 @@ function mouseClicked() {
     }
 
     if (shopState === 1) {
-      if (Math.abs(mouseX - width * 0.7) < width * 0.03 && Math.abs(mouseY - height * 0.1) < width * 0.03) {
-        if (cookies >= 10) {
-          cookies -= 10;
+      // Oven
+      if (Math.abs(mouseX - width * 0.75) < width * 0.03 && Math.abs(mouseY - height * 0.1) < width * 0.03) {
+        if (cookies >= ovenPrice) {
+          cookies -= ovenPrice;
+          ovenOwned++;
+          autoCookies += 0.1;
+        }
+      }
+      // Bakery
+      if (Math.abs(mouseX - width * 0.9) < width * 0.03 && Math.abs(mouseY - height * 0.1) < width * 0.03) {
+        if (cookies >= bakeryPrice) {
+          cookies -= bakeryPrice;
+          bakeryOwned++;
           autoCookies += 1;
         }
       }
