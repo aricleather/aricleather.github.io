@@ -127,11 +127,16 @@ let bakeryPrice = 150;
 let bakeryOwned = 0;
 
 function shop() {
+  rectMode(CORNER);
+  fill(139, 82, 45);
+  rect(width * 0.7, 0, width * 0.3, height);
+
   // Text in shop() displays name of upgrade, cost, how many cookies per second given, and owned number
   // Oven
   image(cookie, width * 0.75, height * 0.1, width * 0.06, width * 0.06);
   textSize(12);
   textAlign(CENTER, TOP);
+  fill(0);
   text("Oven\nCost: " + str(ovenPrice) + " Cookies\n0.1 CPS\nOwned: " + str(ovenOwned), width * 0.75, height * 0.1 + width * 0.03 * 1.1);
 
   image(cookie, width * 0.9, height * 0.1, width * 0.06, width * 0.06);
