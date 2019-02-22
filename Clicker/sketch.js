@@ -6,7 +6,8 @@
 // - describe what you did to take this project "above and beyond"
 
 // Declaring varoius variables
-let cookie;
+let cookie, coin, rightArrow;
+let hoverCoin, hoverRightArrow;
 let gameFont;
 let cookies = 0;
 let autoCookies = 0;
@@ -18,6 +19,8 @@ let shopState = 0;
 // Load images used in game
 function preload() {
   cookie = loadImage("assets/cookie1.png");
+  coin = loadImage("assets/coin.png");
+  rightArrow = loadImage("assets/rightarrow.png");
   gameFont = loadFont("assets/gameFont.ttf");
 }
 
@@ -25,7 +28,7 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   imageMode(CENTER);
   frameRate(60);
-  shopState = 1;
+  //shopState = 1;
   textFont(gameFont);
 }
 
@@ -112,6 +115,19 @@ function mainGame() { // gameState 1
   if (shopState === 1) {
     shop();
   }
+  else {
+    // Make shop coin button enlarge upon hovering
+    if (Math.abs(mouseX - width * 0.97) < width * 0.025 && Math.abs(mouseY - height * 0.06) < width * 0.025) {
+      hoverCoin = 1.05;
+    }
+    else {
+      hoverCoin = 1;
+    }
+    // Draw coin + text underneath
+    image(coin, width * 0.97, height * 0.06, width * 0.05 * hoverCoin, width * 0.05 * hoverCoin);
+    textSize(15);
+    text("Store", width * 0.97, height * 0.06 + width * 0.035);
+  }
 
   //cookieFall();
   //cookieFallAmount--;
@@ -133,7 +149,19 @@ function shop() {
   fill(139, 82, 45, 200);
   noStroke();
 
-  //rect(width * 0.7, 0, width * 0.3, height);
+  // Close shop arrow
+  if (Math.abs(mouseX - width * 0.67) < width * 0.025 && Math.abs(mouseY - height * 0.06) < width * 0.025) {
+    hoverRightArrow = 1.05;
+  }
+  else {
+    hoverRightArrow = 1;
+  }
+  // Draw arrow + text underneath
+  image(rightArrow, width * 0.67, height * 0.06, width * 0.05 * hoverRightArrow, width * 0.05 * hoverRightArrow);
+  fill(0);
+  textSize(15);
+  text("Close\nStore", width * 0.67, height * 0.06 + width * 0.035);
+
   for(i = 0; i < 8; i++) {
     for(j = 0; j < 4; j++) {
       if ((i + j) % 2 === 0) {
@@ -153,15 +181,15 @@ function shop() {
 
   // Text in shop() displays name of upgrade, cost, how many cookies per second given, and owned number
   // Oven
-  image(cookie, width * 0.75, height * 0.1, width * 0.06, width * 0.06);
+  image(cookie, width * 0.775, height * 0.1, width * 0.06, width * 0.06);
   textSize(12);
   textAlign(CENTER, TOP);
   fill(0);
   noStroke();
-  text("Oven\nCost: " + str(ovenPrice) + " Cookies\n0.1 CPS\nOwned: " + str(ovenOwned), width * 0.75, height * 0.1 + width * 0.03 * 1.1);
+  text("Oven\nCost: " + str(ovenPrice) + " Cookies\n0.1 CPS\nOwned: " + str(ovenOwned), width * 0.775, height * 0.1 + width * 0.03 * 1.1);
 
-  image(cookie, width * 0.9, height * 0.1, width * 0.06, width * 0.06);
-  text("Bakery\nCost: " + str(bakeryPrice) + " Cookies\n1 CPS\nOwned: " + str(bakeryOwned), width * 0.9, height * 0.1 + width * 0.03 * 1.1);
+  image(cookie, width * 0.925, height * 0.1, width * 0.06, width * 0.06);
+  text("Bakery\nCost: " + str(bakeryPrice) + " Cookies\n1 CPS\nOwned: " + str(bakeryOwned), width * 0.925, height * 0.1 + width * 0.03 * 1.1);
 }
 
 function cookieFall() {
@@ -196,12 +224,27 @@ function mouseClicked() {
         }
       }
       // Bakery
-      if (Math.abs(mouseX - width * 0.9) < width * 0.03 && Math.abs(mouseY - height * 0.1) < width * 0.03) {
+      else if (Math.abs(mouseX - width * 0.9) < width * 0.03 && Math.abs(mouseY - height * 0.1) < width * 0.03) {
         if (cookies >= bakeryPrice) {
           cookies -= bakeryPrice;
           bakeryOwned++;
           autoCookies += 1;
         }
+      }
+      else if (Math.abs(mouseX - width * 0.67) < width * 0.025 && Math.abs(mouseY - height * 0.06) < width * 0.025) {
+        shopState = 0;
+      }
+      else {
+        null;
+      }
+    }
+    // Opens shop when arrow clicked
+    else {
+      if (Math.abs(mouseX - width * 0.97) < width * 0.025 && Math.abs(mouseY - height * 0.06) < width * 0.025) {
+        shopState = 1;
+      }
+      else {
+        null;
       }
     }
   }
