@@ -5,21 +5,16 @@
 // Extra for Experts:
 // - describe what you did to take this project "above and beyond"
 
-// Declaring varoius variables
-let cookie, coin, rightArrow;
-let hoverCoin, hoverRightArrow;
+// Declaring varoius variables before preload and setup
+// Images / other loadable assets:
+let cookie, coin, oven, rightArrow;
 let gameFont;
-let cookies = 0;
-let autoCookies = 0;
-let clickScalar = 1;
-let cookieFallAmount = 0;
-let gameState = 0;
-let shopState = 0;
 
 // Load images used in game
 function preload() {
   cookie = loadImage("assets/cookie1.png");
   coin = loadImage("assets/coin.png");
+  oven = loadImage("assets/oven.png");
   rightArrow = loadImage("assets/rightarrow.png");
   gameFont = loadFont("assets/gameFont.ttf");
 }
@@ -31,6 +26,30 @@ function setup() {
   //shopState = 1;
   textFont(gameFont);
 }
+
+// Declaring variables after preload and setup
+// "Hover" variables and scalars:
+let hoverCoin, hoverRightArrow;
+let scalars = {
+  // Click or hover based:
+  clickScalar: 1,
+  menuButtonW: width * 0.16,
+  menuButtonH: height * 0.08,
+
+  // Image based:
+  titleScreenCookie: width * 0.06,
+
+
+  // Text based:
+
+};
+let cookieFallAmount = 0;
+// Game states:
+let gameState = 0;
+let shopState = 0;
+// Clicker game variables:
+let cookies = 0;
+let autoCookies = 0;
 
 function draw() {
   if (gameState === 0) {
@@ -56,18 +75,18 @@ function menu() { // gameState 0
   text(titleText , width / 2, height * 0.2);
 
   // image: center - half the width of text - it's size (to be positioned right next to text) (opposite for second image)
-  image(cookie, width / 2 - textWidth(titleText) / 2 - width * 0.06, height * 0.2, width * 0.06, width * 0.06);
-  image(cookie, width / 2 + textWidth(titleText) / 2 + width * 0.06, height * 0.2, width * 0.06, width * 0.06);
+  image(cookie, width / 2 - textWidth(titleText) / 2 - scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie, scalars.titleScreenCookie);
+  image(cookie, width / 2 + textWidth(titleText) / 2 + scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie, scalars.titleScreenCookie);
   
   // if mouse hovering start, button darkens
-  if (Math.abs(mouseX - width / 2) < width * 0.08 && Math.abs(mouseY - height / 2) < height * 0.04) {
+  if (Math.abs(mouseX - width / 2) < scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2) < scalars.menuButtonH / 2) {
     hoverAlphaStart = 150;
   }
   else {
     hoverAlphaStart = 200;
   }
   // if mouse hovering options, button darkens
-  if (Math.abs(mouseX - width / 2) < width * 0.08 && Math.abs(mouseY - height / 2 - height * 0.12) < height * 0.04) {
+  if (Math.abs(mouseX - width / 2) < scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2 - height * 0.12) < scalars.menuButtonH / 2) {
     hoverAlphaOptions = 150;
   }
   else {
@@ -78,9 +97,9 @@ function menu() { // gameState 0
   rectMode(CENTER);
   fill(hoverAlphaStart);
   strokeWeight(3);
-  rect(width / 2, height / 2, width * 0.16, height * 0.08);
+  rect(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH);
   fill(hoverAlphaOptions);
-  rect(width / 2, height / 2 + height * 0.12, width * 0.16, height * 0.08);
+  rect(width / 2, height / 2 + height * 0.12, scalars.menuButtonW, scalars.menuButtonH);
 
   // text in menu buttons
   fill(0);
@@ -93,14 +112,14 @@ function mainGame() { // gameState 1
   background(30, 144, 255);
 
   // This creates the "popping" animation on click
-  if (clickScalar > 1) {
-    clickScalar -= 1/10 * (clickScalar - 1);
+  if (scalars.clickScalar > 1) {
+    scalars.clickScalar -= 1/10 * (scalars.clickScalar - 1);
   }
-  constrain(clickScalar, 1, 1.25);
+  constrain(scalars.clickScalar, 1, 1.25);
 
   // Draws main cookie image to screen
   tint(255, 255);
-  image(cookie, width/2, height/2, width * 0.15 * clickScalar, width * 0.15 * clickScalar);
+  image(cookie, width/2, height/2, width * 0.15 * scalars.clickScalar, width * 0.15 * scalars.clickScalar);
 
   // Draws text to screen
   textFont(gameFont);
@@ -181,13 +200,14 @@ function shop() {
 
   // Text in shop() displays name of upgrade, cost, how many cookies per second given, and owned number
   // Oven
-  image(cookie, width * 0.775, height * 0.1, width * 0.06, width * 0.06);
+  image(oven, width * 0.775, height * 0.1, oven.width * width * 0.01, oven.height * height * 0.01);
   textSize(12);
   textAlign(CENTER, TOP);
   fill(0);
   noStroke();
   text("Oven\nCost: " + str(ovenPrice) + " Cookies\n0.1 CPS\nOwned: " + str(ovenOwned), width * 0.775, height * 0.1 + width * 0.03 * 1.1);
 
+  // Bakery
   image(cookie, width * 0.925, height * 0.1, width * 0.06, width * 0.06);
   text("Bakery\nCost: " + str(bakeryPrice) + " Cookies\n1 CPS\nOwned: " + str(bakeryOwned), width * 0.925, height * 0.1 + width * 0.03 * 1.1);
 }
@@ -199,10 +219,10 @@ function cookieFall() {
 
 function mouseClicked() {
   if (gameState === 0) {
-    if (Math.abs(mouseX - width / 2) < width * 0.08 && Math.abs(mouseY - height / 2) < height * 0.04) {
+    if (Math.abs(mouseX - width / 2) < scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2) < scalars.menuButtonH / 2) {
       gameState = 1;
     }
-    if (Math.abs(mouseX - width / 2) < width * 0.08 && Math.abs(mouseY - height / 2 - height * 0.12) < height * 0.04) {
+    if (Math.abs(mouseX - width / 2) < scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2 - height * 0.12) < scalars.menuButtonH / 2) {
       gameState = 1;
     }
   }
@@ -210,13 +230,13 @@ function mouseClicked() {
     // Increment cookie counter on click and begin "popping" animation
     if (Math.abs(mouseX - width / 2) < width * 0.075 && Math.abs(mouseY - height / 2) < width * 0.075) {
       cookies++;
-      clickScalar += 0.1;
-      constrain(clickScalar, 1, 1.25);
+      scalars.clickScalar += 0.1;
+      constrain(scalars.clickScalar, 1, 1.25);
     }
 
     if (shopState === 1) {
       // Oven
-      if (Math.abs(mouseX - width * 0.75) < width * 0.03 && Math.abs(mouseY - height * 0.1) < width * 0.03) {
+      if (Math.abs(mouseX - width * 0.775) < width * 0.03 && Math.abs(mouseY - height * 0.1) < width * 0.03) {
         if (cookies >= ovenPrice) {
           cookies -= ovenPrice;
           ovenOwned++;
@@ -224,7 +244,7 @@ function mouseClicked() {
         }
       }
       // Bakery
-      else if (Math.abs(mouseX - width * 0.9) < width * 0.03 && Math.abs(mouseY - height * 0.1) < width * 0.03) {
+      else if (Math.abs(mouseX - width * 0.925) < width * 0.03 && Math.abs(mouseY - height * 0.1) < width * 0.03) {
         if (cookies >= bakeryPrice) {
           cookies -= bakeryPrice;
           bakeryOwned++;
