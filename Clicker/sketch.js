@@ -33,12 +33,17 @@ let hoverCoin, hoverRightArrow;
 let scalars = {
   // Click or hover based:
   clickScalar: 1,
-  menuButtonW: width * 0.16,
-  menuButtonH: height * 0.08,
+  storeHoverScalar: 1,
+  storeCloseHoverScalar: 1,
+  menuButtonW: 0.16,
+  menuButtonH: 0.08,
 
   // Image based:
-  titleScreenCookie: width * 0.06,
-
+  mainCookieScalar: 0.15,
+  titleScreenCookie: 0.06,
+  storeCoinScalar: 0.05,
+  storeCloseScalar: 0.05,
+  ovenScalar: 0.0002,
 
   // Text based:
 
@@ -75,18 +80,18 @@ function menu() { // gameState 0
   text(titleText , width / 2, height * 0.2);
 
   // image: center - half the width of text - it's size (to be positioned right next to text) (opposite for second image)
-  image(cookie, width / 2 - textWidth(titleText) / 2 - scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie, scalars.titleScreenCookie);
-  image(cookie, width / 2 + textWidth(titleText) / 2 + scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie, scalars.titleScreenCookie);
+  image(cookie, width / 2 - textWidth(titleText) / 2 - width * scalars.titleScreenCookie, height * 0.2, width * scalars.titleScreenCookie, width * scalars.titleScreenCookie);
+  image(cookie, width / 2 + textWidth(titleText) / 2 + width * scalars.titleScreenCookie, height * 0.2, width * scalars.titleScreenCookie, width * scalars.titleScreenCookie);
   
   // if mouse hovering start, button darkens
-  if (Math.abs(mouseX - width / 2) < scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2) < scalars.menuButtonH / 2) {
+  if (Math.abs(mouseX - width / 2) < width * scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2) < height * scalars.menuButtonH / 2) {
     hoverAlphaStart = 150;
   }
   else {
     hoverAlphaStart = 200;
   }
   // if mouse hovering options, button darkens
-  if (Math.abs(mouseX - width / 2) < scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2 - height * 0.12) < scalars.menuButtonH / 2) {
+  if (Math.abs(mouseX - width / 2) < width * scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2 - height * 0.12) < height * scalars.menuButtonH / 2) {
     hoverAlphaOptions = 150;
   }
   else {
@@ -97,9 +102,9 @@ function menu() { // gameState 0
   rectMode(CENTER);
   fill(hoverAlphaStart);
   strokeWeight(3);
-  rect(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH);
+  rect(width / 2, height / 2, width * scalars.menuButtonW, height * scalars.menuButtonH);
   fill(hoverAlphaOptions);
-  rect(width / 2, height / 2 + height * 0.12, scalars.menuButtonW, scalars.menuButtonH);
+  rect(width / 2, height / 2 + height * 0.12, width * scalars.menuButtonW, height * scalars.menuButtonH);
 
   // text in menu buttons
   fill(0);
@@ -119,7 +124,7 @@ function mainGame() { // gameState 1
 
   // Draws main cookie image to screen
   tint(255, 255);
-  image(cookie, width/2, height/2, width * 0.15 * scalars.clickScalar, width * 0.15 * scalars.clickScalar);
+  image(cookie, width/2, height/2, width * scalars.mainCookieScalar * scalars.clickScalar, width * scalars.mainCookieScalar * scalars.clickScalar);
 
   // Draws text to screen
   textFont(gameFont);
@@ -136,14 +141,14 @@ function mainGame() { // gameState 1
   }
   else {
     // Make shop coin button enlarge upon hovering
-    if (Math.abs(mouseX - width * 0.97) < width * 0.025 && Math.abs(mouseY - height * 0.06) < width * 0.025) {
-      hoverCoin = 1.05;
+    if (Math.abs(mouseX - width * 0.97) < width * scalars.storeCoinScalar / 2 && Math.abs(mouseY - height * 0.06) < width * scalars.storeCoinScalar / 2) {
+      scalars.storeHoverScalar = 1.05;
     }
     else {
-      hoverCoin = 1;
+      scalars.storeHoverScalar = 1;
     }
     // Draw coin + text underneath
-    image(coin, width * 0.97, height * 0.06, width * 0.05 * hoverCoin, width * 0.05 * hoverCoin);
+    image(coin, width * 0.97, height * 0.06, width * scalars.storeCoinScalar * scalars.storeHoverScalar, width * scalars.storeCoinScalar * scalars.storeHoverScalar);
     textSize(15);
     text("Store", width * 0.97, height * 0.06 + width * 0.035);
   }
@@ -169,18 +174,19 @@ function shop() {
   noStroke();
 
   // Close shop arrow
-  if (Math.abs(mouseX - width * 0.67) < width * 0.025 && Math.abs(mouseY - height * 0.06) < width * 0.025) {
-    hoverRightArrow = 1.05;
+  if (Math.abs(mouseX - width * 0.67) < width * scalars.storeCloseScalar / 2 && Math.abs(mouseY - height * 0.06) < width * scalars.storeCloseScalar / 2) {
+    scalars.storeCloseHoverScalar = 1.05;
   }
   else {
-    hoverRightArrow = 1;
+    scalars.storeCloseHoverScalar = 1;
   }
   // Draw arrow + text underneath
-  image(rightArrow, width * 0.67, height * 0.06, width * 0.05 * hoverRightArrow, width * 0.05 * hoverRightArrow);
+  image(rightArrow, width * 0.67, height * 0.06, width * scalars.storeCloseScalar * scalars.storeCloseHoverScalar, width * scalars.storeCloseScalar * scalars.storeCloseHoverScalar);
   fill(0);
   textSize(15);
   text("Close\nStore", width * 0.67, height * 0.06 + width * 0.035);
 
+  // Draws the checkerboard shop pattern
   for(i = 0; i < 8; i++) {
     for(j = 0; j < 4; j++) {
       if ((i + j) % 2 === 0) {
@@ -200,7 +206,7 @@ function shop() {
 
   // Text in shop() displays name of upgrade, cost, how many cookies per second given, and owned number
   // Oven
-  image(oven, width * 0.775, height * 0.1, oven.width * width * 0.01, oven.height * height * 0.01);
+  image(oven, width * 0.775, height * 0.1, oven.width * width * scalars.ovenScalar, oven.height * width * scalars.ovenScalar);
   textSize(12);
   textAlign(CENTER, TOP);
   fill(0);
@@ -219,10 +225,10 @@ function cookieFall() {
 
 function mouseClicked() {
   if (gameState === 0) {
-    if (Math.abs(mouseX - width / 2) < scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2) < scalars.menuButtonH / 2) {
+    if (Math.abs(mouseX - width / 2) < width * scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2) < height * scalars.menuButtonH / 2) {
       gameState = 1;
     }
-    if (Math.abs(mouseX - width / 2) < scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2 - height * 0.12) < scalars.menuButtonH / 2) {
+    if (Math.abs(mouseX - width / 2) < width * scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2 - height * 0.12) < height * scalars.menuButtonH / 2) {
       gameState = 1;
     }
   }
@@ -236,7 +242,7 @@ function mouseClicked() {
 
     if (shopState === 1) {
       // Oven
-      if (Math.abs(mouseX - width * 0.775) < width * 0.03 && Math.abs(mouseY - height * 0.1) < width * 0.03) {
+      if (Math.abs(mouseX - width * 0.775) < oven.width * width * scalars.ovenScalar / 2 && Math.abs(mouseY - height * 0.1) < oven.width * width * scalars.ovenScalar / 2) {
         if (cookies >= ovenPrice) {
           cookies -= ovenPrice;
           ovenOwned++;
