@@ -9,6 +9,7 @@
 // Images / other loadable assets:
 let cookie, coin, oven, rightArrow;
 let gameFont;
+let cookieGetArray = [];
 
 // Load images used in game
 function preload() {
@@ -113,6 +114,8 @@ function menu() { // gameState 0
   text("Options", width / 2, height / 2 + height * 0.12);
 }
 
+let cookieGetText;
+
 function mainGame() { // gameState 1
   background(30, 144, 255);
 
@@ -124,6 +127,7 @@ function mainGame() { // gameState 1
 
   // Draws main cookie image to screen
   tint(255, 255);
+  fill(0, 255);
   image(cookie, width/2, height/2, width * scalars.mainCookieScalar * scalars.clickScalar, width * scalars.mainCookieScalar * scalars.clickScalar);
 
   // Draws text to screen
@@ -134,7 +138,15 @@ function mainGame() { // gameState 1
 
   if (frameCount % 6 === 0) {
     cookies += autoCookies / 10;
+    cookieGetText = {
+      num: String(cookies),
+      xpos: random(width * 0.4, width * 0.6),
+      ypos: height * 0.95,
+      alphaval: 255,
+    };
+    cookieGetArray.push(cookieGetText);
   }
+  cookieGet();
 
   if (shopState === 1) {
     shop();
@@ -158,6 +170,23 @@ function mainGame() { // gameState 1
 
   //text(frameRate(), width / 2, height * 0.1);
 
+}
+
+let tempText; 
+
+function cookieGet() {
+  textSize(15);
+  textAlign(LEFT, CENTER);
+  for(let i = 0; i < cookieGetArray.length; i++) {
+    tempText = "+" + cookieGetArray[i].num 
+    fill(0, cookieGetArray[i].alphaval);
+    text(tempText, cookieGetArray[i].xpos, cookieGetArray[i].ypos);
+    image(cookie, cookiegetArray[i].xpos + text, cookieGetArray[i].ypos, )
+    cookieGetArray[i].alphaval -= 25.5;
+    if (cookieGetArray[i].alphaval === 0) {
+      cookieGetArray.splice(i, 1);
+    }
+  }
 }
 
 // variables used for shop()
@@ -206,6 +235,12 @@ function shop() {
 
   // Text in shop() displays name of upgrade, cost, how many cookies per second given, and owned number
   // Oven
+  if (cookies < ovenPrice) {
+    tint(50);
+  }
+  else {
+    tint(255);
+  }
   image(oven, width * 0.775, height * 0.1, oven.width * width * scalars.ovenScalar, oven.height * width * scalars.ovenScalar);
   textSize(12);
   textAlign(CENTER, TOP);
@@ -214,6 +249,12 @@ function shop() {
   text("Oven\nCost: " + str(ovenPrice) + " Cookies\n0.1 CPS\nOwned: " + str(ovenOwned), width * 0.775, height * 0.1 + width * 0.03 * 1.1);
 
   // Bakery
+  if (cookies < bakeryPrice) {
+    tint(50);
+  }
+  else {
+    tint(255);
+  }
   image(cookie, width * 0.925, height * 0.1, width * 0.06, width * 0.06);
   text("Bakery\nCost: " + str(bakeryPrice) + " Cookies\n1 CPS\nOwned: " + str(bakeryOwned), width * 0.925, height * 0.1 + width * 0.03 * 1.1);
 }
