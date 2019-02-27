@@ -9,7 +9,7 @@
 // Images / other loadable assets:
 let cookie, coin, oven, rightArrow;
 let gameFont;
-let cookieGetArray = [];
+let cookieGetAlpha, cookieGetX, cookieGetY, tempText;
 
 // Load images used in game
 function preload() {
@@ -136,17 +136,25 @@ function mainGame() { // gameState 1
   textAlign(CENTER, CENTER);
   text(str(Math.floor(cookies)) + " Cookies" , width / 2, height * 0.9);
 
-  if (frameCount % 6 === 0) {
-    cookies += autoCookies / 10;
-    cookieGetText = {
-      num: String(cookies),
-      xpos: random(width * 0.4, width * 0.6),
-      ypos: height * 0.95,
-      alphaval: 255,
-    };
-    cookieGetArray.push(cookieGetText);
+  // Draws the "+ Cookie Amount" thing on screen when autoCookies is 
+  if (frameCount % 15 === 0) {
+    cookies += autoCookies / 4;
+    if (frameCount % 60 === 0 && autoCookies > 0) {
+      cookieGetX = random(width * 0.4, width * 0.6);
+      cookieGetY = height * 0.955;
+      cookieGetAlpha = 255;
+      tempText = "+" + String(autoCookies);
+    }
   }
-  cookieGet();
+  if (cookieGetAlpha > 0) {
+    fill(0, cookieGetAlpha);
+    textSize(15);
+    text(tempText, cookieGetX, cookieGetY);
+    tint(255, cookieGetAlpha);
+    image(cookie, cookieGetX + textWidth(tempText) + width * 0.0125 , cookieGetY, width * 0.025, width * 0.025);
+    cookieGetAlpha -= 8.5;
+  }
+
 
   if (shopState === 1) {
     shop();
@@ -160,8 +168,11 @@ function mainGame() { // gameState 1
       scalars.storeHoverScalar = 1;
     }
     // Draw coin + text underneath
+    tint(255, 255);
     image(coin, width * 0.97, height * 0.06, width * scalars.storeCoinScalar * scalars.storeHoverScalar, width * scalars.storeCoinScalar * scalars.storeHoverScalar);
     textSize(15);
+    textAlign(CENTER, CENTER);
+    fill(0, 255);
     text("Store", width * 0.97, height * 0.06 + width * 0.035);
   }
 
@@ -170,23 +181,6 @@ function mainGame() { // gameState 1
 
   //text(frameRate(), width / 2, height * 0.1);
 
-}
-
-let tempText; 
-
-function cookieGet() {
-  textSize(15);
-  textAlign(LEFT, CENTER);
-  for(let i = 0; i < cookieGetArray.length; i++) {
-    tempText = "+" + cookieGetArray[i].num 
-    fill(0, cookieGetArray[i].alphaval);
-    text(tempText, cookieGetArray[i].xpos, cookieGetArray[i].ypos);
-    image(cookie, cookiegetArray[i].xpos + text, cookieGetArray[i].ypos, )
-    cookieGetArray[i].alphaval -= 25.5;
-    if (cookieGetArray[i].alphaval === 0) {
-      cookieGetArray.splice(i, 1);
-    }
-  }
 }
 
 // variables used for shop()
@@ -210,9 +204,11 @@ function shop() {
     scalars.storeCloseHoverScalar = 1;
   }
   // Draw arrow + text underneath
+  tint(255, 255);
   image(rightArrow, width * 0.67, height * 0.06, width * scalars.storeCloseScalar * scalars.storeCloseHoverScalar, width * scalars.storeCloseScalar * scalars.storeCloseHoverScalar);
   fill(0);
   textSize(15);
+  textAlign(CENTER, CENTER);
   text("Close\nStore", width * 0.67, height * 0.06 + width * 0.035);
 
   // Draws the checkerboard shop pattern
