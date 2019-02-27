@@ -6,9 +6,9 @@
 // - describe what you did to take this project "above and beyond"
 
 // Declaring varoius variables before preload and setup
-// Images / other loadable assets:
-let cookie, coin, oven, rightArrow;
-let gameFont;
+let cookie, coin, oven, rightArrow; // Images
+let gameFont; // Fonts
+let scalars; // Scalars
 let cookieGetAlpha, cookieGetX, cookieGetY, tempText;
 
 // Load images used in game
@@ -26,29 +26,34 @@ function setup() {
   frameRate(60);
   //shopState = 1;
   textFont(gameFont);
+  initVar();
+}
+
+function initVar() {
+  scalars = {
+    // Click or hover based:
+    clickScalar: 1,
+    storeHoverScalar: 1,
+    storeCloseHoverScalar: 1,
+    menuButtonW: 0.16,
+    menuButtonH: 0.08,
+  
+    // Image based:
+    mainCookieScalar: width * 0.15,
+    titleScreenCookie: width * 0.06,
+    storeCoinScalar: 0.05,
+    storeCloseScalar: 0.05,
+    ovenScalar: 0.0002,
+  
+    // Text based:
+  
+  };
 }
 
 // Declaring variables after preload and setup
 // "Hover" variables and scalars:
 let hoverCoin, hoverRightArrow;
-let scalars = {
-  // Click or hover based:
-  clickScalar: 1,
-  storeHoverScalar: 1,
-  storeCloseHoverScalar: 1,
-  menuButtonW: 0.16,
-  menuButtonH: 0.08,
 
-  // Image based:
-  mainCookieScalar: 0.15,
-  titleScreenCookie: 0.06,
-  storeCoinScalar: 0.05,
-  storeCloseScalar: 0.05,
-  ovenScalar: 0.0002,
-
-  // Text based:
-
-};
 let cookieFallAmount = 0;
 // Game states:
 let gameState = 0;
@@ -81,8 +86,8 @@ function menu() { // gameState 0
   text(titleText , width / 2, height * 0.2);
 
   // image: center - half the width of text - it's size (to be positioned right next to text) (opposite for second image)
-  image(cookie, width / 2 - textWidth(titleText) / 2 - width * scalars.titleScreenCookie, height * 0.2, width * scalars.titleScreenCookie, width * scalars.titleScreenCookie);
-  image(cookie, width / 2 + textWidth(titleText) / 2 + width * scalars.titleScreenCookie, height * 0.2, width * scalars.titleScreenCookie, width * scalars.titleScreenCookie);
+  image(cookie, width / 2 - textWidth(titleText) / 2 - scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie, scalars.titleScreenCookie);
+  image(cookie, width / 2 + textWidth(titleText) / 2 + scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie, scalars.titleScreenCookie);
   
   // if mouse hovering start, button darkens
   if (Math.abs(mouseX - width / 2) < width * scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2) < height * scalars.menuButtonH / 2) {
@@ -128,7 +133,7 @@ function mainGame() { // gameState 1
   // Draws main cookie image to screen
   tint(255, 255);
   fill(0, 255);
-  image(cookie, width/2, height/2, width * scalars.mainCookieScalar * scalars.clickScalar, width * scalars.mainCookieScalar * scalars.clickScalar);
+  image(cookie, width/2, height/2, scalars.mainCookieScalar * scalars.clickScalar, scalars.mainCookieScalar * scalars.clickScalar);
 
   // Draws text to screen
   textFont(gameFont);
@@ -143,7 +148,7 @@ function mainGame() { // gameState 1
       cookieGetX = random(width * 0.4, width * 0.6);
       cookieGetY = height * 0.955;
       cookieGetAlpha = 255;
-      tempText = "+" + String(autoCookies);
+      tempText = "+" + autoCookies.toFixed(1);
     }
   }
   if (cookieGetAlpha > 0) {
@@ -154,7 +159,6 @@ function mainGame() { // gameState 1
     image(cookie, cookieGetX + textWidth(tempText) + width * 0.0125 , cookieGetY, width * 0.025, width * 0.025);
     cookieGetAlpha -= 8.5;
   }
-
 
   if (shopState === 1) {
     shop();
@@ -271,7 +275,7 @@ function mouseClicked() {
   }
   else {
     // Increment cookie counter on click and begin "popping" animation
-    if (Math.abs(mouseX - width / 2) < width * 0.075 && Math.abs(mouseY - height / 2) < width * 0.075) {
+    if (Math.abs(mouseX - width / 2) < scalars.mainCookieScalar / 2 && Math.abs(mouseY - height / 2) < scalars.mainCookieScalar / 2) {
       cookies++;
       scalars.clickScalar += 0.1;
       constrain(scalars.clickScalar, 1, 1.25);
