@@ -7,17 +7,24 @@
 
 // Declaring varoius variables before preload and setup
 let cookie, coin, oven, rightArrow; // Images
+let coinSound, popSound; // Sounds
 let gameFont; // Fonts
 let scalars; // Scalars
 let cookieGetAlpha, cookieGetX, cookieGetY, tempText;
+let resetAlpha = 0;
 
 // Load images used in game
 function preload() {
+  // Images
   cookie = loadImage("assets/cookie1.png");
   coin = loadImage("assets/coin.png");
   oven = loadImage("assets/oven.png");
   rightArrow = loadImage("assets/rightarrow.png");
+
+  // Sounds and fonts
   gameFont = loadFont("assets/gameFont.ttf");
+  coinSound = loadSound("assets/coinSound.wav");
+  popSound = loadSound("assets/pop.ogg");
 }
 
 function setup() {
@@ -46,8 +53,10 @@ function initVar() {
     storeCoinScalar: width * 0.05,
     storeCloseScalar: width * 0.05,
     ovenScalar: width * 0.0002,
+    cookieGetScalar: width * 0.025,
   
     // Text based:
+    textScalar: width / 1920,
   
   };
 }
@@ -83,7 +92,7 @@ function menu() { // gameState 0
 
   // Game title text
   fill(0);
-  textSize(75);
+  textSize(75 * scalars.textScalar);
   textAlign(CENTER, CENTER);
   text(titleText , width / 2, height * 0.2);
 
@@ -116,7 +125,7 @@ function menu() { // gameState 0
 
   // text in menu buttons
   fill(0);
-  textSize(30);
+  textSize(30 * scalars.textScalar);
   text("Start", width / 2, height / 2);
   text("Options", width / 2, height / 2 + height * 0.12);
 }
@@ -139,26 +148,29 @@ function mainGame() { // gameState 1
 
   // Draws text to screen
   textFont(gameFont);
-  textSize(40);
+  textSize(40 * scalars.textScalar);
   textAlign(CENTER, CENTER);
   text(str(Math.floor(cookies)) + " Cookies" , width / 2, height * 0.9);
 
-  // Draws the "+ Cookie Amount" thing on screen when autoCookies is 
+  // Draws the "+ Cookie Amount" thing on screen when autoCookies is greater than 0 
   if (frameCount % 15 === 0) {
     cookies += autoCookies / 4;
     if (frameCount % 60 === 0 && autoCookies > 0) {
+      // Random location under cookie total
       cookieGetX = random(width * 0.4, width * 0.6);
       cookieGetY = height * 0.955;
       cookieGetAlpha = 255;
+      // Temporary variable for the "+" and cookies just gained
       tempText = "+" + autoCookies.toFixed(1);
     }
   }
   if (cookieGetAlpha > 0) {
+    // Draws text to screen with a cookie beside it, for cookie gains
     fill(0, cookieGetAlpha);
-    textSize(15);
+    textSize(15 * scalars.textScalar);
     text(tempText, cookieGetX, cookieGetY);
     tint(255, cookieGetAlpha);
-    image(cookie, cookieGetX + textWidth(tempText) + width * 0.0125 , cookieGetY, width * 0.025, width * 0.025);
+    image(cookie, cookieGetX + textWidth(tempText) , cookieGetY, scalars.cookieGetScalar, scalars.cookieGetScalar);
     cookieGetAlpha -= 8.5;
   }
 
@@ -176,7 +188,7 @@ function mainGame() { // gameState 1
     // Draw coin + text underneath
     tint(255, 255);
     image(coin, width * 0.97, height * 0.06, scalars.storeCoinScalar * scalars.storeHoverScalar, scalars.storeCoinScalar * scalars.storeHoverScalar);
-    textSize(15);
+    textSize(15 * scalars.textScalar);
     textAlign(CENTER, CENTER);
     fill(0, 255);
     text("Store", width * 0.97, height * 0.06 + width * 0.035);
@@ -187,6 +199,12 @@ function mainGame() { // gameState 1
 
   //text(frameRate(), width / 2, height * 0.1);
 
+  if (resetAlpha > 0) {
+    textSize(50 * scalars.textScalar);
+    fill(0, resetAlpha);
+    text("Game reset!", width / 2, height * 0.2);
+    resetAlpha -= 8.5;
+  }
 }
 
 // variables used for shop()
@@ -213,7 +231,7 @@ function shop() {
   tint(255, 255);
   image(rightArrow, width * 0.67, height * 0.06, scalars.storeCloseScalar * scalars.storeCloseHoverScalar, scalars.storeCloseScalar * scalars.storeCloseHoverScalar);
   fill(0);
-  textSize(15);
+  textSize(15 * scalars.textScalar);
   textAlign(CENTER, CENTER);
   text("Close\nStore", width * 0.67, height * 0.06 + width * 0.035);
 
@@ -244,7 +262,7 @@ function shop() {
     tint(255);
   }
   image(oven, width * 0.775, height * 0.1, oven.width * scalars.ovenScalar, oven.height * scalars.ovenScalar);
-  textSize(12);
+  textSize(12 * scalars.textScalar);
   textAlign(CENTER, TOP);
   fill(0);
   noStroke();
@@ -281,6 +299,7 @@ function mouseClicked() {
       cookies++;
       scalars.clickScalar += 0.1;
       constrain(scalars.clickScalar, 1, 1.25);
+      popSound.play();
     }
 
     if (shopState === 1) {
@@ -290,6 +309,7 @@ function mouseClicked() {
           cookies -= ovenPrice;
           ovenOwned++;
           autoCookies += 0.1;
+          coinSound.play();
         }
       }
       // Bakery
@@ -298,9 +318,10 @@ function mouseClicked() {
           cookies -= bakeryPrice;
           bakeryOwned++;
           autoCookies += 1;
+          coinSound.play();
         }
       }
-      else if (Math.abs(mouseX - width * 0.67) < width * 0.025 && Math.abs(mouseY - height * 0.06) < width * 0.025) {
+      else if (Math.abs(mouseX - width * 0.67) < scalars.storeCloseScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCloseScalar / 2) {
         shopState = 0;
       }
       else {
@@ -309,12 +330,25 @@ function mouseClicked() {
     }
     // Opens shop when arrow clicked
     else {
-      if (Math.abs(mouseX - width * 0.97) < width * 0.025 && Math.abs(mouseY - height * 0.06) < width * 0.025) {
+      if (Math.abs(mouseX - width * 0.97) < scalars.storeCoinScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCoinScalar / 2) {
         shopState = 1;
       }
       else {
         null;
       }
+    }
+  }
+}
+
+function keyPressed() {
+  if (gameState === 1) {
+    if (key === "r") {
+      // Resets game upon pressing "r" on keyboard. resetAlpha is used in mainGame() to draw "Game reset!" to screen which fades away
+      cookies = 0;
+      autoCookies = 0;
+      ovenOwned = 0;
+      bakeryOwned = 0;
+      resetAlpha = 255;
     }
   }
 }
