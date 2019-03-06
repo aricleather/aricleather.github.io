@@ -10,7 +10,7 @@
 
 // GLOBAL VARIABLES
 // Game content
-let cookie, coin, oven, rightArrow; // Images
+let cookie, coin, oven, rightArrow, wood; // Images
 let coinSound, popSound; // Sounds
 let gameFont; // Fonts
 
@@ -51,6 +51,7 @@ function preload() {
   coin = loadImage("assets/coin.png");
   oven = loadImage("assets/oven.png");
   rightArrow = loadImage("assets/rightarrow.png");
+  wood = loadImage("assets/wood.png");
 
   // Sounds and fonts
   gameFont = loadFont("assets/gameFont.ttf");
@@ -74,7 +75,11 @@ function initVar() {
     storeHoverScalar: 1,
     storeCloseHoverScalar: 1,
 
-    // Buttons
+    // Animation based:
+    menuAnimScalar: 1,
+    menuAnimSpeed: 0.004,
+
+    // Buttons:
     menuButtonW: width * 0.16,
     menuButtonH: height * 0.08,
   
@@ -106,13 +111,13 @@ function menu() { // gameState 0
 
   // Game title text
   fill(0);
-  textSize(75 * scalars.textScalar);
+  textSize(75 * scalars.textScalar * scalars.menuAnimScalar);
   textAlign(CENTER, CENTER);
   text(titleText , width / 2, height * 0.2);
 
   // image: center - half the width of text - it's size (to be positioned right next to text) (opposite for second image)
-  image(cookie, width / 2 - textWidth(titleText) / 2 - scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie, scalars.titleScreenCookie);
-  image(cookie, width / 2 + textWidth(titleText) / 2 + scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie, scalars.titleScreenCookie);
+  image(cookie, width / 2 - textWidth(titleText) / 2 - scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie * scalars.menuAnimScalar, scalars.titleScreenCookie * scalars.menuAnimScalar);
+  image(cookie, width / 2 + textWidth(titleText) / 2 + scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie * scalars.menuAnimScalar, scalars.titleScreenCookie * scalars.menuAnimScalar);
   
   // if mouse hovering start, button darkens
   if (Math.abs(mouseX - width / 2) < scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2) < scalars.menuButtonH / 2) {
@@ -128,6 +133,18 @@ function menu() { // gameState 0
   else {
     hoverAlphaOptions = 200;
   }
+
+  // Animates the text and cookies on menu
+  
+  if (scalars.menuAnimScalar > 1.03) {
+    scalars.menuAnimSpeed = -scalars.menuAnimSpeed;
+    scalars.menuAnimScalar = 1.03;
+  }
+  else if (scalars.menuAnimScalar < 0.97) {
+    scalars.menuAnimSpeed = -scalars.menuAnimSpeed;
+    scalars.menuAnimScalar = 0.97;
+  }
+  scalars.menuAnimScalar += scalars.menuAnimSpeed;
 
   // menu buttons
   rectMode(CENTER);
@@ -245,17 +262,7 @@ function shop() {
   text("Close\nStore", width * 0.67, height * 0.06 + width * 0.035);
 
   // Draws the checkerboard shop pattern
-  for(i = 0; i < 8; i++) {
-    for(j = 0; j < 4; j++) {
-      if ((i + j) % 2 === 0) {
-        fill(70, 130, 180);
-      }
-      else {
-        fill(135, 206, 250);
-      }
-      rect(width * (0.7 + j * 0.075), height * i * 0.125, width * (0.7 + (j + 1) * 0.075), height * (i + 1) * 0.125);
-    }
-  }
+  image(wood, width * 0.7, 0, width * 0.3, height, 0, 0, width * 0.3, height);
 
   stroke(0);
   line(width * 0.7, height * 0.25, width, height * 0.25);
@@ -270,12 +277,12 @@ function shop() {
   else {
     tint(255);
   }
-  image(oven, width * 0.775, height * 0.1, oven.width * scalars.ovenScalar, oven.height * scalars.ovenScalar);
-  textSize(12 * scalars.textScalar);
-  textAlign(CENTER, TOP);
+  image(oven, width * 0.775, height * 0.125, oven.width * scalars.ovenScalar, oven.height * scalars.ovenScalar);
+  textSize(18 * scalars.textScalar);
+  textAlign(LEFT, CENTER);
   fill(0);
   noStroke();
-  text("Oven\nCost: " + str(ovenPrice) + " Cookies\n0.1 CPS\nOwned: " + str(ovenOwned), width * 0.775, height * 0.1 + width * 0.03 * 1.1);
+  text("Oven\nCost: " + str(ovenPrice) + " Cookies\n0.1 CPS\nOwned: " + str(ovenOwned), width * 0.85, height * 0.125);
 
   // Bakery
   if (cookies < bakeryPrice) {
@@ -284,8 +291,8 @@ function shop() {
   else {
     tint(255);
   }
-  image(cookie, width * 0.925, height * 0.1, width * 0.06, width * 0.06);
-  text("Bakery\nCost: " + str(bakeryPrice) + " Cookies\n1 CPS\nOwned: " + str(bakeryOwned), width * 0.925, height * 0.1 + width * 0.03 * 1.1);
+  image(cookie, width * 0.775, height * 0.375, width * 0.06, width * 0.06);
+  text("Bakery\nCost: " + str(bakeryPrice) + " Cookies\n1 CPS\nOwned: " + str(bakeryOwned), width * 0.85, height * 0.375);
 }
 
 function cookieFall() {
