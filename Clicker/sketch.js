@@ -8,13 +8,41 @@
 // - My game can successfully handle window resizing, in terms of scaling and canvas
 // - My game incorporates sound effects
 
-// Declaring varoius variables before preload and setup
+// GLOBAL VARIABLES
+// Game content
 let cookie, coin, oven, rightArrow; // Images
 let coinSound, popSound; // Sounds
 let gameFont; // Fonts
-let scalars; // Scalars
-let cookieGetAlpha, cookieGetX, cookieGetY, tempText;
-let resetAlpha = 0;
+
+// Position / scaling variables
+let scalars; // Scalars used throughout code definied in initVar()
+let cookieGetAlpha; // Alpha / transparency values
+let resetAlpha = 0; 
+let cookieGetX, cookieGetY; // Position values
+let cookieFallAmount = 0;
+
+// Game states:
+let gameState = 0;
+let shopState = 0;
+
+// Clicker game variables:
+let cookies = 0;
+let autoCookies = 0;
+
+// Variables used for menu()
+let titleText = "Cookie Clicker"; // strings
+let hoverAlphaStart;              // button rectangle fills
+let hoverAlphaOptions;
+
+// variables used for shop()
+let ovenPrice = 10;
+let ovenOwned = 0;
+let bakeryPrice = 150;
+let bakeryOwned = 0;
+let i, j;
+
+let cookieGetText;
+let tempText;
 
 // Load images used in game
 function preload() {
@@ -64,18 +92,6 @@ function initVar() {
   };
 }
 
-// Declaring variables after preload and setup
-// "Hover" variables and scalars:
-let hoverCoin, hoverRightArrow;
-
-let cookieFallAmount = 0;
-// Game states:
-let gameState = 0;
-let shopState = 0;
-// Clicker game variables:
-let cookies = 0;
-let autoCookies = 0;
-
 function draw() {
   if (gameState === 0) {
     menu();
@@ -84,11 +100,6 @@ function draw() {
     mainGame();
   }
 }
-
-// Variables used for menu()
-let titleText = "Cookie Clicker"; // strings
-let hoverAlphaStart;              // button rectangle fills
-let hoverAlphaOptions;
 
 function menu() { // gameState 0
   background(30, 144, 255);
@@ -133,7 +144,7 @@ function menu() { // gameState 0
   text("Options", width / 2, height / 2 + height * 0.12);
 }
 
-let cookieGetText;
+
 
 function mainGame() { // gameState 1
   background(30, 144, 255);
@@ -210,12 +221,7 @@ function mainGame() { // gameState 1
   }
 }
 
-// variables used for shop()
-let ovenPrice = 10;
-let ovenOwned = 0;
-let bakeryPrice = 150;
-let bakeryOwned = 0;
-let i, j;
+
 
 function shop() {
   // Shop background & lines
