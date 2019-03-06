@@ -1,9 +1,12 @@
 // Interactive Scene
 // Aric Leather
-// Date:
+// Date: March 4, 2019
+// 
+// Mouse incorporation: clicking on cookie and store stuff, keyboard incorporation: press R key to reset game
 //
 // Extra for Experts:
-// - describe what you did to take this project "above and beyond"
+// - My game can successfully handle window resizing, in terms of scaling and canvas
+// - My game incorporates sound effects
 
 // Declaring varoius variables before preload and setup
 let cookie, coin, oven, rightArrow; // Images
