@@ -10,9 +10,10 @@
 
 // GLOBAL VARIABLES
 // Game content
-let cookie, coin, oven, rightArrow, wood; // Images
+let cookie, coin, oven, rightArrow; // Images
 let coinSound, popSound; // Sounds
 let gameFont; // Fonts
+let shopGraphic; // Graphics
 
 // Position / scaling variables
 let scalars; // Scalars used throughout code definied in initVar()
@@ -51,7 +52,6 @@ function preload() {
   coin = loadImage("assets/coin.png");
   oven = loadImage("assets/oven.png");
   rightArrow = loadImage("assets/rightarrow.png");
-  wood = loadImage("assets/wood.png");
 
   // Sounds and fonts
   gameFont = loadFont("assets/gameFont.ttf");
@@ -62,10 +62,10 @@ function preload() {
 function setup() {
   createCanvas(windowWidth, windowHeight);
   imageMode(CENTER);
-  frameRate(60);
   //shopState = 1;
   textFont(gameFont);
   initVar();
+  generateGraphics();
 }
 
 function initVar() {
@@ -95,9 +95,23 @@ function initVar() {
     textScalar: width / 1920,
   
   };
+  
+}
+
+function generateGraphics() {
+  let testNum = width * 0.3;
+  shopGraphic = createGraphics(testNum, height);
+  shopGraphic.strokeWeight(testNum/80);
+  for(let i = 0; i < 100; i++) {
+    shopGraphic.stroke(30 + 2.25 * i, 144 + i, 255);
+    shopGraphic.line(testNum/100 * i, 0, testNum/100 * i, height);
+  }
 }
 
 function draw() {
+  background(30, 144, 255);
+  textSize(15);
+  text(frameRate().toFixed(0), 20, 20);
   if (gameState === 0) {
     menu();
   } 
@@ -107,8 +121,6 @@ function draw() {
 }
 
 function menu() { // gameState 0
-  background(30, 144, 255);
-
   // Game title text
   fill(0);
   textSize(75 * scalars.textScalar * scalars.menuAnimScalar);
@@ -150,12 +162,14 @@ function menu() { // gameState 0
   rectMode(CENTER);
   fill(hoverAlphaStart);
   strokeWeight(3);
+  stroke(0);
   rect(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH);
   fill(hoverAlphaOptions);
   rect(width / 2, height / 2 + height * 0.12, scalars.menuButtonW, scalars.menuButtonH);
 
   // text in menu buttons
   fill(0);
+  noStroke();
   textSize(30 * scalars.textScalar);
   text("Start", width / 2, height / 2);
   text("Options", width / 2, height / 2 + height * 0.12);
@@ -164,8 +178,6 @@ function menu() { // gameState 0
 
 
 function mainGame() { // gameState 1
-  background(30, 144, 255);
-
   // This creates the "popping" animation on click
   if (scalars.clickScalar > 1) {
     scalars.clickScalar -= 1/10 * (scalars.clickScalar - 1);
@@ -262,12 +274,12 @@ function shop() {
   text("Close\nStore", width * 0.67, height * 0.06 + width * 0.035);
 
   // Draws the checkerboard shop pattern
-  image(wood, width * 0.7, 0, width * 0.3, height, 0, 0, width * 0.3, height);
-
-  stroke(0);
-  line(width * 0.7, height * 0.25, width, height * 0.25);
-  line(width * 0.7, height * 0.5, width, height * 0.5);
-  line(width * 0.7, height * 0.75, width, height * 0.75);
+  //image(wood, width * 0.7, 0, width * 0.3, height, 0, 0, width * 0.3, height);
+  imageMode(CORNER);
+  //image(wood, width * 0.7, 0, width * 0.3, height, 0, 0);
+  fill(30, 148, 255);
+  image(shopGraphic, width * 0.7, 0);
+  imageMode(CENTER);
 
   // Text in shop() displays name of upgrade, cost, how many cookies per second given, and owned number
   // Oven
