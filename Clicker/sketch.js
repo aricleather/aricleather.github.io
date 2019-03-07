@@ -32,8 +32,8 @@ let autoCookies = 0;
 
 // Variables used for menu()
 let titleText = "Cookie Clicker"; // strings
-let hoverAlphaStart;              // button rectangle fills
-let hoverAlphaOptions;
+let hoverFillStart = 200;         // button rectangle fills
+let hoverFillOptions = 200;
 
 // variables used for shop()
 let ovenPrice = 10;
@@ -61,9 +61,8 @@ function preload() {
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  textFont(gameFont); // Font used throughout whole game
   imageMode(CENTER);
-  //shopState = 1;
-  textFont(gameFont);
   initVar();
   generateGraphics();
 }
@@ -77,7 +76,7 @@ function initVar() {
 
     // Animation based:
     menuAnimScalar: 1,
-    menuAnimSpeed: 0.004,
+    menuAnimSpeed: 0.008,
 
     // Buttons:
     menuButtonW: width * 0.16,
@@ -93,9 +92,7 @@ function initVar() {
   
     // Text based:
     textScalar: width / 1920,
-  
   };
-  
 }
 
 function generateGraphics() {
@@ -121,58 +118,9 @@ function draw() {
 }
 
 function menu() { // gameState 0
-  // Game title text
-  fill(0);
-  textSize(75 * scalars.textScalar * scalars.menuAnimScalar);
-  textAlign(CENTER, CENTER);
-  text(titleText , width / 2, height * 0.2);
-
-  // image: center - half the width of text - it's size (to be positioned right next to text) (opposite for second image)
-  image(cookie, width / 2 - textWidth(titleText) / 2 - scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie * scalars.menuAnimScalar, scalars.titleScreenCookie * scalars.menuAnimScalar);
-  image(cookie, width / 2 + textWidth(titleText) / 2 + scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie * scalars.menuAnimScalar, scalars.titleScreenCookie * scalars.menuAnimScalar);
-  
-  // if mouse hovering start, button darkens
-  if (Math.abs(mouseX - width / 2) < scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2) < scalars.menuButtonH / 2) {
-    hoverAlphaStart = 150;
-  }
-  else {
-    hoverAlphaStart = 200;
-  }
-  // if mouse hovering options, button darkens
-  if (Math.abs(mouseX - width / 2) < scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2 - height * 0.12) < scalars.menuButtonH / 2) {
-    hoverAlphaOptions = 150;
-  }
-  else {
-    hoverAlphaOptions = 200;
-  }
-
-  // Animates the text and cookies on menu
-  
-  if (scalars.menuAnimScalar > 1.03) {
-    scalars.menuAnimSpeed = -scalars.menuAnimSpeed;
-    scalars.menuAnimScalar = 1.03;
-  }
-  else if (scalars.menuAnimScalar < 0.97) {
-    scalars.menuAnimSpeed = -scalars.menuAnimSpeed;
-    scalars.menuAnimScalar = 0.97;
-  }
-  scalars.menuAnimScalar += scalars.menuAnimSpeed;
-
-  // menu buttons
-  rectMode(CENTER);
-  fill(hoverAlphaStart);
-  strokeWeight(3);
-  stroke(0);
-  rect(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH);
-  fill(hoverAlphaOptions);
-  rect(width / 2, height / 2 + height * 0.12, scalars.menuButtonW, scalars.menuButtonH);
-
-  // text in menu buttons
-  fill(0);
-  noStroke();
-  textSize(30 * scalars.textScalar);
-  text("Start", width / 2, height / 2);
-  text("Options", width / 2, height / 2 + height * 0.12);
+  displayMenu();
+  animateMenu();
+  menuButtonHover();
 }
 
 
@@ -250,14 +198,66 @@ function mainGame() { // gameState 1
   }
 }
 
+function displayMenu() {
+  // Draws everything to screen in menu()
+  // Game title text
+  fill(0);
+  textSize(75 * scalars.textScalar);
+  textAlign(CENTER, CENTER);
+  text(titleText , width / 2, height * 0.2);
 
+  // Cookies that are next to title text, positions based on length of titleText
+  image(cookie, width / 2 - textWidth(titleText) / 2 - scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie * scalars.menuAnimScalar, scalars.titleScreenCookie * scalars.menuAnimScalar);
+  image(cookie, width / 2 + textWidth(titleText) / 2 + scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie * scalars.menuAnimScalar, scalars.titleScreenCookie * scalars.menuAnimScalar);
+
+  // Menu buttons
+  rectMode(CENTER);
+  fill(hoverFillStart);
+  strokeWeight(3);
+  stroke(0);
+  rect(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH); // Start
+  fill(hoverFillOptions);
+  rect(width / 2, height / 2 + height * 0.12, scalars.menuButtonW, scalars.menuButtonH); // Options
+
+  // Text inside menu buttons
+  fill(0);
+  noStroke();
+  textSize(30 * scalars.textScalar);
+  text("Start", width / 2, height / 2);
+  text("Options", width / 2, height / 2 + height * 0.12);
+}
+
+function animateMenu() {
+  // Animates the text and cookies on menu by alternating a scalar
+  if (scalars.menuAnimScalar > 1.05) {
+    scalars.menuAnimSpeed = -scalars.menuAnimSpeed;
+    scalars.menuAnimScalar = 1.05;
+  }
+  else if (scalars.menuAnimScalar < 0.95) {
+    scalars.menuAnimSpeed = -scalars.menuAnimSpeed;
+    scalars.menuAnimScalar = 0.95;
+  }
+  scalars.menuAnimScalar += scalars.menuAnimSpeed;
+}
+
+function menuButtonHover() {
+  // If mouse hovering start, button darkens
+  if (Math.abs(mouseX - width / 2) < scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2) < scalars.menuButtonH / 2) {
+    hoverFillStart = 150;
+  }
+  else {
+    hoverFillStart = 200;
+  }
+  // If mouse hovering options, button darkens
+  if (Math.abs(mouseX - width / 2) < scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2 - height * 0.12) < scalars.menuButtonH / 2) {
+    hoverFillOptions = 150;
+  }
+  else {
+    hoverFillOptions = 200;
+  }
+}
 
 function shop() {
-  // Shop background & lines
-  rectMode(CORNER);
-  fill(139, 82, 45, 200);
-  noStroke();
-
   // Close shop arrow
   if (Math.abs(mouseX - width * 0.67) < scalars.storeCloseScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCloseScalar / 2) {
     scalars.storeCloseHoverScalar = 1.05;
@@ -305,6 +305,10 @@ function shop() {
   }
   image(cookie, width * 0.775, height * 0.375, width * 0.06, width * 0.06);
   text("Bakery\nCost: " + str(bakeryPrice) + " Cookies\n1 CPS\nOwned: " + str(bakeryOwned), width * 0.85, height * 0.375);
+}
+
+function displayShop() {
+
 }
 
 function cookieFall() {
