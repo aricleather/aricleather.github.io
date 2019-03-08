@@ -10,7 +10,7 @@
 
 // GLOBAL VARIABLES
 // Game content
-let cookie, coin, oven, rightArrow; // Images
+let cookie, coin, oven, bakery, rightArrow; // Images
 let coinSound, popSound; // Sounds
 let gameFont; // Fonts
 let shopGraphic; // Graphics
@@ -30,6 +30,20 @@ let shopState = 0;
 let cookies = 0;
 let autoCookies = 0;
 let lastMillis = 0;
+let shopItems = [
+  { name: "Oven",
+    text: "",
+    image: oven,
+    price: 10,
+    cps: 0.1,
+    owned: 0,},
+  { name: "Bakery",
+    text: "",
+    image: bakery,
+    price: 150,
+    cps: 1,
+    owned: 0,}
+];
 
 // Variables used for menu()
 let titleText = "Cookie Clicker"; // strings
@@ -408,7 +422,7 @@ function keyPressed() {
       autoCookies = 0;
       ovenOwned = 0;
       bakeryOwned = 0;
-      resetAlpha = 255;
+      resetAlpha = 255; // This is used when drawing "Game Reset!"
     }
   }
 }
