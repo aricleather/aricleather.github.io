@@ -29,6 +29,7 @@ let shopState = 0;
 // Clicker game variables:
 let cookies = 0;
 let autoCookies = 0;
+let lastMillis = 0;
 
 // Variables used for menu()
 let titleText = "Cookie Clicker"; // strings
@@ -45,7 +46,7 @@ let i, j;
 let cookieGetText;
 let tempText;
 
-// Load images used in game
+// Load content used in game
 function preload() {
   // Images
   cookie = loadImage("assets/cookie1.png");
@@ -123,78 +124,104 @@ function menu() { // gameState 0
   menuButtonHover();
 }
 
-
-
 function mainGame() { // gameState 1
-  // This creates the "popping" animation on click
-  if (scalars.clickScalar > 1) {
-    scalars.clickScalar -= 1/10 * (scalars.clickScalar - 1);
+  cookiePop();
+  incrementCookies();
+  displayGame();
+  animateCookieGet();
+  if (shopState === 1) {
+    shop();
   }
-  constrain(scalars.clickScalar, 1, 1.25);
+  else {
+    shopOpenButton();
+  }
+}
 
+function displayGame() {
   // Draws main cookie image to screen
   tint(255, 255);
   fill(0, 255);
   image(cookie, width/2, height/2, scalars.mainCookieScalar * scalars.clickScalar, scalars.mainCookieScalar * scalars.clickScalar);
 
-  // Draws text to screen
+  // Draws cookie amount text to screen
   textFont(gameFont);
   textSize(40 * scalars.textScalar);
   textAlign(CENTER, CENTER);
   text(str(Math.floor(cookies)) + " Cookies" , width / 2, height * 0.9);
 
-  // Draws the "+ Cookie Amount" thing on screen when autoCookies is greater than 0 
-  if (frameCount % 15 === 0) {
-    cookies += autoCookies / 4;
-    if (frameCount % 60 === 0 && autoCookies > 0) {
-      // Random location under cookie total
-      cookieGetX = random(width * 0.4, width * 0.6);
-      cookieGetY = height * 0.955;
-      cookieGetAlpha = 255;
-      // Temporary variable for the "+" and cookies just gained
-      tempText = "+" + autoCookies.toFixed(1);
-    }
-  }
-  if (cookieGetAlpha > 0) {
-    // Draws text to screen with a cookie beside it, for cookie gains
-    fill(0, cookieGetAlpha);
-    textSize(15 * scalars.textScalar);
-    text(tempText, cookieGetX, cookieGetY);
-    tint(255, cookieGetAlpha);
-    image(cookie, cookieGetX + textWidth(tempText) , cookieGetY, scalars.cookieGetScalar, scalars.cookieGetScalar);
-    cookieGetAlpha -= 8.5;
-  }
-
-  if (shopState === 1) {
-    shop();
-  }
-  else {
-    // Make shop coin button enlarge upon hovering
-    if (Math.abs(mouseX - width * 0.97) < scalars.storeCoinScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCoinScalar / 2) {
-      scalars.storeHoverScalar = 1.05;
-    }
-    else {
-      scalars.storeHoverScalar = 1;
-    }
-    // Draw coin + text underneath
-    tint(255, 255);
-    image(coin, width * 0.97, height * 0.06, scalars.storeCoinScalar * scalars.storeHoverScalar, scalars.storeCoinScalar * scalars.storeHoverScalar);
-    textSize(15 * scalars.textScalar);
-    textAlign(CENTER, CENTER);
-    fill(0, 255);
-    text("Store", width * 0.97, height * 0.06 + width * 0.035);
-  }
-
-  //cookieFall();
-  //cookieFallAmount--;
-
-  //text(frameRate(), width / 2, height * 0.1);
-
+  // "Game reset!" text when r clicked on keyboard
   if (resetAlpha > 0) {
     textSize(50 * scalars.textScalar);
     fill(0, resetAlpha);
     text("Game reset!", width / 2, height * 0.2);
     resetAlpha -= 8.5;
+  }
+}
+
+function cookiePop() {
+  // This creates the "popping" animation on click
+  if (scalars.clickScalar > 1) {
+    scalars.clickScalar -= 1/10 * (scalars.clickScalar - 1);
+  }
+  constrain(scalars.clickScalar, 1, 1.25);
+}
+
+function incrementCookies() {
+  // Increments the cookie amount 4 times a second
+  if (millis() - lastMillis > 250) {
+    cookies += autoCookies / 4;
+    lastMillis = millis();
+  } 
+  if (frameCount % 60 === 0) {
+    cookieGet();
+  }
+}
+
+function cookieGet() {
+  // This function creates the effect underneath cookie total showing cookies gained every second
+  if (frameCount % 60 === 0 && autoCookies > 0) {
+    // Random location somewhere under cookie total text
+    cookieGetX = random(width * 0.4, width * 0.6);
+    cookieGetY = height * 0.955;
+    cookieGetAlpha = 255;
+    // Temporary variable for the "+" and cookies just gained in a string
+    tempText = "+" + autoCookies.toFixed(1);
+  }
+}
+
+function animateCookieGet() {
+  // Draws tempText to screen with a cookie beside it every second, showing how many cookies gained that second
+  if (cookieGetAlpha > 0) {
+    fill(0, cookieGetAlpha);
+    textSize(15 * scalars.textScalar);
+    text(tempText, cookieGetX, cookieGetY);
+    tint(255, cookieGetAlpha);
+    image(cookie, cookieGetX + textWidth(tempText) , cookieGetY, scalars.cookieGetScalar, scalars.cookieGetScalar);
+    // Reduces alpha value so that it fades away
+    cookieGetAlpha -= 8.5;
+  }
+}
+
+function shopOpenButton() {
+  shopOpenButtonHover();
+
+  // Draw shop coin + "Store" text underneath
+  tint(255, 255);
+  image(coin, width * 0.97, height * 0.06, scalars.storeCoinScalar * scalars.storeHoverScalar, scalars.storeCoinScalar * scalars.storeHoverScalar);
+  textSize(15 * scalars.textScalar);
+  textAlign(CENTER, CENTER);
+  fill(0, 255);
+  text("Shop", width * 0.97, height * 0.06 + width * 0.035);
+
+}
+
+function shopOpenButtonHover() {
+  // Make shop coin button enlarge upon hovering
+  if (Math.abs(mouseX - width * 0.97) < scalars.storeCoinScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCoinScalar / 2) {
+    scalars.storeHoverScalar = 1.05;
+  }
+  else {
+    scalars.storeHoverScalar = 1;
   }
 }
 
@@ -259,56 +286,57 @@ function menuButtonHover() {
 
 function shop() {
   // Close shop arrow
-  if (Math.abs(mouseX - width * 0.67) < scalars.storeCloseScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCloseScalar / 2) {
-    scalars.storeCloseHoverScalar = 1.05;
-  }
-  else {
-    scalars.storeCloseHoverScalar = 1;
-  }
-  // Draw arrow + text underneath
+  displayShop();
+  shopCloseButtonHover();
+}
+
+function displayShop() {
+  // Draw "close shop" arrow + text underneath
   tint(255, 255);
   image(rightArrow, width * 0.67, height * 0.06, scalars.storeCloseScalar * scalars.storeCloseHoverScalar, scalars.storeCloseScalar * scalars.storeCloseHoverScalar);
   fill(0);
   textSize(15 * scalars.textScalar);
   textAlign(CENTER, CENTER);
-  text("Close\nStore", width * 0.67, height * 0.06 + width * 0.035);
+  text("Close\nShop", width * 0.67, height * 0.06 + width * 0.035);
 
-  // Draws the checkerboard shop pattern
-  //image(wood, width * 0.7, 0, width * 0.3, height, 0, 0, width * 0.3, height);
+  // Draws gradient shop background from pre-rendered "shopGraphic"
   imageMode(CORNER);
-  //image(wood, width * 0.7, 0, width * 0.3, height, 0, 0);
   fill(30, 148, 255);
   image(shopGraphic, width * 0.7, 0);
   imageMode(CENTER);
 
   // Text in shop() displays name of upgrade, cost, how many cookies per second given, and owned number
   // Oven
-  if (cookies < ovenPrice) {
-    tint(50);
-  }
-  else {
-    tint(255);
-  }
+  tint(enoughCookies(cookies, ovenPrice));
   image(oven, width * 0.775, height * 0.125, oven.width * scalars.ovenScalar, oven.height * scalars.ovenScalar);
   textSize(18 * scalars.textScalar);
   textAlign(LEFT, CENTER);
   fill(0);
   noStroke();
-  text("Oven\nCost: " + str(ovenPrice) + " Cookies\n0.1 CPS\nOwned: " + str(ovenOwned), width * 0.85, height * 0.125);
+  text("Oven\nCost: " + str(ovenPrice) + " Cookies\n0.1 CPS\nOwned: " + str(ovenOwned), width * 0.83, height * 0.125);
 
   // Bakery
-  if (cookies < bakeryPrice) {
-    tint(50);
-  }
-  else {
-    tint(255);
-  }
+  tint(enoughCookies(cookies, bakeryPrice));
   image(cookie, width * 0.775, height * 0.375, width * 0.06, width * 0.06);
-  text("Bakery\nCost: " + str(bakeryPrice) + " Cookies\n1 CPS\nOwned: " + str(bakeryOwned), width * 0.85, height * 0.375);
+  text("Bakery\nCost: " + str(bakeryPrice) + " Cookies\n1 CPS\nOwned: " + str(bakeryOwned), width * 0.83, height * 0.375);
 }
 
-function displayShop() {
+function shopCloseButtonHover() {
+  if (Math.abs(mouseX - width * 0.67) < scalars.storeCloseScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCloseScalar / 2) {
+    scalars.storeCloseHoverScalar = 1.05;
+  }
+  else {
+    scalars.storeCloseHoverScalar = 1;
+  }
+}
 
+function enoughCookies(cookies, price) {
+  if (cookies < price) {
+    return 50;
+  }
+  else {
+    return 255;
+  }
 }
 
 function cookieFall() {
