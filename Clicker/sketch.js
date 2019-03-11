@@ -21,6 +21,7 @@ let cookieGetAlpha; // Alpha / transparency values
 let resetAlpha = 0; 
 let cookieGetX, cookieGetY; // Position values
 let cookieFallAmount = 0;
+let scroll = 0;
 
 // Game states:
 let gameState = 0;
@@ -30,6 +31,7 @@ let shopState = 0;
 let cookies = 0;
 let autoCookies = 0;
 let lastMillis = 0;
+let increments = 0;
 let shopItems = [
   { name: "Oven",
     text: "",
@@ -182,25 +184,24 @@ function cookiePop() {
 
 function incrementCookies() {
   // Increments the cookie amount 4 times a second
-  if (millis() - lastMillis > 250) {
+  if (autoCookies > 0 && millis() - lastMillis > 250) {
     cookies += autoCookies / 4;
     lastMillis = millis();
+    increments ++;
+    if (increments % 4 === 0) {
+      cookieGet();
+    }
   } 
-  if (frameCount % 60 === 0) {
-    cookieGet();
-  }
 }
 
 function cookieGet() {
   // This function creates the effect underneath cookie total showing cookies gained every second
-  if (frameCount % 60 === 0 && autoCookies > 0) {
-    // Random location somewhere under cookie total text
-    cookieGetX = random(width * 0.4, width * 0.6);
-    cookieGetY = height * 0.955;
-    cookieGetAlpha = 255;
-    // Temporary variable for the "+" and cookies just gained in a string
-    tempText = "+" + autoCookies.toFixed(1);
-  }
+  // Random location somewhere under cookie total text
+  cookieGetX = random(width * 0.4, width * 0.6);
+  cookieGetY = height * 0.955;
+  cookieGetAlpha = 255;
+  // Temporary variable for the "+" and cookies just gained in a string
+  tempText = "+" + autoCookies.toFixed(1);
 }
 
 function animateCookieGet() {
@@ -322,17 +323,26 @@ function displayShop() {
   // Text in shop() displays name of upgrade, cost, how many cookies per second given, and owned number
   // Oven
   tint(enoughCookies(cookies, ovenPrice));
-  image(oven, width * 0.775, height * 0.125, oven.width * scalars.ovenScalar, oven.height * scalars.ovenScalar);
-  textSize(18 * scalars.textScalar);
+  image(oven, width * 0.775, height * 0.125 + scroll, oven.width * scalars.ovenScalar, oven.height * scalars.ovenScalar);
+  textSize(15 * scalars.textScalar);
   textAlign(LEFT, CENTER);
   fill(0);
   noStroke();
-  text("Oven\nCost: " + str(ovenPrice) + " Cookies\n0.1 CPS\nOwned: " + str(ovenOwned), width * 0.83, height * 0.125);
+  text("Oven\nCost: " + str(ovenPrice) + " Cookies\n0.1 CPS\nOwned: " + str(ovenOwned), width * 0.83, height * 0.125 + scroll);
 
   // Bakery
   tint(enoughCookies(cookies, bakeryPrice));
-  image(cookie, width * 0.775, height * 0.375, width * 0.06, width * 0.06);
-  text("Bakery\nCost: " + str(bakeryPrice) + " Cookies\n1 CPS\nOwned: " + str(bakeryOwned), width * 0.83, height * 0.375);
+  image(cookie, width * 0.775, height * 0.375 + scroll, width * 0.06, width * 0.06);
+  text("Bakery\nCost: " + str(bakeryPrice) + " Cookies\n1 CPS\nOwned: " + str(bakeryOwned), width * 0.83, height * 0.375 + scroll);
+
+  // Scroll bar
+  fill(200);
+  rectMode(CORNER);
+  stroke(0);
+  rect(width * 0.99, 0, width * 0.99, height);
+  noStroke();
+  fill(75);
+  rect(width * 0.99 + 2, 2 + scroll, width * 0.01 - 2, height * 0.1);
 }
 
 function shopCloseButtonHover() {
@@ -425,6 +435,11 @@ function keyPressed() {
       resetAlpha = 255; // This is used when drawing "Game Reset!"
     }
   }
+}
+
+function mouseWheel() {
+  scroll += event.delta/2;
+  scroll = constrain(scroll, 0, 1000);
 }
 
 function windowResized() {
