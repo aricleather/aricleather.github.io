@@ -10,7 +10,7 @@
 
 // GLOBAL VARIABLES
 // Game content
-let cookie, coin, oven, bakery, rightArrow; // Images
+let cookie, coin, oven, bakery, rightArrow, gameCursor; // Images
 let coinSound, popSound; // Sounds
 let gameFont; // Fonts
 let shopGraphic; // Graphics
@@ -32,20 +32,7 @@ let cookies = 0;
 let autoCookies = 0;
 let lastMillis = 0;
 let increments = 0;
-let shopItems = [
-  { name: "Oven",
-    text: "",
-    image: oven,
-    price: 10,
-    cps: 0.1,
-    owned: 0,},
-  { name: "Bakery",
-    text: "",
-    image: bakery,
-    price: 150,
-    cps: 1,
-    owned: 0,}
-];
+let shopItems;
 
 // Variables used for menu()
 let titleText = "Cookie Clicker"; // strings
@@ -69,6 +56,7 @@ function preload() {
   coin = loadImage("assets/coin.png");
   oven = loadImage("assets/oven.png");
   rightArrow = loadImage("assets/rightarrow.png");
+  gameCursor = loadImage("assets/cursor.png");
 
   // Sounds and fonts
   gameFont = loadFont("assets/gameFont.ttf");
@@ -82,6 +70,7 @@ function setup() {
   imageMode(CENTER);
   initVar();
   generateGraphics();
+  cursor(gameCursor);
 }
 
 function initVar() {
@@ -104,12 +93,28 @@ function initVar() {
     titleScreenCookie: width * 0.06,
     storeCoinScalar: width * 0.05,
     storeCloseScalar: width * 0.05,
-    ovenScalar: width * 0.0002,
     cookieGetScalar: width * 0.025,
   
     // Text based:
     textScalar: width / 1920,
   };
+  
+  shopItems = [
+    { name: "Oven",
+      text: "",
+      image: oven,
+      scalar: oven.width * width * 0.002,
+      price: 10,
+      cps: 0.1,
+      owned: 0,},
+    { name: "Bakery",
+      text: "",
+      image: bakery,
+      scalar: bakery.width * width * 0.002,
+      price: 150,
+      cps: 1,
+      owned: 0,}
+  ];
 }
 
 function generateGraphics() {
@@ -322,18 +327,30 @@ function displayShop() {
 
   // Text in shop() displays name of upgrade, cost, how many cookies per second given, and owned number
   // Oven
-  tint(enoughCookies(cookies, ovenPrice));
-  image(oven, width * 0.775, height * 0.125 + scroll, oven.width * scalars.ovenScalar, oven.height * scalars.ovenScalar);
+  // tint(enoughCookies(cookies, ovenPrice));
+  // image(oven, width * 0.775, height * 0.125 + scroll, oven.width * scalars.ovenScalar, oven.height * scalars.ovenScalar);
+  // textSize(15 * scalars.textScalar);
+  // textAlign(LEFT, CENTER);
+  // fill(0);
+  // noStroke();
+  // text("Oven\nCost: " + str(ovenPrice) + " Cookies\n0.1 CPS\nOwned: " + str(ovenOwned), width * 0.83, height * 0.125 + scroll);
+
+  // Bakery
+  // tint(enoughCookies(cookies, bakeryPrice));
+  // image(cookie, width * 0.775, height * 0.375 + scroll, width * 0.06, width * 0.06);
+  // text("Bakery\nCost: " + str(bakeryPrice) + " Cookies\n1 CPS\nOwned: " + str(bakeryOwned), width * 0.83, height * 0.375 + scroll);
+
+  let theItem;
   textSize(15 * scalars.textScalar);
   textAlign(LEFT, CENTER);
   fill(0);
   noStroke();
-  text("Oven\nCost: " + str(ovenPrice) + " Cookies\n0.1 CPS\nOwned: " + str(ovenOwned), width * 0.83, height * 0.125 + scroll);
-
-  // Bakery
-  tint(enoughCookies(cookies, bakeryPrice));
-  image(cookie, width * 0.775, height * 0.375 + scroll, width * 0.06, width * 0.06);
-  text("Bakery\nCost: " + str(bakeryPrice) + " Cookies\n1 CPS\nOwned: " + str(bakeryOwned), width * 0.83, height * 0.375 + scroll);
+  for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
+    theItem = shopItems[shopItem];
+    tint(enoughCookies(cookies, theItem.price));
+    image(theItem.image, width * 0.775, height * (shopItem + 1) * 0.125, theItem.scalar, theItem.scalar);
+    text(theItem.name + "\nCost: " + str(theItem.price) + " Cookies\n" + str(theItem.cps) + " CPS\nOwned: " + str(theItem.owned));
+  }
 
   // Scroll bar
   fill(200);
