@@ -71,7 +71,6 @@ function setup() {
   imageMode(CENTER);
   initVar();
   generateGraphics();
-  cursor(gameCursor);
 }
 
 function initVar() {
@@ -102,7 +101,7 @@ function initVar() {
   
   shopItems = [
     { name: "Oven",
-      text: "",
+      text: "Bake more\ncookies!",
       image: oven,
       width: oven.width * width * 0.0002,
       height: oven.height * width * 0.0002,
@@ -110,7 +109,7 @@ function initVar() {
       cps: 0.1,
       owned: 0,},
     { name: "Bakery",
-      text: "",
+      text: "Mmm, smells\ngood...",
       image: bakery,
       width: bakery.width * width * 0.0002,
       height: bakery.height * width * 0.0002,
@@ -132,7 +131,10 @@ function generateGraphics() {
 
 function draw() {
   background(30, 144, 255);
+  // cursor("assets/cursor.png");
   textSize(15);
+  fill(0);
+  textAlign(CENTER, CENTER);
   text(frameRate().toFixed(0), 20, 20);
   if (gameState === 0) {
     menu();
@@ -328,21 +330,7 @@ function displayShop() {
   image(shopGraphic, width * 0.7, 0);
   imageMode(CENTER);
 
-  // Text in shop() displays name of upgrade, cost, how many cookies per second given, and owned number
-  // Oven
-  // tint(enoughCookies(cookies, ovenPrice));
-  // image(oven, width * 0.775, height * 0.125 + scroll, oven.width * scalars.ovenScalar, oven.height * scalars.ovenScalar);
-  // textSize(15 * scalars.textScalar);
-  // textAlign(LEFT, CENTER);
-  // fill(0);
-  // noStroke();
-  // text("Oven\nCost: " + str(ovenPrice) + " Cookies\n0.1 CPS\nOwned: " + str(ovenOwned), width * 0.83, height * 0.125 + scroll);
-
-  // Bakery
-  // tint(enoughCookies(cookies, bakeryPrice));
-  // image(cookie, width * 0.775, height * 0.375 + scroll, width * 0.06, width * 0.06);
-  // text("Bakery\nCost: " + str(bakeryPrice) + " Cookies\n1 CPS\nOwned: " + str(bakeryOwned), width * 0.83, height * 0.375 + scroll);
-
+  // For each shop item, draw it and various data
   let theItem;
   textSize(15 * scalars.textScalar);
   textAlign(LEFT, CENTER);
@@ -351,11 +339,14 @@ function displayShop() {
   for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
     theItem = shopItems[shopItem];
     tint(enoughCookies(cookies, theItem.price));
-    image(theItem.image, width * 0.775, height * (2 * shopItem + 1) * 0.125, theItem.width, theItem.height);
-    text(theItem.name + "\nCost: " + str(theItem.price) + " Cookies\n" + str(theItem.cps) + " CPS\nOwned: " + str(theItem.owned));
+    image(theItem.image, width * 0.775, height * (2 * shopItem + 1) * 0.125 + scroll, theItem.width, theItem.height);
+    text(theItem.name + "\nCost: " + str(theItem.price) + " Cookies\n" + str(theItem.cps) + " CPS\nOwned: " + str(theItem.owned), width * 0.825, height * (2 * shopItem + 1) * 0.125 + scroll);
   }
 
+  textBox();
+
   // Scroll bar
+  strokeWeight(3);
   fill(200);
   rectMode(CORNER);
   stroke(0);
@@ -383,6 +374,29 @@ function enoughCookies(cookies, price) {
   }
 }
 
+function displayTextBox(theText, x, y) {
+  textAlign(LEFT, TOP);
+  textSize(15 * scalars.textScalar);
+  rectMode(CORNERS);
+  stroke(0);
+  strokeWeight(4);
+  fill(186, 211, 252);
+  rect(x - 150, y - 75, x, y);
+  noStroke();
+  fill(0);
+  text(theText, x - 145, y - 70);
+}
+
+function textBox() {
+  let theItem;
+  for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
+    theItem = shopItems[shopItem];
+    if (Math.abs(mouseX - width * 0.775) < theItem.width / 2 && Math.abs(mouseY - height * (2 * shopItem + 1) * 0.125 - scroll) < theItem.height / 2) {
+      displayTextBox(theItem.text, mouseX, mouseY);
+    }
+  }
+}
+
 function cookieFall() {
   tint(255, 80);
   image(cookie, 100, 100 - cookieFallAmount, width * 0.06, width * 0.06);
@@ -407,25 +421,18 @@ function mouseClicked() {
     }
 
     if (shopState === 1) {
-      // Oven
-      if (Math.abs(mouseX - width * 0.775) < oven.width * scalars.ovenScalar / 2 && Math.abs(mouseY - height * 0.1) < oven.width * scalars.ovenScalar / 2) {
-        if (cookies >= ovenPrice) {
-          cookies -= ovenPrice;
-          ovenOwned++;
-          autoCookies += 0.1;
-          coinSound.play();
+      let theItem;
+      for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
+        theItem = shopItems[shopItem];
+        if (Math.abs(mouseX - width * 0.775) < theItem.width / 2 && Math.abs(mouseY - height * (2 * shopItem + 1) * 0.125 - scroll) < theItem.height / 2) {
+          if(cookies >= theItem.price) {
+            theItem.owned++;
+            cookies -= theItem.price;
+            autoCookies += theItem.cps;
+          } 
         }
       }
-      // Bakery
-      else if (Math.abs(mouseX - width * 0.925) < width * 0.03 && Math.abs(mouseY - height * 0.1) < width * 0.03) {
-        if (cookies >= bakeryPrice) {
-          cookies -= bakeryPrice;
-          bakeryOwned++;
-          autoCookies += 1;
-          coinSound.play();
-        }
-      }
-      else if (Math.abs(mouseX - width * 0.67) < scalars.storeCloseScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCloseScalar / 2) {
+      if (Math.abs(mouseX - width * 0.67) < scalars.storeCloseScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCloseScalar / 2) {
         shopState = 0;
       }
       else {
