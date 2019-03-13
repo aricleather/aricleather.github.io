@@ -57,6 +57,7 @@ function preload() {
   oven = loadImage("assets/oven.png");
   rightArrow = loadImage("assets/rightarrow.png");
   gameCursor = loadImage("assets/cursor.png");
+  bakery = loadImage("assets/bakery.png");
 
   // Sounds and fonts
   gameFont = loadFont("assets/gameFont.ttf");
@@ -103,14 +104,16 @@ function initVar() {
     { name: "Oven",
       text: "",
       image: oven,
-      scalar: oven.width * width * 0.002,
+      width: oven.width * width * 0.0002,
+      height: oven.height * width * 0.0002,
       price: 10,
       cps: 0.1,
       owned: 0,},
     { name: "Bakery",
       text: "",
       image: bakery,
-      scalar: bakery.width * width * 0.002,
+      width: bakery.width * width * 0.0002,
+      height: bakery.height * width * 0.0002,
       price: 150,
       cps: 1,
       owned: 0,}
@@ -348,7 +351,7 @@ function displayShop() {
   for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
     theItem = shopItems[shopItem];
     tint(enoughCookies(cookies, theItem.price));
-    image(theItem.image, width * 0.775, height * (shopItem + 1) * 0.125, theItem.scalar, theItem.scalar);
+    image(theItem.image, width * 0.775, height * (2 * shopItem + 1) * 0.125, theItem.width, theItem.height);
     text(theItem.name + "\nCost: " + str(theItem.price) + " Cookies\n" + str(theItem.cps) + " CPS\nOwned: " + str(theItem.owned));
   }
 
