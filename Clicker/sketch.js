@@ -69,8 +69,31 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   textFont(gameFont); // Font used throughout whole game
   imageMode(CENTER);
+  initShopItems();
   initVar();
   generateGraphics();
+}
+
+function initShopItems() {
+  // Sets variables in shopItems. Width and height of each item defined in initVar() to allow for window resizing functionality
+  shopItems = [
+    { name: "Oven",
+      text: "Bake more\ncookies!",
+      image: oven,
+      width: 0,
+      height: 0,
+      price: 10,
+      cps: 0.1,
+      owned: 0,},
+    { name: "Bakery",
+      text: "Mmm, smells\ngood...",
+      image: bakery,
+      width: 0,
+      height: 0,
+      price: 150,
+      cps: 1,
+      owned: 0,}
+  ];
 }
 
 function initVar() {
@@ -83,6 +106,7 @@ function initVar() {
     // Animation based:
     menuAnimScalar: 1,
     menuAnimSpeed: 0.008,
+    scrollScalar: width * 0.0625,
 
     // Buttons:
     menuButtonW: width * 0.16,
@@ -98,25 +122,12 @@ function initVar() {
     // Text based:
     textScalar: width / 1920,
   };
-  
-  shopItems = [
-    { name: "Oven",
-      text: "Bake more\ncookies!",
-      image: oven,
-      width: oven.width * width * 0.0002,
-      height: oven.height * width * 0.0002,
-      price: 10,
-      cps: 0.1,
-      owned: 0,},
-    { name: "Bakery",
-      text: "Mmm, smells\ngood...",
-      image: bakery,
-      width: bakery.width * width * 0.0002,
-      height: bakery.height * width * 0.0002,
-      price: 150,
-      cps: 1,
-      owned: 0,}
-  ];
+  // Init width and height in shopItems
+  for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
+    let theItem = shopItems[shopItem];
+    theItem.width = width * theItem.image.width * 0.0002;
+    theItem.height = width * theItem.image.height * 0.0002;
+  }
 }
 
 function generateGraphics() {
@@ -339,21 +350,17 @@ function displayShop() {
   for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
     theItem = shopItems[shopItem];
     tint(enoughCookies(cookies, theItem.price));
-    image(theItem.image, width * 0.775, height * (2 * shopItem + 1) * 0.125 + scroll, theItem.width, theItem.height);
-    text(theItem.name + "\nCost: " + str(theItem.price) + " Cookies\n" + str(theItem.cps) + " CPS\nOwned: " + str(theItem.owned), width * 0.825, height * (2 * shopItem + 1) * 0.125 + scroll);
+    image(theItem.image, width * 0.775, height * (2 * shopItem + 1) * 0.125 - scroll * scalars.scrollScalar, theItem.width, theItem.height);
+    text(theItem.name + "\nCost: " + str(theItem.price) + " Cookies\n" + str(theItem.cps) + " CPS\nOwned: " + str(theItem.owned), width * 0.825, height * (2 * shopItem + 1) * 0.125 - scroll * scalars.scrollScalar);
   }
 
-  textBox();
-
   // Scroll bar
-  strokeWeight(3);
-  fill(200);
-  rectMode(CORNER);
-  stroke(0);
-  rect(width * 0.99, 0, width * 0.99, height);
   noStroke();
   fill(75);
-  rect(width * 0.99 + 2, 2 + scroll, width * 0.01 - 2, height * 0.1);
+  rectMode(CORNER);
+  rect(width * 0.99, scroll / 4 * height, width * 0.01, height/4);
+  
+  textBox();
 }
 
 function shopCloseButtonHover() {
@@ -375,6 +382,7 @@ function enoughCookies(cookies, price) {
 }
 
 function displayTextBox(theText, x, y) {
+  // Called from textBox(), displays a shop item's text attribute in a rectangle if hovered over
   textAlign(LEFT, TOP);
   textSize(15 * scalars.textScalar);
   rectMode(CORNERS);
@@ -388,10 +396,11 @@ function displayTextBox(theText, x, y) {
 }
 
 function textBox() {
+  // Call displayTextBox if user is hovering over a shop item
   let theItem;
   for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
     theItem = shopItems[shopItem];
-    if (Math.abs(mouseX - width * 0.775) < theItem.width / 2 && Math.abs(mouseY - height * (2 * shopItem + 1) * 0.125 - scroll) < theItem.height / 2) {
+    if (Math.abs(mouseX - width * 0.775) < theItem.width / 2 && Math.abs(mouseY - height * (2 * shopItem + 1) * 0.125 + scroll * scalars.scrollScalar) < theItem.height / 2) {
       displayTextBox(theItem.text, mouseX, mouseY);
     }
   }
@@ -424,11 +433,12 @@ function mouseClicked() {
       let theItem;
       for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
         theItem = shopItems[shopItem];
-        if (Math.abs(mouseX - width * 0.775) < theItem.width / 2 && Math.abs(mouseY - height * (2 * shopItem + 1) * 0.125 - scroll) < theItem.height / 2) {
+        if (Math.abs(mouseX - width * 0.775) < theItem.width / 2 && Math.abs(mouseY - height * (2 * shopItem + 1) * 0.125 + scroll * scalars.scrollScalar) < theItem.height / 2) {
           if(cookies >= theItem.price) {
             theItem.owned++;
             cookies -= theItem.price;
             autoCookies += theItem.cps;
+            coinSound.play();
           } 
         }
       }
@@ -457,16 +467,24 @@ function keyPressed() {
       // Resets game upon pressing "r" on keyboard. resetAlpha is used in mainGame() to draw "Game reset!" to screen which fades away
       cookies = 0;
       autoCookies = 0;
-      ovenOwned = 0;
-      bakeryOwned = 0;
+      for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
+        shopItems[shopItem].owned = 0;
+      }
       resetAlpha = 255; // This is used when drawing "Game Reset!"
     }
   }
 }
 
-function mouseWheel() {
-  scroll += event.delta/2;
-  scroll = constrain(scroll, 0, 1000);
+function mouseWheel(event) {
+  if (shopState === 1) {
+    if (event.delta > 0) {
+      scroll++;
+    }
+    else {
+      scroll--;
+    }
+    scroll = constrain(scroll, 0, 3);
+  }
 }
 
 function windowResized() {
