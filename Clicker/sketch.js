@@ -10,7 +10,7 @@
 
 // GLOBAL VARIABLES
 // Game content
-let cookie, coin, oven, bakery, rightArrow, gameCursor; // Images
+let cookie, coin, oven, bakery, rightArrow, gameCursor, clickUpgrade; // Images
 let coinSound, popSound; // Sounds
 let gameFont; // Fonts
 let shopGraphic; // Graphics
@@ -20,7 +20,7 @@ let scalars; // Scalars used throughout code definied in initVar()
 let cookieGetAlpha; // Alpha / transparency values
 let resetAlpha = 0; 
 let cookieGetX, cookieGetY; // Position values
-let cookieFallAmount = 0;
+let cookiesFalling = [];
 let scroll = 0;
 
 // Game states:
@@ -58,6 +58,7 @@ function preload() {
   rightArrow = loadImage("assets/rightarrow.png");
   gameCursor = loadImage("assets/cursor.png");
   bakery = loadImage("assets/bakery.png");
+  clickUpgrade = loadImage("assets/clickUpgrade.png");
 
   // Sounds and fonts
   gameFont = loadFont("assets/gameFont.ttf");
@@ -77,6 +78,14 @@ function setup() {
 function initShopItems() {
   // Sets variables in shopItems. Width and height of each item defined in initVar() to allow for window resizing functionality
   shopItems = [
+    { name: "Upgrade Click",
+      text: "Mo' cookies,\nmo' problems.",
+      image: clickUpgrade,
+      width: 0,
+      height: 0,
+      price: 1,
+      cps: 100,
+      owned: 0,},
     { name: "Oven",
       text: "Bake more\ncookies!",
       image: oven,
@@ -118,6 +127,7 @@ function initVar() {
     storeCoinScalar: width * 0.05,
     storeCloseScalar: width * 0.05,
     cookieGetScalar: width * 0.025,
+    fallingCookieScalar: 50,
   
     // Text based:
     textScalar: width / 1920,
@@ -162,11 +172,11 @@ function menu() { // gameState 0
 }
 
 function mainGame() { // gameState 1
-  cookiePop();
   incrementCookies();
+  cookiePop();
   displayGame();
   animateCookieGet();
-  if (shopState === 1) {
+  if (shopState) {
     shop();
   }
   else {
@@ -175,6 +185,8 @@ function mainGame() { // gameState 1
 }
 
 function displayGame() {
+  cookieFall();
+
   // Draws main cookie image to screen
   tint(255, 255);
   fill(0, 255);
@@ -345,13 +357,17 @@ function displayShop() {
   let theItem;
   textSize(15 * scalars.textScalar);
   textAlign(LEFT, CENTER);
-  fill(0);
+  rectMode(CENTER);
   noStroke();
   for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
     theItem = shopItems[shopItem];
+    fill(30, 70);
+    rect(width * 0.85, height * (2 * shopItem + 1) * 0.125 - scroll * scalars.scrollScalar, width * 0.3, height * 0.2);
+    fill(0);
     tint(enoughCookies(cookies, theItem.price));
-    image(theItem.image, width * 0.775, height * (2 * shopItem + 1) * 0.125 - scroll * scalars.scrollScalar, theItem.width, theItem.height);
+    image(theItem.image, width * 0.76, height * (2 * shopItem + 1) * 0.125 - scroll * scalars.scrollScalar, theItem.width, theItem.height);
     text(theItem.name + "\nCost: " + str(theItem.price) + " Cookies\n" + str(theItem.cps) + " CPS\nOwned: " + str(theItem.owned), width * 0.825, height * (2 * shopItem + 1) * 0.125 - scroll * scalars.scrollScalar);
+    
   }
 
   // Scroll bar
@@ -400,15 +416,36 @@ function textBox() {
   let theItem;
   for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
     theItem = shopItems[shopItem];
-    if (Math.abs(mouseX - width * 0.775) < theItem.width / 2 && Math.abs(mouseY - height * (2 * shopItem + 1) * 0.125 + scroll * scalars.scrollScalar) < theItem.height / 2) {
+    if (Math.abs(mouseX - width * 0.76) < theItem.width / 2 && Math.abs(mouseY - height * (2 * shopItem + 1) * 0.125 + scroll * scalars.scrollScalar) < theItem.height / 2) {
       displayTextBox(theItem.text, mouseX, mouseY);
     }
   }
 }
 
+function newFallingCookie() {
+  // Creates a new cookie object to be drawn with cookieFall(), called when mousePressed() on main cookie
+  let tempCookie = {
+    x: random(0, width),
+    y: -25,
+    grav: 0,
+  };
+  cookiesFalling.push(tempCookie);
+}
+
 function cookieFall() {
-  tint(255, 80);
-  image(cookie, 100, 100 - cookieFallAmount, width * 0.06, width * 0.06);
+  // For each object in cookiesFalling, draws a semi-transparent cookie that falls from top of screen
+  tint(255, 200);
+  let theCookie;
+  for(let i = 0; i < cookiesFalling.length; i++) {
+    theCookie = cookiesFalling[i];
+    theCookie.y += theCookie.grav;
+    theCookie.grav++;
+    image(cookie, theCookie.x, theCookie.y, scalars.fallingCookieScalar, scalars.fallingCookieScalar);
+    if (theCookie.y > height + scalars.fallingCookieScalar) {
+      // When cookie leaves screen, remove from list
+      cookiesFalling.splice(i, 1);
+    }
+  }
 }
 
 function mouseClicked() {
@@ -427,13 +464,14 @@ function mouseClicked() {
       scalars.clickScalar += 0.1;
       constrain(scalars.clickScalar, 1, 1.25);
       popSound.play();
+      newFallingCookie();
     }
 
     if (shopState === 1) {
       let theItem;
       for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
         theItem = shopItems[shopItem];
-        if (Math.abs(mouseX - width * 0.775) < theItem.width / 2 && Math.abs(mouseY - height * (2 * shopItem + 1) * 0.125 + scroll * scalars.scrollScalar) < theItem.height / 2) {
+        if (Math.abs(mouseX - width * 0.76) < theItem.width / 2 && Math.abs(mouseY - height * (2 * shopItem + 1) * 0.125 + scroll * scalars.scrollScalar) < theItem.height / 2) {
           if(cookies >= theItem.price) {
             theItem.owned++;
             cookies -= theItem.price;
