@@ -30,9 +30,23 @@ let shopState = 0;
 // Clicker game variables:
 let cookies = 0;
 let autoCookies = 0;
+let clickPower = 1;
 let lastMillis = 0;
 let increments = 0;
 let shopItems;
+let optionChosen = 1;
+let dialog = [
+  {
+    text: "Are you sure you want to reset?",
+    buttonText: [
+      "Yes", "No"
+    ],
+    buttonCalls: [
+      resetGame,
+      "Close"
+    ],
+  }
+];
 
 // Variables used for menu()
 let titleText = "Cookie Clicker"; // strings
@@ -80,11 +94,16 @@ function initShopItems() {
   shopItems = [
     { name: "Upgrade Click",
       text: "Mo' cookies,\nmo' problems.",
+      metaText: "cookies per click",
       image: clickUpgrade,
       width: 0,
       height: 0,
       price: 1,
-      cps: 100,
+      cps: 1,
+      func: function() {
+        clickPower += this.cps;
+        this.owned++;
+      },
       owned: 0,},
     { name: "Oven",
       text: "Bake more\ncookies!",
@@ -186,6 +205,9 @@ function mainGame() { // gameState 1
 
 function displayGame() {
   cookieFall();
+  if (optionChosen === 1) {
+    dialogBox(dialog[0]);
+  }
 
   // Draws main cookie image to screen
   tint(255, 255);
@@ -193,6 +215,7 @@ function displayGame() {
   image(cookie, width/2, height/2, scalars.mainCookieScalar * scalars.clickScalar, scalars.mainCookieScalar * scalars.clickScalar);
 
   // Draws cookie amount text to screen
+  noStroke();
   textFont(gameFont);
   textSize(40 * scalars.textScalar);
   textAlign(CENTER, CENTER);
@@ -355,6 +378,7 @@ function displayShop() {
 
   // For each shop item, draw it and various data
   let theItem;
+  let theText;
   textSize(15 * scalars.textScalar);
   textAlign(LEFT, CENTER);
   rectMode(CENTER);
@@ -366,8 +390,13 @@ function displayShop() {
     fill(0);
     tint(enoughCookies(cookies, theItem.price));
     image(theItem.image, width * 0.76, height * (2 * shopItem + 1) * 0.125 - scroll * scalars.scrollScalar, theItem.width, theItem.height);
-    text(theItem.name + "\nCost: " + str(theItem.price) + " Cookies\n" + str(theItem.cps) + " CPS\nOwned: " + str(theItem.owned), width * 0.825, height * (2 * shopItem + 1) * 0.125 - scroll * scalars.scrollScalar);
-    
+    if(typeof theItem.metaText === "undefined") {
+      theText = theItem.name + "\nCost: " + str(theItem.price) + " Cookies\n" + str(theItem.cps) + " CPS\nOwned: " + str(theItem.owned);
+    }
+    else {
+      theText = theItem.name + "\nCost: " + str(theItem.price) + " Cookies\n" + str(theItem.cps) + " " + theItem.metaText + "\nOwned: " + str(theItem.owned);
+    }
+    text(theText, width * 0.825, height * (2 * shopItem + 1) * 0.125 - scroll * scalars.scrollScalar);
   }
 
   // Scroll bar
@@ -460,7 +489,7 @@ function mouseClicked() {
   else {
     // Increment cookie counter on click and begin "popping" animation
     if (Math.abs(mouseX - width / 2) < scalars.mainCookieScalar / 2 && Math.abs(mouseY - height / 2) < scalars.mainCookieScalar / 2) {
-      cookies++;
+      cookies += clickPower;
       scalars.clickScalar += 0.1;
       constrain(scalars.clickScalar, 1, 1.25);
       popSound.play();
@@ -473,10 +502,15 @@ function mouseClicked() {
         theItem = shopItems[shopItem];
         if (Math.abs(mouseX - width * 0.76) < theItem.width / 2 && Math.abs(mouseY - height * (2 * shopItem + 1) * 0.125 + scroll * scalars.scrollScalar) < theItem.height / 2) {
           if(cookies >= theItem.price) {
-            theItem.owned++;
-            cookies -= theItem.price;
-            autoCookies += theItem.cps;
-            coinSound.play();
+            if (typeof theItem.func === "undefined") {
+              theItem.owned++;
+              cookies -= theItem.price;
+              autoCookies += theItem.cps;
+              coinSound.play();
+            } 
+            else {
+              theItem.func();
+            }
           } 
         }
       }
@@ -499,18 +533,49 @@ function mouseClicked() {
   }
 }
 
+function dialogBox(dialogObject) {
+  rectMode(CORNERS);
+  stroke(0);
+  strokeWeight(4);
+  fill(186, 211, 252);
+  rect(width * 0.3, height * 0.1, width * 0.7, height * 0.3);
+  let theWidth = width * 0.7 - width * 0.3;
+  let options = dialogObject.buttonText.length;
+  rectMode(CENTER);
+  for(let i = 0; i < options; i++) {
+    noFill();
+    stroke(0);
+    rect(width * 0.3 + theWidth * ((i + 1) / (options + 1)), height * 0.27, 60, 30);
+    fill(0);
+    noStroke();
+    text(dialogObject.buttonText[i], width * 0.3 + theWidth * ((i + 1) / (options + 1)), height * 0.27);
+  }
+  for(let i = 0; i < options; i++) {
+    if (mouseIsPressed && Math.abs(mouseX - (width * 0.3 + theWidth * ((i + 1) / (options + 1))) <= 30 && Math.abs(mouseY - height * 0.25) <= 15)) {
+      if (dialogObject.buttonCalls[i] !== "Close") {
+        dialogObject.buttonCalls[i]();
+      }
+      optionChosen = 0;
+    }
+  }
+}
+
 function keyPressed() {
   if (gameState === 1) {
     if (key === "r") {
       // Resets game upon pressing "r" on keyboard. resetAlpha is used in mainGame() to draw "Game reset!" to screen which fades away
-      cookies = 0;
-      autoCookies = 0;
-      for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
-        shopItems[shopItem].owned = 0;
-      }
-      resetAlpha = 255; // This is used when drawing "Game Reset!"
-    }
+      resetGame();
+    }  
   }
+}
+
+function resetGame() {
+  cookies = 0;
+  autoCookies = 0;
+  for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
+    shopItems[shopItem].owned = 0;
+  }
+  resetAlpha = 255; // This is used when drawing "Game Reset!"
 }
 
 function mouseWheel(event) {
