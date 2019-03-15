@@ -18,7 +18,7 @@ let shopGraphic; // Graphics
 // Position / scaling variables
 let scalars; // Scalars used throughout code definied in initVar()
 let cookieGetAlpha; // Alpha / transparency values
-let resetAlpha = 0; 
+let messageAlpha = 0; 
 let cookieGetX, cookieGetY; // Position values
 let cookiesFalling = [];
 let scroll = 0;
@@ -26,6 +26,7 @@ let scroll = 0;
 // Game states:
 let gameState = 0;
 let shopState = 0;
+let dialogState = 0;
 
 // Clicker game variables:
 let cookies = 0;
@@ -34,17 +35,42 @@ let clickPower = 1;
 let lastMillis = 0;
 let increments = 0;
 let shopItems;
-let optionChosen = 1;
 let dialog = [
+  // Each element has text, button options, and calls to do on various button presses. Drawn by dialogBox(), the one being drawn tracked by dialogState
   {
-    text: "Are you sure you want to reset?",
+    text: "Are you sure you\nwant to reset?",
     buttonText: [
       "Yes", "No"
     ],
     buttonCalls: [
       resetGame,
-      "Close"
+      closeDialog,
     ],
+  },
+  {
+    text: "Go back to\nmain menu?",
+    buttonText: [
+      "Yes", "No"
+    ],
+    buttonCalls: [
+      function() {
+        gameState = 0;
+      },
+      closeDialog
+    ]
+  },
+  {
+    text: "Cheat?",
+    buttonText: [
+      "Yes", "No, duh"
+    ],
+    buttonCalls: [
+      function() {
+        cookies += 1000000;
+        newMessage("Filthy cheater!", 5);
+      },
+      closeDialog
+    ]
   }
 ];
 
@@ -62,6 +88,8 @@ let i, j;
 
 let cookieGetText;
 let tempText;
+let globalMessage;
+let globalMessageDecay;
 
 // Load content used in game
 function preload() {
@@ -151,6 +179,7 @@ function initVar() {
     // Text based:
     textScalar: width / 1920,
   };
+
   // Init width and height in shopItems
   for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
     let theItem = shopItems[shopItem];
@@ -205,9 +234,6 @@ function mainGame() { // gameState 1
 
 function displayGame() {
   cookieFall();
-  if (optionChosen === 1) {
-    dialogBox(dialog[0]);
-  }
 
   // Draws main cookie image to screen
   tint(255, 255);
@@ -222,12 +248,8 @@ function displayGame() {
   text(str(Math.floor(cookies)) + " Cookies" , width / 2, height * 0.9);
 
   // "Game reset!" text when r clicked on keyboard
-  if (resetAlpha > 0) {
-    textSize(50 * scalars.textScalar);
-    fill(0, resetAlpha);
-    text("Game reset!", width / 2, height * 0.2);
-    resetAlpha -= 8.5;
-  }
+  displayMessage();
+  dialogBox();
 }
 
 function cookiePop() {
@@ -405,7 +427,25 @@ function displayShop() {
   rectMode(CORNER);
   rect(width * 0.99, scroll / 4 * height, width * 0.01, height/4);
   
+  displayMessage();
   textBox();
+}
+
+function newMessage(message, decay) {
+  globalMessage = message;
+  messageAlpha = 255;
+  globalMessageDecay = millis() + decay * 1000;
+}
+
+function displayMessage() {
+  if (messageAlpha > 0) {
+    textSize(50 * scalars.textScalar);
+    fill(0, messageAlpha);
+    text(globalMessage, width / 2, height * 0.2);
+    if(millis() > globalMessageDecay) {
+      messageAlpha -= 8.5;
+    }
+  }
 }
 
 function shopCloseButtonHover() {
@@ -487,85 +527,120 @@ function mouseClicked() {
     }
   }
   else {
-    // Increment cookie counter on click and begin "popping" animation
-    if (Math.abs(mouseX - width / 2) < scalars.mainCookieScalar / 2 && Math.abs(mouseY - height / 2) < scalars.mainCookieScalar / 2) {
-      cookies += clickPower;
-      scalars.clickScalar += 0.1;
-      constrain(scalars.clickScalar, 1, 1.25);
-      popSound.play();
-      newFallingCookie();
-    }
+    if(dialogState === 0) {
+      // Increment cookie counter on click and begin "popping" animation
+      if (Math.abs(mouseX - width / 2) < scalars.mainCookieScalar / 2 && Math.abs(mouseY - height / 2) < scalars.mainCookieScalar / 2) {
+        cookies += clickPower;
+        scalars.clickScalar += 0.1;
+        constrain(scalars.clickScalar, 1, 1.25);
+        popSound.play();
+        newFallingCookie();
+      }
 
-    if (shopState === 1) {
-      let theItem;
-      for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
-        theItem = shopItems[shopItem];
-        if (Math.abs(mouseX - width * 0.76) < theItem.width / 2 && Math.abs(mouseY - height * (2 * shopItem + 1) * 0.125 + scroll * scalars.scrollScalar) < theItem.height / 2) {
-          if(cookies >= theItem.price) {
-            if (typeof theItem.func === "undefined") {
-              theItem.owned++;
-              cookies -= theItem.price;
-              autoCookies += theItem.cps;
-              coinSound.play();
+      if (shopState === 1) {
+        let theItem;
+        for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
+          theItem = shopItems[shopItem];
+          if (Math.abs(mouseX - width * 0.76) < theItem.width / 2 && Math.abs(mouseY - height * (2 * shopItem + 1) * 0.125 + scroll * scalars.scrollScalar) < theItem.height / 2) {
+            if(cookies >= theItem.price) {
+              if (typeof theItem.func === "undefined") {
+                theItem.owned++;
+                cookies -= theItem.price;
+                autoCookies += theItem.cps;
+                coinSound.play();
+              } 
+              else {
+                theItem.func();
+              }
             } 
-            else {
-              theItem.func();
-            }
-          } 
+          }
+        }
+        if (Math.abs(mouseX - width * 0.67) < scalars.storeCloseScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCloseScalar / 2) {
+          shopState = 0;
+        }
+        else {
+          null;
         }
       }
-      if (Math.abs(mouseX - width * 0.67) < scalars.storeCloseScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCloseScalar / 2) {
-        shopState = 0;
-      }
+      // Opens shop when arrow clicked
       else {
-        null;
-      }
-    }
-    // Opens shop when arrow clicked
-    else {
-      if (Math.abs(mouseX - width * 0.97) < scalars.storeCoinScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCoinScalar / 2) {
-        shopState = 1;
-      }
-      else {
-        null;
+        if (Math.abs(mouseX - width * 0.97) < scalars.storeCoinScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCoinScalar / 2) {
+          shopState = 1;
+        }
+        else {
+          null;
+        }
       }
     }
   }
 }
 
-function dialogBox(dialogObject) {
-  rectMode(CORNERS);
-  stroke(0);
-  strokeWeight(4);
-  fill(186, 211, 252);
-  rect(width * 0.3, height * 0.1, width * 0.7, height * 0.3);
-  let theWidth = width * 0.7 - width * 0.3;
-  let options = dialogObject.buttonText.length;
-  rectMode(CENTER);
-  for(let i = 0; i < options; i++) {
-    noFill();
+function dialogBox() {
+  if(dialogState > 0) {
+    // Takes a dialog object from dialog, displays it's text and it's options, runs option based on user selection
+    // Variables
+    let dialogObject = dialog[dialogState - 1];
+    let xPos;
+    let options = dialogObject.buttonText.length;
+    let optionHeight = height * 0.045;
+    let optionWidth = (width * 0.7 - width * 0.3) * 0.15;
+
+    //Formatting
+    rectMode(CORNERS);
     stroke(0);
-    rect(width * 0.3 + theWidth * ((i + 1) / (options + 1)), height * 0.27, 60, 30);
+    strokeWeight(4);
+    fill(186, 211, 252);
+    // Main box
+    rect(width * 0.3, height * 0.1, width * 0.7, height * 0.3);
+    rectMode(CENTER);
+    // Text in main box
+    textSize(scalars.textScalar * 40);
+    textAlign(CENTER, CENTER);
     fill(0);
     noStroke();
-    text(dialogObject.buttonText[i], width * 0.3 + theWidth * ((i + 1) / (options + 1)), height * 0.27);
-  }
-  for(let i = 0; i < options; i++) {
-    if (mouseIsPressed && Math.abs(mouseX - (width * 0.3 + theWidth * ((i + 1) / (options + 1))) <= 30 && Math.abs(mouseY - height * 0.25) <= 15)) {
-      if (dialogObject.buttonCalls[i] !== "Close") {
+    text(dialogObject.text, width * 0.5, height * 0.18);
+
+    textSize(scalars.textScalar * 23);
+    for(let i = 0; i < options; i++) {
+      // More formatting
+      xPos = width * 0.3 + (width * 0.7 - width * 0.3) * ((i + 1) / (options + 1));
+      noFill();
+      stroke(0);
+      // The smaller boxes
+      rect(xPos, height * 0.27, optionWidth, optionHeight);
+      fill(0);
+      noStroke();
+      text(dialogObject.buttonText[i], xPos, height * 0.27);
+    }
+    // If we are clicking on an option, run the function
+    for(let i = 0; i < options; i++) {
+      xPos = width * 0.3 + (width * 0.7 - width * 0.3) * ((i + 1) / (options + 1));
+      if (mouseIsPressed && Math.abs(mouseX - xPos) <= optionWidth / 2 && Math.abs(mouseY - height * 0.27) <= optionHeight / 2) {
         dialogObject.buttonCalls[i]();
+        dialogState = 0;
       }
-      optionChosen = 0;
     }
   }
+}
+
+function closeDialog() {
+  dialogState = 0;
 }
 
 function keyPressed() {
-  if (gameState === 1) {
-    if (key === "r") {
-      // Resets game upon pressing "r" on keyboard. resetAlpha is used in mainGame() to draw "Game reset!" to screen which fades away
-      resetGame();
-    }  
+  if (dialogState === 0) {
+    if (gameState === 1) {
+      if (key === "r") {
+        // Resets game upon pressing "r" on keyboard. resetAlpha is used in mainGame() to draw "Game reset!" to screen which fades away
+        dialogState = 1;
+      }  
+      else if (key === "m") {
+        dialogState = 2;
+      }
+      else if (key === "c") {
+        dialogState = 3;
+      }
+    }
   }
 }
 
@@ -575,7 +650,8 @@ function resetGame() {
   for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
     shopItems[shopItem].owned = 0;
   }
-  resetAlpha = 255; // This is used when drawing "Game Reset!"
+  messageAlpha = 255; // This is used when drawing "Game Reset!"
+  newMessage("Game reset!", 1);
 }
 
 function mouseWheel(event) {
@@ -593,4 +669,5 @@ function mouseWheel(event) {
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   initVar();
+  generateGraphics();
 }
