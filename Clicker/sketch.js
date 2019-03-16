@@ -16,7 +16,7 @@ let gameFont; // Fonts
 let shopGraphic; // Graphics
 
 // Position / scaling variables
-let scalars; // Scalars used throughout code definied in initVar()
+let scalars; // Scalars used throughout code definied in initScalars()
 let cookieGetAlpha; // Alpha / transparency values
 let messageAlpha = 0; 
 let cookieGetX, cookieGetY; // Position values
@@ -35,44 +35,7 @@ let clickPower = 1;
 let lastMillis = 0;
 let increments = 0;
 let shopItems;
-let dialog = [
-  // Each element has text, button options, and calls to do on various button presses. Drawn by dialogBox(), the one being drawn tracked by dialogState
-  {
-    text: "Are you sure you\nwant to reset?",
-    buttonText: [
-      "Yes", "No"
-    ],
-    buttonCalls: [
-      resetGame,
-      closeDialog,
-    ],
-  },
-  {
-    text: "Go back to\nmain menu?",
-    buttonText: [
-      "Yes", "No"
-    ],
-    buttonCalls: [
-      function() {
-        gameState = 0;
-      },
-      closeDialog
-    ]
-  },
-  {
-    text: "Cheat?",
-    buttonText: [
-      "Yes", "No, duh"
-    ],
-    buttonCalls: [
-      function() {
-        cookies += 1000000;
-        newMessage("Filthy cheater!", 5);
-      },
-      closeDialog
-    ]
-  }
-];
+let dialog;
 
 // Variables used for menu()
 let titleText = "Cookie Clicker"; // strings
@@ -112,21 +75,21 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   textFont(gameFont); // Font used throughout whole game
   imageMode(CENTER);
-  initShopItems();
   initVar();
+  initScalars();
   generateGraphics();
 }
 
-function initShopItems() {
-  // Sets variables in shopItems. Width and height of each item defined in initVar() to allow for window resizing functionality
+function initVar() {
+  // Sets variables in shopItems. Width and height of each item defined in initScalars() to allow for window resizing functionality
   shopItems = [
     { name: "Upgrade Click",
       text: "Mo' cookies,\nmo' problems.",
-      metaText: "cookies per click",
+      metaText: "cookie(s) per click",
       image: clickUpgrade,
       width: 0,
       height: 0,
-      price: 1,
+      price: 100,
       cps: 1,
       func: function() {
         clickPower += this.cps;
@@ -150,9 +113,34 @@ function initShopItems() {
       cps: 1,
       owned: 0,}
   ];
+  // Each element has text, button options, and calls to do on various button presses. Drawn by dialogBox(), the one being drawn tracked by dialogState
+  dialog = [
+    {
+      text: "Are you sure you want to reset?",
+      buttonText: [
+        "Yes", "No"
+      ],
+      buttonCalls: [
+        resetGame,
+        closeDialog,
+      ],
+    },
+    {
+      text: "Go back to main menu?",
+      buttonText: [
+        "Yes", "No"
+      ],
+      buttonCalls: [
+        function() {
+          gameState = 0;
+        },
+        closeDialog
+      ]
+    },
+  ];
 }
 
-function initVar() {
+function initScalars() {
   scalars = {
     // Click or hover based:
     clickScalar: 1,
@@ -208,8 +196,11 @@ function draw() {
   if (gameState === 0) {
     menu();
   } 
-  else {
+  else if (gameState === 1) {
     mainGame();
+  }
+  else {
+    displayOptions();
   }
 }
 
@@ -249,7 +240,9 @@ function displayGame() {
 
   // "Game reset!" text when r clicked on keyboard
   displayMessage();
-  dialogBox();
+  if(dialogState) {
+    dialogBox(dialog[dialogState - 1]);
+  }
 }
 
 function cookiePop() {
@@ -374,6 +367,16 @@ function menuButtonHover() {
   }
   else {
     hoverFillOptions = 200;
+  }
+}
+
+function displayOptions() {
+  textSize(50);
+  text("Nothing here yet!", width * 0.5, height * 0.2);
+  textSize(25);
+  text("(Press 'm' to go back)", width * 0.5, height * 0.25);
+  if(dialogState) {
+    dialogBox(dialog[dialogState - 1]);
   }
 }
 
@@ -523,10 +526,10 @@ function mouseClicked() {
       gameState = 1;
     }
     if (Math.abs(mouseX - width / 2) < scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2 - height * 0.12) < scalars.menuButtonH / 2) {
-      gameState = 1;
+      gameState = 2;
     }
   }
-  else {
+  else if (gameState === 1) {
     if(dialogState === 0) {
       // Increment cookie counter on click and begin "popping" animation
       if (Math.abs(mouseX - width / 2) < scalars.mainCookieScalar / 2 && Math.abs(mouseY - height / 2) < scalars.mainCookieScalar / 2) {
@@ -575,47 +578,68 @@ function mouseClicked() {
   }
 }
 
-function dialogBox() {
-  if(dialogState > 0) {
+function newDialogBox(option) {
+  if(typeof dialog[option - 1].formatted === "undefined") {
+    // Prepares variables in dialogBox object for dialogBox(), text formatting and stuff
+    let whichDialog = dialog[option - 1];
+    whichDialog.text = calculateTextSize(whichDialog.text, width * 0.4, scalars.textScalar * 40);
+    for(let i = 0; i < whichDialog.buttonText.length; i++) {
+      whichDialog.buttonText[i] = calculateTextSize(whichDialog.buttonText[i], width * 0.06, scalars.textScalar * 23);
+    }
+    dialog[option - 1].formatted = true;
+  }
+  messageAlpha = 0;
+  dialogState = option;
+}
+
+function dialogBox(dialogObject) {
+  if(dialogState) {
     // Takes a dialog object from dialog, displays it's text and it's options, runs option based on user selection
     // Variables
-    let dialogObject = dialog[dialogState - 1];
     let xPos;
+    let dWidth = width * 0.4;
+    let dHeight = height * 0.2;
     let options = dialogObject.buttonText.length;
     let optionHeight = height * 0.045;
-    let optionWidth = (width * 0.7 - width * 0.3) * 0.15;
+    let optionWidth = width * 0.06;
+    
 
     //Formatting
-    rectMode(CORNERS);
+    rectMode(CENTER);
     stroke(0);
     strokeWeight(4);
     fill(186, 211, 252);
     // Main box
-    rect(width * 0.3, height * 0.1, width * 0.7, height * 0.3);
-    rectMode(CENTER);
+    rect(width * 0.5, height * 0.2, dWidth, dHeight);
     // Text in main box
     textSize(scalars.textScalar * 40);
     textAlign(CENTER, CENTER);
     fill(0);
     noStroke();
-    text(dialogObject.text, width * 0.5, height * 0.18);
+    text(dialogObject.text, width * 0.5, height * 0.17);
 
     textSize(scalars.textScalar * 23);
     for(let i = 0; i < options; i++) {
       // More formatting
-      xPos = width * 0.3 + (width * 0.7 - width * 0.3) * ((i + 1) / (options + 1));
-      noFill();
+      xPos = width * 0.3 + dWidth * ((i + 1) / (options + 1));
+      if(Math.abs(mouseX - xPos) <= optionWidth / 2 && Math.abs(mouseY - height * 0.26) <= optionHeight / 2) {
+        fill(150);
+      }
+      else {
+        fill(200);
+      }
       stroke(0);
       // The smaller boxes
-      rect(xPos, height * 0.27, optionWidth, optionHeight);
+      rect(xPos, height * 0.26, optionWidth, optionHeight);
       fill(0);
       noStroke();
-      text(dialogObject.buttonText[i], xPos, height * 0.27);
+      text(dialogObject.buttonText[i], xPos, height * 0.26);
     }
+
     // If we are clicking on an option, run the function
     for(let i = 0; i < options; i++) {
-      xPos = width * 0.3 + (width * 0.7 - width * 0.3) * ((i + 1) / (options + 1));
-      if (mouseIsPressed && Math.abs(mouseX - xPos) <= optionWidth / 2 && Math.abs(mouseY - height * 0.27) <= optionHeight / 2) {
+      xPos = width * 0.3 + dWidth * ((i + 1) / (options + 1));
+      if (mouseIsPressed && Math.abs(mouseX - xPos) <= optionWidth / 2 && Math.abs(mouseY - height * 0.26) <= optionHeight / 2) {
         dialogObject.buttonCalls[i]();
         dialogState = 0;
       }
@@ -627,18 +651,36 @@ function closeDialog() {
   dialogState = 0;
 }
 
+function calculateTextSize(theString, theWidth, theSize) {
+  // Many functions require the ability to break text in the right location so it doesn't go "out of bounds."
+  // This function returns an edited string with line breaks that fit into the specified width given the text size
+  theString = theString.split(" ");
+  let widthCounter = 0;
+  let returnString = "";
+  textSize(theSize);
+  for(let i = 0; i < theString.length; i++) {
+    widthCounter += textWidth(theString[i] + " ");
+    if(widthCounter >= theWidth) {
+      returnString += "\n" + theString[i];
+      widthCounter = textWidth(theString[i]);
+    } 
+    else {
+      returnString += " " + theString[i];
+    }
+  }
+  return returnString.trim();
+}
+
+
 function keyPressed() {
   if (dialogState === 0) {
-    if (gameState === 1) {
-      if (key === "r") {
+    if (gameState === 1 || gameState === 2) {
+      if (key === "r" && gameState === 1) {
         // Resets game upon pressing "r" on keyboard. resetAlpha is used in mainGame() to draw "Game reset!" to screen which fades away
-        dialogState = 1;
+        newDialogBox(1);
       }  
       else if (key === "m") {
-        dialogState = 2;
-      }
-      else if (key === "c") {
-        dialogState = 3;
+        newDialogBox(2);
       }
     }
   }
@@ -668,6 +710,6 @@ function mouseWheel(event) {
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  initVar();
+  initScalars();
   generateGraphics();
 }
