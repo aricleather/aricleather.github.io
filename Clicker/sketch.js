@@ -15,6 +15,7 @@ class GameObject {
     this.resize = function(x, y, width = 0, height = 0) {
       this.x = x;
       this.y = y;
+      this.mouse;
       if(width) {
         this.width = width;
       }
@@ -40,7 +41,6 @@ class GameObject {
 class Buttons extends GameObject {
   constructor(x, y, width, height) {
     super(x, y, width, height);
-    this.mouse;
     this.color = 200;
     this.run = function() {
       // When a Button is run, calculate if mouse is on top, draw the rectangle around it, fill it in with
@@ -83,10 +83,6 @@ class Button extends Buttons {
     // This class is the one used to construct a complete button, taking in x coord, y coord, width, height
     // Text of button, textSize (which will be automated later), and the function to run on click of button
     super(x, y, width, height);
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
     this.text = text;
     this.tSize = tSize;
     this.clicked = clicked;
@@ -96,7 +92,6 @@ class Button extends Buttons {
 class ImageObjects extends GameObject {
   constructor(x, y, width, height) {
     super(x, y, width, height);
-    this.mouse;
     this.run = function() {
       // Image objects when run() draw their image to the screen with specified x, y, width, height
       this.calcMouse();
@@ -150,7 +145,7 @@ class ShopObject extends ImageObject {
     this.position = shopNumber;
     this.owned = 0;
     this.rectX = width * 0.85; // Center of rectangle behind shop item
-    this.Y = height * (2 * this.position + 1) * 0.125; // Height of this particular shop item
+    this.y = height * (2 * this.position + 1) * 0.125; // Height of this particular shop item
     this.textX = width * 0.825; // Where text is drawn (aligned left)
     this.tSize = 15 * scalars.textScalar;
     // This just keeps track of order in the shop, so that the next shopObject construction knows it comes after
@@ -161,6 +156,7 @@ class ShopObject extends ImageObject {
         autoCookies += cps;
         cookies -= price;
         coinSound.play();
+        this.owned++;
         this.updateText();
       }
     };
@@ -170,11 +166,11 @@ class ShopObject extends ImageObject {
       // or not the player has enough cookies
       rectMode(CENTER);
       fill(30, 70);
-      rect(this.rectX, this.Y, width * 0.3, height * 0.2);
+      rect(this.rectX, this.y, width * 0.3, height * 0.2);
       textAlign(LEFT, CENTER);
       fill(0);
       textSize(this.tSize);
-      text(this.text, this.textX, this.Y);
+      text(this.text, this.textX, this.y);
       tint(enoughCookies(cookies, this.price));
     };
     this.updateText = function() {
@@ -745,23 +741,6 @@ function cookieFall() {
 function mouseClicked() {
   if (gameState === 1) {
     if (shopState === 1) {
-      let theItem;
-      for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
-        theItem = shopItems[shopItem];
-        if (Math.abs(mouseX - width * 0.76) < theItem.width / 2 && Math.abs(mouseY - height * (2 * shopItem + 1) * 0.125 + scroll * scalars.scrollScalar) < theItem.height / 2) {
-          if(cookies >= theItem.price) {
-            if (typeof theItem.func === "undefined") {
-              theItem.owned++;
-              cookies -= theItem.price;
-              autoCookies += theItem.cps;
-              coinSound.play();
-            } 
-            else {
-              theItem.func();
-            }
-          } 
-        }
-      }
       if (Math.abs(mouseX - width * 0.67) < scalars.storeCloseScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCloseScalar / 2) {
         shopState = 0;
       }
