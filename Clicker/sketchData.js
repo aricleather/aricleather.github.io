@@ -8,181 +8,8 @@
 // - My game can successfully handle window resizing, in terms of scaling and canvas
 // - My game incorporates sound effects
 
-class Buttons {
-  constructor() {
-    this.color = 200;
-    this.run = function() {
-      stroke(0);
-      strokeWeight(3);
-      fill(this.color);
-      rectMode(CENTER);
-      rect(this.x, this.y, this.width, this.height);
-      noStroke();
-      fill(0);
-      textSize(this.tSize);
-      textAlign(CENTER, CENTER);
-      text(this.text, this.x, this.y);
-      this.mouseHover(mouseX, mouseY);
-      this.checkClicked(mouseX, mouseY);
-    };
-    this.mouseHover = (mX, mY) => {
-      if(Math.abs(mX - this.x) <= this.width / 2 && Math.abs(mY - this.y) <= this.height / 2) {
-        this.color = 150;
-      }
-      else {
-        this.color = 200;
-      }
-    };
-    this.checkClicked = (mX, mY) => {
-      if(Math.abs(mX - this.x) <= this.width / 2 && Math.abs(mY - this.y) <= this.height / 2 && mouseIsPressed) {
-        this.clicked();
-      }
-    };
-  }
-}
-
-class Button extends Buttons {
-  constructor(x, y, width, height, text, tSize, clicked) {
-    super();
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-    this.text = text;
-    this.tSize = tSize;
-    this.clicked = clicked;
-  }
-}
-
-class imageObjects {
-  constructor() {
-    this.mouse;
-    this.alreadyClicked = false;
-    this.run = function() {
-      this.mouse = Math.abs(mouseX - this.x) <= this.width / 2 && Math.abs(mouseY - this.y) <= this.height / 2;
-      tint(255, 255);
-      fill(0, 255);
-      if(typeof this.extendRun === "function") {
-        this.extendRun();
-      }
-      image(this.image, this.x, this.y, this.width, this.height);
-      if(mouseIsPressed && this.mouse && !this.alreadyClicked) {
-        this.clicked();
-        this.alreadyClicked = true;
-      }
-      if(!mouseIsPressed) {
-        this.alreadyClicked = false;
-      }
-    };
-  }
-}
-
-class imageObject extends imageObjects {
-  constructor(x, y, width, height, image, clicked, extendRun = 0) {
-    super();
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-    this.image = image;
-    this.clicked = clicked;
-    this.extendRun = extendRun;
-  }
-}
-
-class shopObject extends imageObject {
-  constructor(objWidth, objHeight, image, name, price, cps) {
-    super(width * 0.76, height * (2 * shopNumber + 1) * 0.125, objWidth, objHeight, image, () => this.clicked(), () => this.extendRun());
-    // Vars
-    this.name = name;
-    this.price = price;
-    this.cps = cps;
-    this.position = shopNumber;
-    this.owned = 0;
-    this.rectX = width * 0.85;
-    this.Y = height * (2 * this.position + 1) * 0.125;
-    this.textX = width * 0.825;
-    this.tSize = 15 * scalars.textScalar;
-    // This just keeps track of order in the shop
-    shopNumber++;
-    this.clicked = function() {
-      if(cookies >= this.price) {
-        autoCookies += cps;
-        cookies -= price;
-        coinSound.play();
-      }
-    };
-    this.extendRun = function() {
-      rectMode(CENTER);
-      fill(30, 70);
-      rect(this.rectX, this.Y, width * 0.3, height * 0.2);
-      textAlign(LEFT, CENTER);
-      fill(0);
-      textSize(this.tSize);
-      text(this.text, this.textX, this.Y);
-      tint(enoughCookies(cookies, this.price));
-    };
-    this.updateText = function() {
-      this.text = this.name + "\nCost: " + str(this.price) + " Cookies\n" + str(this.cps) + " CPS\nOwned: " + str(this.owned);
-    };
-    this.updateText();
-  }
-}
-
-let titleStartButton;
-let titleOptionsButton;
-let mainCookie;
-let bakeryObj, ovenObj;
-let shopNumber = 0;
-
-function initObjects() {
-  // Buttons
-  titleStartButton = new Button(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH, "Start", 30, function() {
-    gameState = 1; // Defines "start" menu button, on click switches to gameState 1 (mainGame())
-  });
-  titleOptionsButton = new Button(width / 2, height * 0.62, scalars.menuButtonW, scalars.menuButtonH, "Options", 30, function() { // Options button on main menu
-    gameState = 2; // Defines "options" menu button, on click switches to gameState 2 (mainGame())
-  });
-
-  // Image objects
-  // Main cookie object. On click, cookieIncrement() and increase width and height of cookie to create popping animation
-  // The extended run of this object refers to scalars.mainCookieScalar to complete popping animation
-  mainCookie = new imageObject(width / 2, height / 2, scalars.mainCookieScalar, scalars.mainCookieScalar, cookie, 
-    function() {
-      cookieIncrement();
-      this.width = 1.15 * this.width;
-      this.height = 1.15 * this.height;
-    },
-    function() {
-      this.width -= 1/10 * (this.width - scalars.mainCookieScalar);
-      this.height -= 1/10 * (this.height - scalars.mainCookieScalar);
-      this.width = constrain(this.width, scalars.mainCookieScalar, scalars.mainCookieScalar * 1.25);
-      this.height = constrain(this.height, scalars.mainCookieScalar, scalars.mainCookieScalar * 1.25);
-    });
-
-  // Shop Objects
-  ovenObj = new shopObject(shopItems[1].width, shopItems[1].height, oven, "Oven", 10, 0.1);
-  bakeryObj = new shopObject(shopItems[2].width, shopItems[2].height, bakery, "Bakery", 150, 1);
-}
-
-function cookieIncrement() {
-  if(dialogState === 0) {
-    // Increment cookie counter on click and begin "popping" animation
-    cookies += clickPower;
-    popSound.play();
-    newFallingCookie();
-  }
-}
-
-function cookiePop() {
-  // This creates the "popping" animation on click
-  if (scalars.clickScalar > 1) {
-    scalars.clickScalar -= 1/10 * (scalars.clickScalar - 1);
-  }
-  constrain(scalars.clickScalar, 1, 1.25);
-}
-
-// Load content used in game
+// GLOBAL VARIABLES
+// Game content
 let cookie, coin, oven, bakery, rightArrow, gameCursor, clickUpgrade; // Images
 let coinSound, popSound; // Sounds
 let gameFont; // Fonts
@@ -209,6 +36,7 @@ let lastMillis = 0;
 let increments = 0;
 let shopItems;
 let dialog;
+let buttons;
 
 // Variables used for menu()
 let titleText = "Cookie Clicker"; // strings
@@ -216,12 +44,18 @@ let hoverFillStart = 200;         // button rectangle fills
 let hoverFillOptions = 200;
 
 // variables used for shop()
+let ovenPrice = 10;
+let ovenOwned = 0;
+let bakeryPrice = 150;
+let bakeryOwned = 0;
+let i, j;
 
 let cookieGetText;
 let tempText;
 let globalMessage;
 let globalMessageDecay;
 
+// Load content used in game
 function preload() {
   // Images
   cookie = loadImage("assets/cookie1.png");
@@ -242,15 +76,9 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   textFont(gameFont); // Font used throughout whole game
   imageMode(CENTER);
-  initScalarsPositions();
   initVar();
+  initScalars();
   generateGraphics();
-  for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
-    let theItem = shopItems[shopItem];
-    theItem.width = width * theItem.image.width * 0.0002;
-    theItem.height = width * theItem.image.height * 0.0002;
-  }
-  initObjects();
 }
 
 function initVar() {
@@ -311,9 +139,18 @@ function initVar() {
       ]
     },
   ];
+  buttons = [
+    {
+      text: "Start",
+      tSize: 30,
+      func: function() {
+        gameState = 1;
+      },
+    }
+  ];
 }
 
-function initScalarsPositions() {
+function initScalars() {
   scalars = {
     // Click or hover based:
     clickScalar: 1,
@@ -342,6 +179,11 @@ function initScalarsPositions() {
   };
 
   // Init width and height in shopItems
+  for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
+    let theItem = shopItems[shopItem];
+    theItem.width = width * theItem.image.width * 0.0002;
+    theItem.height = width * theItem.image.height * 0.0002;
+  }
 }
 
 function generateGraphics() {
@@ -393,7 +235,11 @@ function mainGame() { // gameState 1
 
 function displayGame() {
   cookieFall();
-  mainCookie.run();
+
+  // Draws main cookie image to screen
+  tint(255, 255);
+  fill(0, 255);
+  image(cookie, width/2, height/2, scalars.mainCookieScalar * scalars.clickScalar, scalars.mainCookieScalar * scalars.clickScalar);
 
   // Draws cookie amount text to screen
   noStroke();
@@ -409,15 +255,13 @@ function displayGame() {
   }
 }
 
-// function mainCookie() {
-//   // Draws main cookie image to screen
-//   tint(255, 255);
-//   fill(0, 255);
-//   image(cookie, width/2, height/2, scalars.mainCookieScalar * scalars.clickScalar, scalars.mainCookieScalar * scalars.clickScalar);
-//   this.clicked = (mX, mY) => {
-    
-//   };
-// }
+function cookiePop() {
+  // This creates the "popping" animation on click
+  if (scalars.clickScalar > 1) {
+    scalars.clickScalar -= 1/10 * (scalars.clickScalar - 1);
+  }
+  constrain(scalars.clickScalar, 1, 1.25);
+}
 
 function incrementCookies() {
   // Increments the cookie amount 4 times a second
@@ -489,9 +333,21 @@ function displayMenu() {
   image(cookie, width / 2 - textWidth(titleText) / 2 - scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie * scalars.menuAnimScalar, scalars.titleScreenCookie * scalars.menuAnimScalar);
   image(cookie, width / 2 + textWidth(titleText) / 2 + scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie * scalars.menuAnimScalar, scalars.titleScreenCookie * scalars.menuAnimScalar);
 
-  // Menu buttons (see class Buttons and initButtons())
-  titleStartButton.run();
-  titleOptionsButton.run();
+  // Menu buttons
+  rectMode(CENTER);
+  fill(hoverFillStart);
+  strokeWeight(3);
+  stroke(0);
+  rect(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH); // Start
+  fill(hoverFillOptions);
+  rect(width / 2, height / 2 + height * 0.12, scalars.menuButtonW, scalars.menuButtonH); // Options
+
+  // Text inside menu buttons
+  fill(0);
+  noStroke();
+  textSize(30 * scalars.textScalar);
+  text("Start", width / 2, height / 2);
+  text("Options", width / 2, height / 2 + height * 0.12);
 }
 
 function animateMenu() {
@@ -556,29 +412,27 @@ function displayShop() {
   imageMode(CENTER);
 
   // For each shop item, draw it and various data
-  // let theItem;
-  // let theText;
-  // textSize(15 * scalars.textScalar);
-  // textAlign(LEFT, CENTER);
-  // rectMode(CENTER);
-  // noStroke();
-  // for(let shopItem = 0; shopItem < shopItems.length - 1; shopItem++) {
-  //   theItem = shopItems[shopItem];
-  //   fill(30, 70);
-  //   rect(width * 0.85, height * (2 * shopItem + 1) * 0.125 - scroll * scalars.scrollScalar, width * 0.3, height * 0.2);
-  //   fill(0);
-  //   tint(enoughCookies(cookies, theItem.price));
-  //   image(theItem.image, width * 0.76, height * (2 * shopItem + 1) * 0.125 - scroll * scalars.scrollScalar, theItem.width, theItem.height);
-  //   if(typeof theItem.metaText === "undefined") {
-  //     theText = theItem.name + "\nCost: " + str(theItem.price) + " Cookies\n" + str(theItem.cps) + " CPS\nOwned: " + str(theItem.owned);
-  //   }
-  //   else {
-  //     theText = theItem.name + "\nCost: " + str(theItem.price) + " Cookies\n" + str(theItem.cps) + " " + theItem.metaText + "\nOwned: " + str(theItem.owned);
-  //   }
-  //   text(theText, width * 0.825, height * (2 * shopItem + 1) * 0.125 - scroll * scalars.scrollScalar);
-  // }
-  ovenObj.run();
-  bakeryObj.run();
+  let theItem;
+  let theText;
+  textSize(15 * scalars.textScalar);
+  textAlign(LEFT, CENTER);
+  rectMode(CENTER);
+  noStroke();
+  for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
+    theItem = shopItems[shopItem];
+    fill(30, 70);
+    rect(width * 0.85, height * (2 * shopItem + 1) * 0.125 - scroll * scalars.scrollScalar, width * 0.3, height * 0.2);
+    fill(0);
+    tint(enoughCookies(cookies, theItem.price));
+    image(theItem.image, width * 0.76, height * (2 * shopItem + 1) * 0.125 - scroll * scalars.scrollScalar, theItem.width, theItem.height);
+    if(typeof theItem.metaText === "undefined") {
+      theText = theItem.name + "\nCost: " + str(theItem.price) + " Cookies\n" + str(theItem.cps) + " CPS\nOwned: " + str(theItem.owned);
+    }
+    else {
+      theText = theItem.name + "\nCost: " + str(theItem.price) + " Cookies\n" + str(theItem.cps) + " " + theItem.metaText + "\nOwned: " + str(theItem.owned);
+    }
+    text(theText, width * 0.825, height * (2 * shopItem + 1) * 0.125 - scroll * scalars.scrollScalar);
+  }
 
   // Scroll bar
   noStroke();
@@ -676,42 +530,59 @@ function cookieFall() {
   }
 }
 
-
-
 function mouseClicked() {
-  if (gameState === 1) {
-    if (shopState === 1) {
-      let theItem;
-      for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
-        theItem = shopItems[shopItem];
-        if (Math.abs(mouseX - width * 0.76) < theItem.width / 2 && Math.abs(mouseY - height * (2 * shopItem + 1) * 0.125 + scroll * scalars.scrollScalar) < theItem.height / 2) {
-          if(cookies >= theItem.price) {
-            if (typeof theItem.func === "undefined") {
-              theItem.owned++;
-              cookies -= theItem.price;
-              autoCookies += theItem.cps;
-              coinSound.play();
+  if (gameState === 0) {
+    if (Math.abs(mouseX - width / 2) < scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2) < scalars.menuButtonH / 2) {
+      gameState = 1;
+    }
+    if (Math.abs(mouseX - width / 2) < scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2 - height * 0.12) < scalars.menuButtonH / 2) {
+      gameState = 2;
+    }
+  }
+  else if (gameState === 1) {
+    if(dialogState === 0) {
+      // Increment cookie counter on click and begin "popping" animation
+      if (Math.abs(mouseX - width / 2) < scalars.mainCookieScalar / 2 && Math.abs(mouseY - height / 2) < scalars.mainCookieScalar / 2) {
+        cookies += clickPower;
+        scalars.clickScalar += 0.1;
+        constrain(scalars.clickScalar, 1, 1.25);
+        popSound.play();
+        newFallingCookie();
+      }
+
+      if (shopState === 1) {
+        let theItem;
+        for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
+          theItem = shopItems[shopItem];
+          if (Math.abs(mouseX - width * 0.76) < theItem.width / 2 && Math.abs(mouseY - height * (2 * shopItem + 1) * 0.125 + scroll * scalars.scrollScalar) < theItem.height / 2) {
+            if(cookies >= theItem.price) {
+              if (typeof theItem.func === "undefined") {
+                theItem.owned++;
+                cookies -= theItem.price;
+                autoCookies += theItem.cps;
+                coinSound.play();
+              } 
+              else {
+                theItem.func();
+              }
             } 
-            else {
-              theItem.func();
-            }
-          } 
+          }
+        }
+        if (Math.abs(mouseX - width * 0.67) < scalars.storeCloseScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCloseScalar / 2) {
+          shopState = 0;
+        }
+        else {
+          null;
         }
       }
-      if (Math.abs(mouseX - width * 0.67) < scalars.storeCloseScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCloseScalar / 2) {
-        shopState = 0;
-      }
+      // Opens shop when arrow clicked
       else {
-        null;
-      }
-    }
-    // Opens shop when arrow clicked
-    else {
-      if (Math.abs(mouseX - width * 0.97) < scalars.storeCoinScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCoinScalar / 2) {
-        shopState = 1;
-      }
-      else {
-        null;
+        if (Math.abs(mouseX - width * 0.97) < scalars.storeCoinScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCoinScalar / 2) {
+          shopState = 1;
+        }
+        else {
+          null;
+        }
       }
     }
   }
@@ -849,7 +720,7 @@ function mouseWheel(event) {
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  initScalarsPositions();
+  initScalars();
   generateGraphics();
 }
 
@@ -858,5 +729,5 @@ function windowResized() {
 function drawButton(buttonObject) {
   let theText = buttonObject.text;
   let tSize = buttonObject.tSize;
-
+  
 }
