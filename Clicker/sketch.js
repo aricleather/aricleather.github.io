@@ -8,10 +8,45 @@
 // - My game can successfully handle window resizing, in terms of scaling and canvas
 // - My game incorporates sound effects
 
-class Buttons {
-  constructor() {
+class GameObject {
+  // Main class used in game. Gives it x coord, y coord, width, and height and resize function to edit these variables easily
+  // Also gives a function to check if the mouse is on top of it or not (calcMouse())
+  constructor(x, y, width, height) {
+    this.resize = function(x, y, width = 0, height = 0) {
+      this.x = x;
+      this.y = y;
+      if(width) {
+        this.width = width;
+      }
+      if(height) {
+        this.height = height;
+      }
+      // If object has an extendResize function, run it (used mainly for objects with text to allow text resizing)
+      if(typeof this.extendResize === "function") {
+        this.extendResize();
+      }
+    };
+    // Call resize once on construction to initialize x, y, width, height
+    this.resize(x, y, width, height);
+    // Objects in my game check if they are clicked on by themselves. This variable is set to true when the mouse is clicked
+    // Which blocks further clicks, until the mouse button is released (this function given in subclasses)
+    this.alreadyClicked = false;
+    this.calcMouse = function() {
+      this.mouse = Math.abs(mouseX - this.x) <= this.width / 2 && Math.abs(mouseY - this.y) <= this.height / 2;
+    };
+  }
+}
+
+class Buttons extends GameObject {
+  constructor(x, y, width, height) {
+    super(x, y, width, height);
+    this.mouse;
     this.color = 200;
     this.run = function() {
+      // When a Button is run, calculate if mouse is on top, draw the rectangle around it, fill it in with
+      // a shade of gray dependent on whether the mouse is inside or not, then the text inside
+      // (later, will add support to use calculateTextSize() to get best-fitting text)
+      this.calcMouse();
       stroke(0);
       strokeWeight(3);
       fill(this.color);
@@ -26,7 +61,7 @@ class Buttons {
       this.checkClicked(mouseX, mouseY);
     };
     this.mouseHover = (mX, mY) => {
-      if(Math.abs(mX - this.x) <= this.width / 2 && Math.abs(mY - this.y) <= this.height / 2) {
+      if(this.mouse) {
         this.color = 150;
       }
       else {
@@ -34,8 +69,10 @@ class Buttons {
       }
     };
     this.checkClicked = (mX, mY) => {
-      if(Math.abs(mX - this.x) <= this.width / 2 && Math.abs(mY - this.y) <= this.height / 2 && mouseIsPressed) {
+      if(this.mouse && mouseIsPressed && !this.alreadyClicked && !gMouse) { // If the global mouse variable is true DON'T REGISTER CLICK!
         this.clicked();
+        // After a click, set gMouse to true temporarily to block further clicks until mouse button released
+        gMouse = !gMouse;
       }
     };
   }
@@ -43,7 +80,9 @@ class Buttons {
 
 class Button extends Buttons {
   constructor(x, y, width, height, text, tSize, clicked) {
-    super();
+    // This class is the one used to construct a complete button, taking in x coord, y coord, width, height
+    // Text of button, textSize (which will be automated later), and the function to run on click of button
+    super(x, y, width, height);
     this.x = x;
     this.y = y;
     this.width = width;
@@ -54,19 +93,23 @@ class Button extends Buttons {
   }
 }
 
-class imageObjects {
-  constructor() {
+class ImageObjects extends GameObject {
+  constructor(x, y, width, height) {
+    super(x, y, width, height);
     this.mouse;
-    this.alreadyClicked = false;
     this.run = function() {
-      this.mouse = Math.abs(mouseX - this.x) <= this.width / 2 && Math.abs(mouseY - this.y) <= this.height / 2;
+      // Image objects when run() draw their image to the screen with specified x, y, width, height
+      this.calcMouse();
       tint(255, 255);
       fill(0, 255);
+      // If ImageObject has extendRun function (passed during construction), run it here
+      // Ex. used in mainCookie to do popping animation
       if(typeof this.extendRun === "function") {
         this.extendRun();
       }
       image(this.image, this.x, this.y, this.width, this.height);
-      if(mouseIsPressed && this.mouse && !this.alreadyClicked) {
+      // Again utilizing calcMouse() and alreadyClicked to run this.clicked() on click only once
+      if(mouseIsPressed && this.mouse && !this.alreadyClicked && !gMouse) {
         this.clicked();
         this.alreadyClicked = true;
       }
@@ -77,42 +120,54 @@ class imageObjects {
   }
 }
 
-class imageObject extends imageObjects {
+class ImageObject extends ImageObjects {
+  // Used to construct a complete ImageObject, taking in x coord, y coord, width, height,
+  // Image to draw, what do do when clicked, and any other function the image needs to call when run
   constructor(x, y, width, height, image, clicked, extendRun = 0) {
-    super();
+    super(x, y, width, height);
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
     this.image = image;
     this.clicked = clicked;
-    this.extendRun = extendRun;
+    if(extendRun) {
+      this.extendRun = extendRun;
+    }
   }
 }
 
-class shopObject extends imageObject {
+class ShopObject extends ImageObject {
   constructor(objWidth, objHeight, image, name, price, cps) {
-    super(width * 0.76, height * (2 * shopNumber + 1) * 0.125, objWidth, objHeight, image, () => this.clicked(), () => this.extendRun());
-    // Vars
+    // Used to construct a more complicated ImageObject. Has a set x coord, set y coord based on order of construction,
+    // image width, image height (objWidth, objHeight), an image, and references to special this.clicked and this.extendRun
+    // functions defined in the constructor
+    super(width * 0.76, 0, objWidth, objHeight, image, () => this.clicked(), () => this.extendRun());
+    // All the variables
     this.name = name;
     this.price = price;
     this.cps = cps;
     this.position = shopNumber;
     this.owned = 0;
-    this.rectX = width * 0.85;
-    this.Y = height * (2 * this.position + 1) * 0.125;
-    this.textX = width * 0.825;
+    this.rectX = width * 0.85; // Center of rectangle behind shop item
+    this.Y = height * (2 * this.position + 1) * 0.125; // Height of this particular shop item
+    this.textX = width * 0.825; // Where text is drawn (aligned left)
     this.tSize = 15 * scalars.textScalar;
-    // This just keeps track of order in the shop
+    // This just keeps track of order in the shop, so that the next shopObject construction knows it comes after
     shopNumber++;
     this.clicked = function() {
+      // The clicked() function here checks if you have enough money then does stuff if you do
       if(cookies >= this.price) {
         autoCookies += cps;
         cookies -= price;
         coinSound.play();
+        this.updateText();
       }
     };
     this.extendRun = function() {
+      // The extendRun for ShopObject draws the rectangle behind the ShopObject and it's text
+      // Then, it sets a tint value for when the image is drawn (in ImageObjects run()) based on whether
+      // or not the player has enough cookies
       rectMode(CENTER);
       fill(30, 70);
       rect(this.rectX, this.Y, width * 0.3, height * 0.2);
@@ -123,6 +178,7 @@ class shopObject extends imageObject {
       tint(enoughCookies(cookies, this.price));
     };
     this.updateText = function() {
+      // Updates the text drawn by this object when called to match current data. Run once on construction and once on purchase
       this.text = this.name + "\nCost: " + str(this.price) + " Cookies\n" + str(this.cps) + " CPS\nOwned: " + str(this.owned);
     };
     this.updateText();
@@ -134,6 +190,7 @@ let titleOptionsButton;
 let mainCookie;
 let bakeryObj, ovenObj;
 let shopNumber = 0;
+let gMouse = false;
 
 function initObjects() {
   // Buttons
@@ -147,7 +204,7 @@ function initObjects() {
   // Image objects
   // Main cookie object. On click, cookieIncrement() and increase width and height of cookie to create popping animation
   // The extended run of this object refers to scalars.mainCookieScalar to complete popping animation
-  mainCookie = new imageObject(width / 2, height / 2, scalars.mainCookieScalar, scalars.mainCookieScalar, cookie, 
+  mainCookie = new ImageObject(width / 2, height / 2, scalars.mainCookieScalar, scalars.mainCookieScalar, cookie, 
     function() {
       cookieIncrement();
       this.width = 1.15 * this.width;
@@ -161,8 +218,14 @@ function initObjects() {
     });
 
   // Shop Objects
-  ovenObj = new shopObject(shopItems[1].width, shopItems[1].height, oven, "Oven", 10, 0.1);
-  bakeryObj = new shopObject(shopItems[2].width, shopItems[2].height, bakery, "Bakery", 150, 1);
+  ovenObj = new ShopObject(shopItems[1].width, shopItems[1].height, oven, "Oven", 10, 0.1);
+  bakeryObj = new ShopObject(shopItems[2].width, shopItems[2].height, bakery, "Bakery", 150, 1);
+}
+
+function mouseCooldown() {
+  if(!mouseIsPressed) {
+    gMouse = false;
+  }
 }
 
 function cookieIncrement() {
@@ -370,6 +433,7 @@ function draw() {
   else {
     displayOptions();
   }
+  mouseCooldown();
 }
 
 function menu() { // gameState 0
