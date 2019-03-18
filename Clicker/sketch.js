@@ -128,14 +128,14 @@ class ImageObject extends GameObject {
 }
 
 class ShopObject extends GameObject {
-  constructor(imageWidth, imageHeight, image, name, metaText, price, cps) {
+  constructor(imageWidth, imageHeight, objImage, name, metaText, price, cps) {
     // Used to construct a more complicated ImageObject. Has a set x coord, set y coord based on order of construction,
     // image width, image height (objWidth, objHeight), an image, and references to special this.clicked and this.extendRun
     // functions defined in the constructor
     super(width * 0.76, height * 0.125 * (shopNumber * 2 + 1), width * 0.0002 * imageWidth, width * 0.0002 * imageHeight);
 
     // All the variables
-    this.image = image;
+    this.objImage = objImage;
     this.name = name;
     this.metaText = metaText;
     this.price = price;
@@ -167,8 +167,10 @@ class ShopObject extends GameObject {
     // or not the player has enough cookies. If mouse hovering, call metaTextBox
     this.run = function() {
       this.calcMouse();
+
       tint(shopTint(cookies, this.price));
-      image(this.image, this.x, this.y, this.width, this.height);
+      fill(0, 255);
+      image(this.objImage, this.x, this.y, this.width, this.height);
 
       // Again utilizing calcMouse() and alreadyClicked to run this.clicked() on click only once
       if(this.mouse) {
@@ -189,9 +191,6 @@ class ShopObject extends GameObject {
       fill(0);
       textSize(this.tSize);
       text(this.text, this.textX, this.y);
-      if(this.mouse) {
-        this.metaTextBox();
-      }
     };
 
     // Updates the text drawn by this object when called to match current data. Run once on construction and once on purchase
@@ -200,17 +199,13 @@ class ShopObject extends GameObject {
     };
     this.updateText();
 
-    this.metaTextBox = function() {
-      void 0;
-    };
-
     // Since shopObjects are always in the same relative spot on the screen, resize should be called with no params
     // to let this extendResize function reset the scaling and position variables
     this.resize = function() {
       this.x = width * 0.76;
       this.y = height * (2 * this.position + 1) * 0.125;
-      this.width = width * this.image.width * 0.0002;
-      this.height = width * this.image.height * 0.0002;
+      this.width = width * this.objImage.width * 0.0002;
+      this.height = width * this.objImage.height * 0.0002;
       this.textX = width * 0.825;
       this.tSize = 15 * scalars.textScalar;
       this.rectX = width * 0.85;
