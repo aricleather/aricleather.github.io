@@ -11,21 +11,12 @@
 class GameObject {
   // Main class used in game. Gives it x coord, y coord, width, and height
   // Gives function calcMouse to check if mouse is on object
-  // Gives function resize to resize or move object and to run extendResize if present 
   constructor(x, y, width, height) {
-    this.resize = function(x = 0, y = 0, width = 0, height = 0) {
-      this.x = x;
-      this.y = y;
-      this.mouse;
-      this.width = width;
-      this.height = height;
-      // If object has an extendResize function, run it (used mainly for objects with text to allow text resizing)
-      if(typeof this.extendResize === "function") {
-        this.extendResize();
-      }
-    };
-    // Call resize once on construction to initialize x, y, width, height
-    this.resize(x, y, width, height);
+    this.mouse;
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
     // Objects in my game check if they are clicked on by themselves. This variable is set to true when the mouse is clicked
     // Which blocks further clicks, until the mouse button is released (this function given in subclasses)
     this.alreadyClicked = false;
@@ -35,9 +26,12 @@ class GameObject {
   }
 }
 
-class Buttons extends GameObject {
-  constructor(x, y, width, height) {
+class Button extends GameObject {
+  constructor(x, y, width, height, buttonText, tSize, clicked) {
     super(x, y, width, height);
+    this.buttonText = buttonText;
+    this.tSize = tSize;
+    this.clicked = clicked;
     this.color = 200;
     this.run = function() {
       // When a Button is run, calculate if mouse is on top, draw the rectangle around it, fill it in with
@@ -53,10 +47,11 @@ class Buttons extends GameObject {
       fill(0);
       textSize(this.tSize);
       textAlign(CENTER, CENTER);
-      text(this.text, this.x, this.y);
+      text(this.buttonText, this.x, this.y);
       this.mouseHover(mouseX, mouseY);
       this.checkClicked(mouseX, mouseY);
     };
+
     this.mouseHover = (mX, mY) => {
       if(this.mouse) {
         this.color = 150;
@@ -65,6 +60,7 @@ class Buttons extends GameObject {
         this.color = 200;
       }
     };
+
     this.checkClicked = (mX, mY) => {
       if(this.mouse && mouseIsPressed && !this.alreadyClicked && !gMouse) { // If the global mouse variable is true DON'T REGISTER CLICK!
         this.clicked();
@@ -72,23 +68,26 @@ class Buttons extends GameObject {
         gMouse = !gMouse;
       }
     };
+
+    this.resize = function(x, y, width, height) {
+      this.x = x;
+      this.y = y;
+      this.width = width;
+      this.height = height;
+      this.tSize = calculateTextSize(this.buttonText, this.width);
+      this.text = formatText(this.buttonText, this.width, this.tSize);
+    };
   }
 }
 
-class Button extends Buttons {
-  constructor(x, y, width, height, text, tSize, clicked) {
-    // This class is the one used to construct a complete button, taking in x coord, y coord, width, height
-    // Text of button, textSize (which will be automated later), and the function to run on click of button
+class ImageObject extends GameObject {
+  constructor(x, y, width, height, objImage, clicked, extendRun = 0, mouseHover = 0) {
     super(x, y, width, height);
-    this.text = text;
-    this.tSize = tSize;
+    this.objImage = objImage;
     this.clicked = clicked;
-  }
-}
+    this.extendRun = extendRun;
+    this.mouseHover = mouseHover;
 
-class ImageObjects extends GameObject {
-  constructor(x, y, width, height) {
-    super(x, y, width, height);
     this.run = function() {
       // Image objects when run() draw their image to the screen with specified x, y, width, height
       this.calcMouse();
@@ -99,7 +98,7 @@ class ImageObjects extends GameObject {
       if(this.extendRun) {
         this.extendRun();
       }
-      image(this.image, this.x, this.y, this.width, this.height);
+      image(this.objImage, this.x, this.y, this.width, this.height);
 
       // Again utilizing calcMouse() and alreadyClicked to run this.clicked() on click only once
       if(this.mouse) {
@@ -118,47 +117,36 @@ class ImageObjects extends GameObject {
         this.alreadyClicked = false;
       }
     };
+    
+    this.resize = function(x, y, width, height) {
+      this.x = x;
+      this.y = y;
+      this.width = width;
+      this.height = height;
+    };
   }
 }
 
-class ImageObject extends ImageObjects {
-  // Used to construct a complete ImageObject, taking in x coord, y coord, width, height,
-  // Image to draw, what do do when clicked, and any other function the image needs to call when run
-  constructor(x, y, width, height, image, clicked, extendRun = 0, mouseHover = 0) {
-    super(x, y, width, height);
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-    this.image = image;
-    this.clicked = clicked;
-    if(extendRun) {
-      this.extendRun = extendRun;
-    }
-    if(mouseHover) {
-      this.mouseHover = mouseHover;
-    }
-  }
-}
-
-class ShopObject extends ImageObject {
+class ShopObject extends GameObject {
   constructor(imageWidth, imageHeight, image, name, metaText, price, cps) {
     // Used to construct a more complicated ImageObject. Has a set x coord, set y coord based on order of construction,
     // image width, image height (objWidth, objHeight), an image, and references to special this.clicked and this.extendRun
     // functions defined in the constructor
-    super(width * 0.76, height * 0.125 * (shopNumber * 2 + 1), width * 0.0002 * imageWidth, width * 0.0002 * imageHeight, image, 
-      () => this.clicked(), () => this.extendRun(), () => this.mouseHover());
+    super(width * 0.76, height * 0.125 * (shopNumber * 2 + 1), width * 0.0002 * imageWidth, width * 0.0002 * imageHeight);
 
     // All the variables
+    this.image = image;
     this.name = name;
+    this.metaText = metaText;
     this.price = price;
     this.cps = cps;
+
     this.position = shopNumber;
     this.owned = 0;
+
     this.textX = width * 0.825;
     this.tSize = 15 * scalars.textScalar;
     this.rectX = width * 0.85;
-    this.metaText = metaText;
 
     // shopNumber just keeps track of order in the shop, so that the next shopObject construction knows it comes after
     shopNumber++;
@@ -177,7 +165,23 @@ class ShopObject extends ImageObject {
     // The extendRun for ShopObject draws the rectangle behind the ShopObject and it's text
     // Then, it sets a tint value for when the image is drawn (in ImageObjects run()) based on whether
     // or not the player has enough cookies. If mouse hovering, call metaTextBox
-    this.extendRun = function() {
+    this.run = function() {
+      this.calcMouse();
+      tint(shopTint(cookies, this.price));
+      image(this.image, this.x, this.y, this.width, this.height);
+
+      // Again utilizing calcMouse() and alreadyClicked to run this.clicked() on click only once
+      if(this.mouse) {
+        // If mouseHover exists run when mouse hovering
+        if(this.mouseHover) {
+          this.mouseHover();
+        }
+        if(mouseIsPressed && !this.alreadyClicked && !gMouse) {
+          this.clicked();
+          this.alreadyClicked = true;
+        }
+      }
+      
       rectMode(CENTER);
       fill(30, 70);
       rect(this.rectX, this.y, width * 0.3, height * 0.2);
@@ -188,7 +192,6 @@ class ShopObject extends ImageObject {
       if(this.mouse) {
         this.metaTextBox();
       }
-      tint(enoughCookies(cookies, this.price));
     };
 
     // Updates the text drawn by this object when called to match current data. Run once on construction and once on purchase
@@ -203,7 +206,7 @@ class ShopObject extends ImageObject {
 
     // Since shopObjects are always in the same relative spot on the screen, resize should be called with no params
     // to let this extendResize function reset the scaling and position variables
-    this.extendResize = function() {
+    this.resize = function() {
       this.x = width * 0.76;
       this.y = height * (2 * this.position + 1) * 0.125;
       this.width = width * this.image.width * 0.0002;
@@ -600,7 +603,7 @@ function shopCloseButtonHover() {
   }
 }
 
-function enoughCookies(cookies, price) {
+function shopTint(cookies, price) {
   if (cookies < price) {
     return 50;
   }
@@ -749,13 +752,24 @@ function closeDialog() {
   dialogState = 0;
 }
 
-function calculateTextSize(theString, theWidth, theSize) {
+function calculateTextSize(theString, theWidth) {
+  theString = theString.split(" ");
+  let longestWord = "";
+  for(let i = 0; i < theString.length; i++) {
+    if (theString[i].length > longestWord.length) {
+      longestWord = theString[i];
+    }
+  }
+  return theWidth / longestWord.length - 1;
+}
+
+function formatText(theString, theWidth, tSize) {
   // Many functions require the ability to break text in the right location so it doesn't go "out of bounds."
   // This function returns an edited string with line breaks that fit into the specified width given the text size
   theString = theString.split(" ");
   let widthCounter = 0;
   let returnString = "";
-  textSize(theSize);
+  textSize(tSize);
   for(let i = 0; i < theString.length; i++) {
     widthCounter += textWidth(theString[i] + " ");
     if(widthCounter >= theWidth) {
@@ -768,7 +782,6 @@ function calculateTextSize(theString, theWidth, theSize) {
   }
   return returnString.trim();
 }
-
 
 function keyPressed() {
   if (dialogState === 0) {
