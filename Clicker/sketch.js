@@ -9,19 +9,16 @@
 // - My game incorporates sound effects
 
 class GameObject {
-  // Main class used in game. Gives it x coord, y coord, width, and height and resize function to edit these variables easily
-  // Also gives a function to check if the mouse is on top of it or not (calcMouse())
+  // Main class used in game. Gives it x coord, y coord, width, and height
+  // Gives function calcMouse to check if mouse is on object
+  // Gives function resize to resize or move object and to run extendResize if present 
   constructor(x, y, width, height) {
-    this.resize = function(x, y, width = 0, height = 0) {
+    this.resize = function(x = 0, y = 0, width = 0, height = 0) {
       this.x = x;
       this.y = y;
       this.mouse;
-      if(width) {
-        this.width = width;
-      }
-      if(height) {
-        this.height = height;
-      }
+      this.width = width;
+      this.height = height;
       // If object has an extendResize function, run it (used mainly for objects with text to allow text resizing)
       if(typeof this.extendResize === "function") {
         this.extendResize();
@@ -97,17 +94,26 @@ class ImageObjects extends GameObject {
       this.calcMouse();
       tint(255, 255);
       fill(0, 255);
-      // If ImageObject has extendRun function (passed during construction), run it here
-      // Ex. used in mainCookie to do popping animation
-      if(typeof this.extendRun === "function") {
+
+      // If ImageObject has extendRun function (passed during construction), run it here before drawing image
+      if(this.extendRun) {
         this.extendRun();
       }
       image(this.image, this.x, this.y, this.width, this.height);
+
       // Again utilizing calcMouse() and alreadyClicked to run this.clicked() on click only once
-      if(mouseIsPressed && this.mouse && !this.alreadyClicked && !gMouse) {
-        this.clicked();
-        this.alreadyClicked = true;
+      if(this.mouse) {
+        // If mouseHover exists run when mouse hovering
+        if(this.mouseHover) {
+          this.mouseHover();
+        }
+        if(mouseIsPressed && !this.alreadyClicked && !gMouse) {
+          this.clicked();
+          this.alreadyClicked = true;
+        }
       }
+
+      // After click, when mouse released set alreadyClicked back to false to allow for another click
       if(!mouseIsPressed) {
         this.alreadyClicked = false;
       }
@@ -118,7 +124,7 @@ class ImageObjects extends GameObject {
 class ImageObject extends ImageObjects {
   // Used to construct a complete ImageObject, taking in x coord, y coord, width, height,
   // Image to draw, what do do when clicked, and any other function the image needs to call when run
-  constructor(x, y, width, height, image, clicked, extendRun = 0) {
+  constructor(x, y, width, height, image, clicked, extendRun = 0, mouseHover = 0) {
     super(x, y, width, height);
     this.x = x;
     this.y = y;
@@ -129,29 +135,36 @@ class ImageObject extends ImageObjects {
     if(extendRun) {
       this.extendRun = extendRun;
     }
+    if(mouseHover) {
+      this.mouseHover = mouseHover;
+    }
   }
 }
 
 class ShopObject extends ImageObject {
-  constructor(objWidth, objHeight, image, name, price, cps) {
+  constructor(imageWidth, imageHeight, image, name, metaText, price, cps) {
     // Used to construct a more complicated ImageObject. Has a set x coord, set y coord based on order of construction,
     // image width, image height (objWidth, objHeight), an image, and references to special this.clicked and this.extendRun
     // functions defined in the constructor
-    super(width * 0.76, 0, objWidth, objHeight, image, () => this.clicked(), () => this.extendRun());
+    super(width * 0.76, height * 0.125 * (shopNumber * 2 + 1), width * 0.0002 * imageWidth, width * 0.0002 * imageHeight, image, 
+      () => this.clicked(), () => this.extendRun(), () => this.mouseHover());
+
     // All the variables
     this.name = name;
     this.price = price;
     this.cps = cps;
     this.position = shopNumber;
     this.owned = 0;
-    this.rectX = width * 0.85; // Center of rectangle behind shop item
-    this.y = height * (2 * this.position + 1) * 0.125; // Height of this particular shop item
-    this.textX = width * 0.825; // Where text is drawn (aligned left)
+    this.textX = width * 0.825;
     this.tSize = 15 * scalars.textScalar;
-    // This just keeps track of order in the shop, so that the next shopObject construction knows it comes after
+    this.rectX = width * 0.85;
+    this.metaText = metaText;
+
+    // shopNumber just keeps track of order in the shop, so that the next shopObject construction knows it comes after
     shopNumber++;
+
+    // The clicked() function here checks if you have enough money then does stuff if you do
     this.clicked = function() {
-      // The clicked() function here checks if you have enough money then does stuff if you do
       if(cookies >= this.price) {
         autoCookies += cps;
         cookies -= price;
@@ -160,10 +173,11 @@ class ShopObject extends ImageObject {
         this.updateText();
       }
     };
+
+    // The extendRun for ShopObject draws the rectangle behind the ShopObject and it's text
+    // Then, it sets a tint value for when the image is drawn (in ImageObjects run()) based on whether
+    // or not the player has enough cookies. If mouse hovering, call metaTextBox
     this.extendRun = function() {
-      // The extendRun for ShopObject draws the rectangle behind the ShopObject and it's text
-      // Then, it sets a tint value for when the image is drawn (in ImageObjects run()) based on whether
-      // or not the player has enough cookies
       rectMode(CENTER);
       fill(30, 70);
       rect(this.rectX, this.y, width * 0.3, height * 0.2);
@@ -171,20 +185,49 @@ class ShopObject extends ImageObject {
       fill(0);
       textSize(this.tSize);
       text(this.text, this.textX, this.y);
+      if(this.mouse) {
+        this.metaTextBox();
+      }
       tint(enoughCookies(cookies, this.price));
     };
+
+    // Updates the text drawn by this object when called to match current data. Run once on construction and once on purchase
     this.updateText = function() {
-      // Updates the text drawn by this object when called to match current data. Run once on construction and once on purchase
       this.text = this.name + "\nCost: " + str(this.price) + " Cookies\n" + str(this.cps) + " CPS\nOwned: " + str(this.owned);
     };
     this.updateText();
+
+    this.metaTextBox = function() {
+      void 0;
+    };
+
+    // Since shopObjects are always in the same relative spot on the screen, resize should be called with no params
+    // to let this extendResize function reset the scaling and position variables
+    this.extendResize = function() {
+      this.x = width * 0.76;
+      this.y = height * (2 * this.position + 1) * 0.125;
+      this.width = width * this.image.width * 0.0002;
+      this.height = width * this.image.height * 0.0002;
+      this.textX = width * 0.825;
+      this.tSize = 15 * scalars.textScalar;
+      this.rectX = width * 0.85;
+    };
+
+    // mouseHover() is run in run() if it exists. Here it uses function displayTextBox() to
+    // display the little box over the item with some info
+    this.mouseHover = function() {
+      displayTextBox(this.metaText, mouseX, mouseY);
+    };
   }
 }
 
-let titleStartButton;
-let titleOptionsButton;
+// Buttons
+let titleStartButton, titleOptionsButton;
+// Image objects
 let mainCookie;
+// Shop Objects
 let bakeryObj, ovenObj;
+// Global vars
 let shopNumber = 0;
 let gMouse = false;
 
@@ -214,8 +257,8 @@ function initObjects() {
     });
 
   // Shop Objects
-  ovenObj = new ShopObject(shopItems[1].width, shopItems[1].height, oven, "Oven", 10, 0.1);
-  bakeryObj = new ShopObject(shopItems[2].width, shopItems[2].height, bakery, "Bakery", 150, 1);
+  ovenObj = new ShopObject(oven.width, oven.height, oven, "Oven", "Bake more cookies!", 10, 0.1);
+  bakeryObj = new ShopObject(bakery.width, bakery.height, bakery, "Bakery", "Mmm, smells good...", 150, 1);
 }
 
 function mouseCooldown() {
@@ -231,14 +274,6 @@ function cookieIncrement() {
     popSound.play();
     newFallingCookie();
   }
-}
-
-function cookiePop() {
-  // This creates the "popping" animation on click
-  if (scalars.clickScalar > 1) {
-    scalars.clickScalar -= 1/10 * (scalars.clickScalar - 1);
-  }
-  constrain(scalars.clickScalar, 1, 1.25);
 }
 
 // Load content used in game
@@ -303,48 +338,10 @@ function setup() {
   imageMode(CENTER);
   initScalarsPositions();
   initVar();
-  generateGraphics();
-  for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
-    let theItem = shopItems[shopItem];
-    theItem.width = width * theItem.image.width * 0.0002;
-    theItem.height = width * theItem.image.height * 0.0002;
-  }
   initObjects();
 }
 
 function initVar() {
-  // Sets variables in shopItems. Width and height of each item defined in initScalars() to allow for window resizing functionality
-  shopItems = [
-    { name: "Upgrade Click",
-      text: "Mo' cookies,\nmo' problems.",
-      metaText: "cookie(s) per click",
-      image: clickUpgrade,
-      width: 0,
-      height: 0,
-      price: 100,
-      cps: 1,
-      func: function() {
-        clickPower += this.cps;
-        this.owned++;
-      },
-      owned: 0,},
-    { name: "Oven",
-      text: "Bake more\ncookies!",
-      image: oven,
-      width: 0,
-      height: 0,
-      price: 10,
-      cps: 0.1,
-      owned: 0,},
-    { name: "Bakery",
-      text: "Mmm, smells\ngood...",
-      image: bakery,
-      width: 0,
-      height: 0,
-      price: 150,
-      cps: 1,
-      owned: 0,}
-  ];
   // Each element has text, button options, and calls to do on various button presses. Drawn by dialogBox(), the one being drawn tracked by dialogState
   dialog = [
     {
@@ -375,7 +372,6 @@ function initVar() {
 function initScalarsPositions() {
   scalars = {
     // Click or hover based:
-    clickScalar: 1,
     storeHoverScalar: 1,
     storeCloseHoverScalar: 1,
 
@@ -399,18 +395,6 @@ function initScalarsPositions() {
     // Text based:
     textScalar: width / 1920,
   };
-
-  // Init width and height in shopItems
-}
-
-function generateGraphics() {
-  let testNum = width * 0.3;
-  shopGraphic = createGraphics(testNum, height);
-  shopGraphic.strokeWeight(testNum/80);
-  for(let i = 0; i < 100; i++) {
-    shopGraphic.stroke(30 + 2.25 * i, 144 + i, 255);
-    shopGraphic.line(testNum/100 * i, 0, testNum/100 * i, height);
-  }
 }
 
 function draw() {
@@ -435,12 +419,12 @@ function draw() {
 function menu() { // gameState 0
   displayMenu();
   animateMenu();
-  menuButtonHover();
+  titleStartButton.run();
+  titleOptionsButton.run();
 }
 
 function mainGame() { // gameState 1
   incrementCookies();
-  cookiePop();
   displayGame();
   animateCookieGet();
   if (shopState) {
@@ -468,16 +452,6 @@ function displayGame() {
     dialogBox(dialog[dialogState - 1]);
   }
 }
-
-// function mainCookie() {
-//   // Draws main cookie image to screen
-//   tint(255, 255);
-//   fill(0, 255);
-//   image(cookie, width/2, height/2, scalars.mainCookieScalar * scalars.clickScalar, scalars.mainCookieScalar * scalars.clickScalar);
-//   this.clicked = (mX, mY) => {
-    
-//   };
-// }
 
 function incrementCookies() {
   // Increments the cookie amount 4 times a second
@@ -548,10 +522,6 @@ function displayMenu() {
   // Cookies that are next to title text, positions based on length of titleText
   image(cookie, width / 2 - textWidth(titleText) / 2 - scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie * scalars.menuAnimScalar, scalars.titleScreenCookie * scalars.menuAnimScalar);
   image(cookie, width / 2 + textWidth(titleText) / 2 + scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie * scalars.menuAnimScalar, scalars.titleScreenCookie * scalars.menuAnimScalar);
-
-  // Menu buttons (see class Buttons and initButtons())
-  titleStartButton.run();
-  titleOptionsButton.run();
 }
 
 function animateMenu() {
@@ -565,23 +535,6 @@ function animateMenu() {
     scalars.menuAnimScalar = 0.95;
   }
   scalars.menuAnimScalar += scalars.menuAnimSpeed;
-}
-
-function menuButtonHover() {
-  // If mouse hovering start, button darkens
-  if (Math.abs(mouseX - width / 2) < scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2) < scalars.menuButtonH / 2) {
-    hoverFillStart = 150;
-  }
-  else {
-    hoverFillStart = 200;
-  }
-  // If mouse hovering options, button darkens
-  if (Math.abs(mouseX - width / 2) < scalars.menuButtonW / 2 && Math.abs(mouseY - height / 2 - height * 0.12) < scalars.menuButtonH / 2) {
-    hoverFillOptions = 150;
-  }
-  else {
-    hoverFillOptions = 200;
-  }
 }
 
 function displayOptions() {
@@ -609,34 +562,6 @@ function displayShop() {
   textAlign(CENTER, CENTER);
   text("Close\nShop", width * 0.67, height * 0.06 + width * 0.035);
 
-  // Draws gradient shop background from pre-rendered "shopGraphic"
-  imageMode(CORNER);
-  fill(30, 148, 255);
-  image(shopGraphic, width * 0.7, 0);
-  imageMode(CENTER);
-
-  // For each shop item, draw it and various data
-  // let theItem;
-  // let theText;
-  // textSize(15 * scalars.textScalar);
-  // textAlign(LEFT, CENTER);
-  // rectMode(CENTER);
-  // noStroke();
-  // for(let shopItem = 0; shopItem < shopItems.length - 1; shopItem++) {
-  //   theItem = shopItems[shopItem];
-  //   fill(30, 70);
-  //   rect(width * 0.85, height * (2 * shopItem + 1) * 0.125 - scroll * scalars.scrollScalar, width * 0.3, height * 0.2);
-  //   fill(0);
-  //   tint(enoughCookies(cookies, theItem.price));
-  //   image(theItem.image, width * 0.76, height * (2 * shopItem + 1) * 0.125 - scroll * scalars.scrollScalar, theItem.width, theItem.height);
-  //   if(typeof theItem.metaText === "undefined") {
-  //     theText = theItem.name + "\nCost: " + str(theItem.price) + " Cookies\n" + str(theItem.cps) + " CPS\nOwned: " + str(theItem.owned);
-  //   }
-  //   else {
-  //     theText = theItem.name + "\nCost: " + str(theItem.price) + " Cookies\n" + str(theItem.cps) + " " + theItem.metaText + "\nOwned: " + str(theItem.owned);
-  //   }
-  //   text(theText, width * 0.825, height * (2 * shopItem + 1) * 0.125 - scroll * scalars.scrollScalar);
-  // }
   ovenObj.run();
   bakeryObj.run();
 
@@ -647,7 +572,6 @@ function displayShop() {
   rect(width * 0.99, scroll / 4 * height, width * 0.01, height/4);
   
   displayMessage();
-  textBox();
 }
 
 function newMessage(message, decay) {
@@ -686,28 +610,22 @@ function enoughCookies(cookies, price) {
 }
 
 function displayTextBox(theText, x, y) {
-  // Called from textBox(), displays a shop item's text attribute in a rectangle if hovered over
+  // Called from within shop objects in mouseHover() 
+  // Displays a shop object's metaText in a box if hovered over
+
+  // Formatting
   textAlign(LEFT, TOP);
   textSize(15 * scalars.textScalar);
   rectMode(CORNERS);
   stroke(0);
   strokeWeight(4);
   fill(186, 211, 252);
+  // Draw the rectangle
   rect(x - 150, y - 75, x, y);
   noStroke();
   fill(0);
+  // Text inside
   text(theText, x - 145, y - 70);
-}
-
-function textBox() {
-  // Call displayTextBox if user is hovering over a shop item
-  let theItem;
-  for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
-    theItem = shopItems[shopItem];
-    if (Math.abs(mouseX - width * 0.76) < theItem.width / 2 && Math.abs(mouseY - height * (2 * shopItem + 1) * 0.125 + scroll * scalars.scrollScalar) < theItem.height / 2) {
-      displayTextBox(theItem.text, mouseX, mouseY);
-    }
-  }
 }
 
 function newFallingCookie() {
@@ -735,8 +653,6 @@ function cookieFall() {
     }
   }
 }
-
-
 
 function mouseClicked() {
   if (gameState === 1) {
@@ -893,13 +809,16 @@ function mouseWheel(event) {
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   initScalarsPositions();
-  generateGraphics();
+  resizeObjects();
 }
 
-// Functions that require user interaction (buttons, dialog boxes, clickable objects)
+function resizeObjects() {
+  mainCookie.resize(width / 2, height / 2, scalars.mainCookieScalar, scalars.mainCookieScalar);
+  titleStartButton.resize(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH);
+  titleOptionsButton.resize(width / 2, height * 0.62, scalars.menuButtonW, scalars.menuButtonH);
 
-function drawButton(buttonObject) {
-  let theText = buttonObject.text;
-  let tSize = buttonObject.tSize;
-
+  // Shop objects get resized with no params, taken care of by
+  // their extendResize() function called in their resize() function
+  ovenObj.resize();
+  bakeryObj.resize();
 }
