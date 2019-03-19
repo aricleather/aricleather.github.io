@@ -147,6 +147,8 @@ class ShopObject extends GameObject {
     this.textX = width * 0.825;
     this.tSize = 15 * scalars.textScalar;
     this.rectX = width * 0.85;
+    this.scrollAmount = 0;
+    this.scrollPosition = width * 0.0625;
 
     // shopNumber just keeps track of order in the shop, so that the next shopObject construction knows it comes after
     shopNumber++;
@@ -183,6 +185,9 @@ class ShopObject extends GameObject {
           this.alreadyClicked = true;
         }
       }
+      if(!mouseIsPressed) {
+        this.alreadyClicked = false;
+      }
       
       rectMode(CENTER);
       fill(30, 70);
@@ -202,8 +207,9 @@ class ShopObject extends GameObject {
     // Since shopObjects are always in the same relative spot on the screen, resize should be called with no params
     // to let this extendResize function reset the scaling and position variables
     this.resize = function() {
+      this.scrollPosition = width * 0.0625;
       this.x = width * 0.76;
-      this.y = height * (2 * this.position + 1) * 0.125;
+      this.y = height * (2 * this.position + 1) * 0.125 + this.scrollPosition * this.scrollAmount;
       this.width = width * this.objImage.width * 0.0002;
       this.height = width * this.objImage.height * 0.0002;
       this.textX = width * 0.825;
@@ -215,6 +221,17 @@ class ShopObject extends GameObject {
     // display the little box over the item with some info
     this.mouseHover = function() {
       displayTextBox(this.metaText, mouseX, mouseY);
+    };
+
+    this.mouseScroll = function(event) {
+      if(event > 0) {
+        this.scrollAmount--;
+      }
+      else {
+        this.scrollAmount++;
+      }
+      this.scrollAmount = constrain(this.scrollAmount, 0, 7);
+      this.y = height * (2 * this.position + 1) * 0.125 + this.scrollPosition * this.scrollAmount;  
     };
   }
 }
@@ -755,7 +772,7 @@ function calculateTextSize(theString, theWidth) {
       longestWord = theString[i];
     }
   }
-  return theWidth / longestWord.length - 1;
+  return theWidth / longestWord.length * 0.7;
 }
 
 function formatText(theString, theWidth, tSize) {
@@ -812,6 +829,8 @@ function mouseWheel(event) {
     }
     scroll = constrain(scroll, 0, 3);
   }
+  ovenObj.mouseScroll(event.delta);
+  bakeryObj.mouseScroll(event.delta);
 }
 
 function windowResized() {
