@@ -81,12 +81,11 @@ class Button extends GameObject {
 }
 
 class ImageObject extends GameObject {
-  constructor(x, y, width, height, objImage, clicked, extendRun = 0, mouseHover = 0) {
+  constructor(x, y, width, height, objImage, clicked, extendRun = 0) {
     super(x, y, width, height);
     this.objImage = objImage;
     this.clicked = clicked;
     this.extendRun = extendRun;
-    this.mouseHover = mouseHover;
 
     this.run = function() {
       // Image objects when run() draw their image to the screen with specified x, y, width, height
@@ -102,10 +101,6 @@ class ImageObject extends GameObject {
 
       // Again utilizing calcMouse() and alreadyClicked to run this.clicked() on click only once
       if(this.mouse) {
-        // If mouseHover exists run when mouse hovering
-        if(this.mouseHover) {
-          this.mouseHover();
-        }
         if(mouseIsPressed && !this.alreadyClicked && !gMouse) {
           this.clicked();
           this.alreadyClicked = true;
@@ -123,6 +118,39 @@ class ImageObject extends GameObject {
       this.y = y;
       this.width = width;
       this.height = height;
+    };
+  }
+}
+
+class ImageButton extends ImageObject {
+  constructor(x, y, width, height, objImage, clicked, hoverScalar, objText) {
+    super(x, y, width, height, objImage, clicked, () => this.mouseHover);
+    this.hoverScalar = hoverScalar;
+    this.minWidth = this.width;
+    this.minHeight = this.height;
+    this.tSize = calculateTextSize(objText, this.width);
+    this.objText = formatText(objText, this.width, this.tSize);
+
+    this.extendRun = function() {
+      if(this.mouse && this.width === this.minWidth) {
+        this.width *= this.hoverScalar;
+        this.height *= this.hoverScalar;
+      }
+      else if (!this.mouse && this.width > this.minWidth) {
+        this.width = this.minWidth;
+        this.height = this.minHeight;
+      }
+      textAlign(CENTER, TOP);
+      textSize(this.tSize);
+      text(this.objText, this.x, this.y + this.y);
+    };
+    this.resize = function(x, y, width, height) {
+      this.x = x;
+      this.y = y;
+      this.width = width;
+      this.height = height;
+      this.tSize = calculateTextSize(objText, this.width);
+      this.objText = formatText(objText, this.width, this.tSize);
     };
   }
 }
@@ -271,16 +299,24 @@ class ScrollBar extends GameObject {
   }
 }
 
+// class DialogBox extends GameObject {
+//   constructor(...textAndFunctions) {
+//     super(width / 2, height * 0.25, width / 2, height * 0.3);
+//     b
+//   }
+// }
+
 // Buttons
 let titleStartButton, titleOptionsButton;
 // Image objects
-let mainCookie;
+let mainCookie, openShopButton, closeShopButton;
 // Shop Objects
 let bakeryObj, ovenObj;
 // Global vars
 let shopNumber = 0;
-let gMouse = false;
 let shopScrollBar;
+
+let gMouse = false;
 
 function initObjects() {
   // Buttons
@@ -307,6 +343,14 @@ function initObjects() {
       this.height = constrain(this.height, scalars.mainCookieScalar, scalars.mainCookieScalar * 1.25);
     });
 
+  openShopButton = new ImageButton(width * 0.97, height * 0.06, scalars.storeCoinScalar, scalars.storeCoinScalar, coin, function() {
+    shopState = 1;
+  }, 1.05, "Open Shop");
+  closeShopButton = new ImageButton(width * 0.67, height * 0.06, scalars.storeCloseScalar, scalars.storeCloseScalar, rightArrow, function() {
+    shopState = 0;
+  }, 1.05, "Close Shop");
+
+  image(coin, width * 0.97, height * 0.06, scalars.storeCoinScalar * scalars.storeHoverScalar, scalars.storeCoinScalar * scalars.storeHoverScalar);
   // Scroll bar for shop
   shopScrollBar = new ScrollBar(width * 0.995, 0, width * 0.01, 7, height);
 
@@ -484,7 +528,7 @@ function mainGame() { // gameState 1
     shop();
   }
   else {
-    shopOpenButton();
+    openShopButton.run();
   }
 }
 
@@ -603,26 +647,13 @@ function displayOptions() {
 function shop() {
   // Close shop arrow
   displayShop();
-  shopCloseButtonHover();
 }
 
 function displayShop() {
   // Draw "close shop" arrow + text underneath
-  tint(255, 255);
-  image(rightArrow, width * 0.67, height * 0.06, scalars.storeCloseScalar * scalars.storeCloseHoverScalar, scalars.storeCloseScalar * scalars.storeCloseHoverScalar);
-  fill(0);
-  textSize(15 * scalars.textScalar);
-  textAlign(CENTER, CENTER);
-  text("Close\nShop", width * 0.67, height * 0.06 + width * 0.035);
-
+  closeShopButton.run();
   ovenObj.run();
   bakeryObj.run();
-
-  // Scroll bar
-  // noStroke();
-  // fill(75);
-  // rectMode(CORNER);
-  // rect(width * 0.99, scroll / 4 * height, width * 0.01, height/4);
   shopScrollBar.run();
   
   displayMessage();
@@ -642,15 +673,6 @@ function displayMessage() {
     if(millis() > globalMessageDecay) {
       messageAlpha -= 8.5;
     }
-  }
-}
-
-function shopCloseButtonHover() {
-  if (Math.abs(mouseX - width * 0.67) < scalars.storeCloseScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCloseScalar / 2) {
-    scalars.storeCloseHoverScalar = 1.05;
-  }
-  else {
-    scalars.storeCloseHoverScalar = 1;
   }
 }
 
@@ -704,28 +726,6 @@ function cookieFall() {
     if (theCookie.y > height + scalars.fallingCookieScalar) {
       // When cookie leaves screen, remove from list
       cookiesFalling.splice(i, 1);
-    }
-  }
-}
-
-function mouseClicked() {
-  if (gameState === 1) {
-    if (shopState === 1) {
-      if (Math.abs(mouseX - width * 0.67) < scalars.storeCloseScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCloseScalar / 2) {
-        shopState = 0;
-      }
-      else {
-        null;
-      }
-    }
-    // Opens shop when arrow clicked
-    else {
-      if (Math.abs(mouseX - width * 0.97) < scalars.storeCoinScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCoinScalar / 2) {
-        shopState = 1;
-      }
-      else {
-        null;
-      }
     }
   }
 }
