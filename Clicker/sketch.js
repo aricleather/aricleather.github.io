@@ -9,7 +9,7 @@
 // - My game incorporates sound effects
 
 class GameObject {
-  // Main class used in game. Gives it x coord, y coord, width, and height
+  // Main class used in game. Gives x coord, y coord, width, and height
   // Gives function calcMouse to check if mouse is on object
   constructor(x, y, width, height) {
     this.mouse;
@@ -209,7 +209,7 @@ class ShopObject extends GameObject {
     this.resize = function() {
       this.scrollPosition = width * 0.0625;
       this.x = width * 0.76;
-      this.y = height * (2 * this.position + 1) * 0.125 + this.scrollPosition * this.scrollAmount;
+      this.y = height * (2 * this.position + 1) * 0.125 - this.scrollPosition * this.scrollAmount;
       this.width = width * this.objImage.width * 0.0002;
       this.height = width * this.objImage.height * 0.0002;
       this.textX = width * 0.825;
@@ -225,13 +225,48 @@ class ShopObject extends GameObject {
 
     this.mouseScroll = function(event) {
       if(event > 0) {
-        this.scrollAmount--;
-      }
-      else {
         this.scrollAmount++;
       }
+      else {
+        this.scrollAmount--;
+      }
       this.scrollAmount = constrain(this.scrollAmount, 0, 7);
-      this.y = height * (2 * this.position + 1) * 0.125 + this.scrollPosition * this.scrollAmount;  
+      this.y = height * (2 * this.position + 1) * 0.125 - this.scrollPosition * this.scrollAmount;  
+    };
+  }
+}
+
+class ScrollBar extends GameObject {
+  constructor(x, y, scrollBarWidth, scrollCount, scrollDistance) {
+    // For scroll bars in game, for example in the shop
+    super(x, y, scrollBarWidth, scrollDistance / scrollCount);
+    this.scrollCount = scrollCount; // Amount of times it can scroll before reaching bottom
+    this.scrollBarHeight = scrollDistance / scrollCount; // Scroll bar height is the distance it scroll in divided by how many times it can so it fits
+    this.scrollDistance = scrollDistance - this.scrollBarHeight; // Edit scroll distance not to include the scroll bar height so nothing goes off screen
+    this.scrollAmount = 0; // Originally, the scroll bar has not been scrolled at all
+    this.deltaY = 0; // This is edited when the mouse is scrolled by how much the scroll bar needs to move
+    this.run = function() {
+      noStroke();
+      fill(75, 200);
+      rectMode(CENTER);
+      // Rect mode is center, so half the height is the center of it, plus its original y coord and the deltaY from scrolling
+      rect(this.x, this.y + this.scrollBarHeight / 2 + this.deltaY, this.width, this.height);
+    };
+
+    this.mouseScroll = function(event) {
+      if(event > 0) {
+        this.scrollAmount++;
+      }
+      else {
+        this.scrollAmount--;
+      }
+      // this.scrollAmount = constrain(this.scrollAmount, 0, this.scrollCount);
+      this.scrollAmount = constrain(this.scrollAmount, 0, this.scrollCount);
+      this.deltaY = this.scrollAmount * (this.scrollDistance / this.scrollCount);
+    };
+    
+    this.resize = function() {
+      void 0;
     };
   }
 }
@@ -245,6 +280,7 @@ let bakeryObj, ovenObj;
 // Global vars
 let shopNumber = 0;
 let gMouse = false;
+let shopScrollBar;
 
 function initObjects() {
   // Buttons
@@ -271,6 +307,9 @@ function initObjects() {
       this.height = constrain(this.height, scalars.mainCookieScalar, scalars.mainCookieScalar * 1.25);
     });
 
+  // Scroll bar for shop
+  shopScrollBar = new ScrollBar(width * 0.995, 0, width * 0.01, 7, height);
+
   // Shop Objects
   ovenObj = new ShopObject(oven.width, oven.height, oven, "Oven", "Bake more cookies!", 10, 0.1);
   bakeryObj = new ShopObject(bakery.width, bakery.height, bakery, "Bakery", "Mmm, smells good...", 150, 1);
@@ -295,7 +334,6 @@ function cookieIncrement() {
 let cookie, coin, oven, bakery, rightArrow, gameCursor, clickUpgrade; // Images
 let coinSound, popSound; // Sounds
 let gameFont; // Fonts
-let shopGraphic; // Graphics
 
 // Position / scaling variables
 let scalars; // Scalars used throughout code definied in initScalars()
@@ -581,10 +619,11 @@ function displayShop() {
   bakeryObj.run();
 
   // Scroll bar
-  noStroke();
-  fill(75);
-  rectMode(CORNER);
-  rect(width * 0.99, scroll / 4 * height, width * 0.01, height/4);
+  // noStroke();
+  // fill(75);
+  // rectMode(CORNER);
+  // rect(width * 0.99, scroll / 4 * height, width * 0.01, height/4);
+  shopScrollBar.run();
   
   displayMessage();
 }
@@ -829,6 +868,7 @@ function mouseWheel(event) {
     }
     scroll = constrain(scroll, 0, 3);
   }
+  shopScrollBar.mouseScroll(event.delta);
   ovenObj.mouseScroll(event.delta);
   bakeryObj.mouseScroll(event.delta);
 }
