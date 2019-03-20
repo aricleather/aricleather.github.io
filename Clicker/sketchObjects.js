@@ -33,8 +33,7 @@ let returnToMenuDialog;
 // Global vars used for initializing objects
 let shopNumber = 0;
 
-
-
+// Generate all game objects
 function initObjects() {
   // Buttons
   titleStartButton = new Button(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH, "Start", function() {
@@ -67,7 +66,7 @@ function initObjects() {
     shopState = 0;
   }, 1.05, "Close Shop");
 
-  cookieSpinner = new SpinImage(width / 2, height / 2, 500, 500, cookie, 60);
+  cookieSpinner = new SpinImage(width / 2, height / 2, 500, 500, coin, 60);
 
   // Scroll bar for shop
   shopScrollBar = new ScrollBar(width * 0.995, 0, width * 0.01, 7, height);
@@ -83,4 +82,35 @@ function initObjects() {
   function() {
     void 0;
   });
+
+  // Global messages
+  globalMessage = new GlobalMessage();
+}
+
+// Called when window resized to properly resize all game objects
+function resizeObjects() {
+  // Image objects
+  mainCookie.resize(width / 2, height / 2, scalars.mainCookieScalar, scalars.mainCookieScalar);
+
+  // Image buttons
+  openShopButton.resize(width * 0.97, height * 0.06, scalars.storeCoinScalar, scalars.storeCoinScalar);
+  closeShopButton.resize(width * 0.67, height * 0.06, scalars.storeCloseScalar, scalars.storeCloseScalar);
+
+  // Buttons
+  titleStartButton.resize(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH);
+  titleOptionsButton.resize(width / 2, height * 0.62, scalars.menuButtonW, scalars.menuButtonH);
+
+  // Shop objects get resized with no params, taken care of by
+  // their extendResize() function called in their resize() function
+  ovenObj.resize();
+  bakeryObj.resize();
+
+  // Scroll bars
+  shopScrollBar.resize(width * 0.995, 0, width * 0.01, height);
+
+  // Dialog objects
+  returnToMenuDialog.resize();
+
+  // Global message object
+  globalMessage.resize(width / 2, height / 5, width * 0.6, height * 0.2);
 }

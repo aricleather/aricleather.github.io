@@ -143,6 +143,7 @@ function draw() {
     displayOptions();
   }
   runDialogBoxes();
+  globalMessage.run();
   gMouseControl();
 }
 
@@ -168,6 +169,7 @@ function mainGame() { // gameState 1
 
 function displayGame() {
   cookieFall();
+  // cookieSpinner.run();
   mainCookie.run();
 
   // Draws cookie amount text to screen
@@ -307,15 +309,6 @@ function displayMessage() {
     if(millis() > globalMessageDecay) {
       messageAlpha -= 8.5;
     }
-  }
-}
-
-function shopTint(cookies, price) {
-  if (cookies < price) {
-    return 50;
-  }
-  else {
-    return 255;
   }
 }
 
@@ -481,24 +474,4 @@ function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   initScalarsPositions();
   resizeObjects();
-}
-
-function resizeObjects() {
-  // Image objects
-  mainCookie.resize(width / 2, height / 2, scalars.mainCookieScalar, scalars.mainCookieScalar);
-
-  // Image buttons
-  openShopButton.resize(width * 0.97, height * 0.06, scalars.storeCoinScalar, scalars.storeCoinScalar);
-  closeShopButton.resize(width * 0.67, height * 0.06, scalars.storeCloseScalar, scalars.storeCloseScalar);
-
-  // Buttons
-  titleStartButton.resize(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH);
-  titleOptionsButton.resize(width / 2, height * 0.62, scalars.menuButtonW, scalars.menuButtonH);
-
-  // Shop objects get resized with no params, taken care of by
-  // their extendResize() function called in their resize() function
-  ovenObj.resize();
-  bakeryObj.resize();
-
-  returnToMenuDialog.resize();
 }
