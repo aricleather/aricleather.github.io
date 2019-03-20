@@ -37,10 +37,10 @@ let shopNumber = 0;
 
 function initObjects() {
   // Buttons
-  titleStartButton = new Button(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH, "Start", 30, function() {
+  titleStartButton = new Button(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH, "Start", function() {
     gameState = 1; // Defines "start" menu button, on click switches to gameState 1 (mainGame())
   });
-  titleOptionsButton = new Button(width / 2, height * 0.62, scalars.menuButtonW, scalars.menuButtonH, "Options", 30, function() { // Options button on main menu
+  titleOptionsButton = new Button(width / 2, height * 0.62, scalars.menuButtonW, scalars.menuButtonH, "Options", function() { // Options button on main menu
     gameState = 2; // Defines "options" menu button, on click switches to gameState 2 (mainGame())
   });
 

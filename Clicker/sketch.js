@@ -323,19 +323,25 @@ function displayTextBox(theText, x, y) {
   // Called from within shop objects in mouseHover() 
   // Displays a shop object's metaText in a box if hovered over
 
+  // Position vars
+  let rectWidth = width / 10;
+  let rectHeight = width / 25;
+  let tSize = Math.ceil(rectWidth / 15);
+  let formattedText = formatText(theText, rectWidth, tSize);
+
   // Formatting
   textAlign(LEFT, TOP);
-  textSize(15 * scalars.textScalar);
+  textSize(tSize);
   rectMode(CORNERS);
   stroke(0);
   strokeWeight(4);
   fill(186, 211, 252);
   // Draw the rectangle
-  rect(x - 150, y - 75, x, y);
+  rect(x - rectWidth, y - rectHeight, x, y);
   noStroke();
   fill(0);
   // Text inside
-  text(theText, x - 145, y - 70);
+  text(formattedText, x - rectWidth + 5, y - rectHeight + 5);
 }
 
 function newFallingCookie() {
@@ -401,11 +407,24 @@ function calculateTextSize(theString, theWidth, theHeight = 0) {
 
 function formatText(theString, theWidth, tSize) {
   // Many functions require the ability to break text in the right location so it doesn't go "out of bounds."
-  // This function returns an edited string with line breaks that fit into the specified width given the text size
+  // This function returns an edited string with line breaks that fit into the specified width given the text size and width
+  // Set up data
   theString = theString.split(" ");
   let widthCounter = 0;
   let returnString = "";
   textSize(tSize);
+
+  // Remove pre-existing new-lines from string
+  for(let i = 0; i < theString.length; i++) {
+    if(theString[i].includes("\n")) {
+      let theString1 = theString.slice(0, i);
+      let splitString = theString[i].split("\n");
+      let theString2 = theString.slice(i + 1);
+      theString = theString1.concat(splitString, theString2);
+    }
+  }
+
+  // By counting width with textWidth, add new lines in appropiate places
   for(let i = 0; i < theString.length; i++) {
     widthCounter += textWidth(theString[i] + " ");
     if(widthCounter >= theWidth) {
@@ -416,6 +435,8 @@ function formatText(theString, theWidth, tSize) {
       returnString += " " + theString[i];
     }
   }
+
+  // This method may leave whitespace on front of string, trim to remove it
   return returnString.trim();
 }
 
@@ -463,7 +484,14 @@ function windowResized() {
 }
 
 function resizeObjects() {
+  // Image objects
   mainCookie.resize(width / 2, height / 2, scalars.mainCookieScalar, scalars.mainCookieScalar);
+
+  // Image buttons
+  openShopButton.resize(width * 0.97, height * 0.06, scalars.storeCoinScalar, scalars.storeCoinScalar);
+  closeShopButton.resize(width * 0.67, height * 0.06, scalars.storeCloseScalar, scalars.storeCloseScalar);
+
+  // Buttons
   titleStartButton.resize(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH);
   titleOptionsButton.resize(width / 2, height * 0.62, scalars.menuButtonW, scalars.menuButtonH);
 
@@ -471,4 +499,6 @@ function resizeObjects() {
   // their extendResize() function called in their resize() function
   ovenObj.resize();
   bakeryObj.resize();
+
+  returnToMenuDialog.resize();
 }

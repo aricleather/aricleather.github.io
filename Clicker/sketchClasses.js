@@ -32,11 +32,11 @@ class GameObject {
 }
   
 class Button extends GameObject {
-  constructor(x, y, width, height, buttonText, tSize, clicked) {
+  constructor(x, y, width, height, buttonText, clicked) {
     super(x, y, width, height);
     // Vars
     this.buttonText = buttonText;
-    this.tSize = tSize;
+    this.tSize = this.width / 10;
     this.clicked = clicked;
     this.color = 200;
   
@@ -88,7 +88,7 @@ class Button extends GameObject {
       this.y = y;
       this.width = width;
       this.height = height;
-      this.tSize = calculateTextSize(this.buttonText, this.width);
+      this.tSize = this.width / 10;
       this.text = formatText(this.buttonText, this.width, this.tSize);
     };
   }
@@ -172,7 +172,7 @@ class ImageButton extends ImageObject {
     this.hoverScalar = hoverScalar;
     this.minWidth = this.width;
     this.minHeight = this.height;
-    this.tSize = calculateTextSize(objText, this.width);
+    this.tSize = this.width / 6;
     this.objText = formatText(objText, this.width, this.tSize);
   
     this.extendRun = function() {
@@ -186,7 +186,7 @@ class ImageButton extends ImageObject {
       }
       textAlign(CENTER, TOP);
       textSize(this.tSize);
-      text(this.objText, this.x, this.y + this.y);
+      text(this.objText, this.x, this.minHeight * 1.1);
     };
   
     this.resize = function(x, y, width, height) {
@@ -194,7 +194,9 @@ class ImageButton extends ImageObject {
       this.y = y;
       this.width = width;
       this.height = height;
-      this.tSize = calculateTextSize(objText, this.width);
+      this.minWidth = this.width;
+      this.minHeight = this.height;
+      this.tSize = this.width / 6;
       this.objText = formatText(objText, this.width, this.tSize);
     };
   }
@@ -351,11 +353,15 @@ class DialogBox extends GameObject {
 
     // Take in args, first half of rest param is text on buttons, second half is functions to run on button press
     // Stored in arrays
-    this.dialogText = dialogText;
     this.buttonText = textAndFunctions.slice(0, textAndFunctions.length / 2);
     this.buttonFunctions = textAndFunctions.slice(textAndFunctions.length / 2);
     this.buttons = this.buttonText.length;
     this.buttonClicked = false;
+
+    // Text formatting
+    this.textY = this.y - this.height / 2 + this.height * 0.1; // Y coord text drawn at
+    this.tSize = this.width * 0.8 / 25;
+    this.dialogText = formatText(dialogText, this.width * 0.8, this.tSize);
 
     // Button formatting
     this.buttonArr = [];
@@ -365,12 +371,8 @@ class DialogBox extends GameObject {
     // Push new buttons into this.buttonArr
     for(let i = 0; i < this.buttons; i++) {
       this.buttonArr.push(new Button(this.x - this.width / 2 + this.width * (i + 1) / (this.buttons + 1), this.buttonY, this.buttonWidth, this.buttonHeight, 
-        this.buttonText[i], calculateTextSize(this.buttonText[i], this.buttonWidth, this.buttonHeight), this.buttonFunctions[i]));
+        this.buttonText[i], this.buttonFunctions[i]));
     }
-    
-    
-    // y coord for main text dialogText
-    this.textY = this.y - this.height / 2 + this.height * 0.15;
 
     this.run = function() {
       //Formatting
@@ -383,8 +385,8 @@ class DialogBox extends GameObject {
       rect(this.x, this.y, this.width, this.height);
 
       // Text in main box
-      textSize(scalars.textScalar * 40);
-      textAlign(CENTER, CENTER);
+      textSize(this.tSize);
+      textAlign(CENTER, TOP);
       fill(0);
       noStroke();
       text(this.dialogText, this.x, this.textY);
@@ -398,6 +400,27 @@ class DialogBox extends GameObject {
       }
 
       gMouseToggle = true;
+    };
+
+    this.resize = function() {
+      // Main resizing
+      this.x = width / 2;
+      this.y = height * 0.25;
+      this.width = width / 2;
+      this.height = height * 0.3;
+
+      // Resize the text
+      this.tSize = this.width * 0.8 / 25;
+      this.dialogText = formatText(this.dialogText, this.width * 0.8, this.tSize);
+      this.textY = this.y - this.height / 2 + this.height * 0.1;
+
+      // Recalculate button sizes and call resize on each button to finish resizing
+      this.buttonY = this.y + this.height / 2 - this.height * 0.2;
+      this.buttonWidth = this.width / (this.buttons + 2);
+      this.buttonHeight = this.height / 5;
+      for(let i = 0; i < this.buttons; i++) {
+        this.buttonArr[i].resize(this.x - this.width / 2 + this.width * (i + 1) / (this.buttons + 1), this.buttonY, this.buttonWidth, this.buttonHeight);
+      }
     };
   }
 }
