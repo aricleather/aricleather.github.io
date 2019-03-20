@@ -57,6 +57,11 @@ class Button extends GameObject {
       text(this.buttonText, this.x, this.y);
   
       this.checkClicked(mouseX, mouseY);
+      if(!mouseIsPressed) {
+        this.alreadyClicked = false;
+      }
+
+      return this.alreadyClicked;
     };
   
     this.mouseHover = (mX, mY) => {
@@ -70,10 +75,11 @@ class Button extends GameObject {
     };
   
     this.checkClicked = (mX, mY) => {
-      if(this.mouse && mouseIsPressed && !this.alreadyClicked && !gMouse) { // If the global mouse variable is true DON'T REGISTER CLICK!
+      if(this.mouse && mouseIsPressed && !this.alreadyClicked) { // If the global mouse variable is true DON'T REGISTER CLICK!
         this.clicked();
+        this.alreadyClicked = true;
         // After a click, set gMouse to true temporarily to block further clicks until mouse button released
-        gMouse = !gMouse;
+        gMouseToggle = true;
       }
     };
   
@@ -131,7 +137,34 @@ class ImageObject extends GameObject {
     };
   }
 }
-  
+
+class SpinImage extends GameObject {
+  constructor(x, y, width, height, objImage, speed) {
+    // Creates an object you can .run() to draw its image spinning 
+    // Complete one full rotation per "this.speed" frames
+    // Vars
+    super(x, y, width, height);
+    this.objImage = objImage;
+    this.speed = speed;
+    this.spinCount = 0;
+    this.rotateAmount;
+
+    // Translate to the x and y of the object, rotate, draw image, rotate back, translate back
+    this.run = function() {
+      this.rotateAmount = 360 * (this.spinCount % this.speed / this.speed);
+      console.log(this.rotateAmount);
+      translate(this.x, this.y);
+      rotate(this.rotateAmount);
+      imageMode(CENTER);
+      fill("white");
+      rect(0, 0, this.width, this.height);
+      rotate(-this.rotateAmount);
+      translate(-this.x, -this.y);
+      this.spinCount++;
+    };
+  }
+}
+
 class ImageButton extends ImageObject {
   constructor(x, y, width, height, objImage, clicked, hoverScalar, objText) {
     super(x, y, width, height, objImage, clicked, () => this.mouseHover);
@@ -315,28 +348,31 @@ class DialogBox extends GameObject {
   // When constructing, first send x strings then x functions
   constructor(dialogText, ...textAndFunctions) {
     super(width / 2, height * 0.25, width / 2, height * 0.3);
-    
+
     // Take in args, first half of rest param is text on buttons, second half is functions to run on button press
     // Stored in arrays
     this.dialogText = dialogText;
     this.buttonText = textAndFunctions.slice(0, textAndFunctions.length / 2);
     this.buttonFunctions = textAndFunctions.slice(textAndFunctions.length / 2);
     this.buttons = this.buttonText.length;
+    this.buttonClicked = false;
 
-    // x, y coords, width & height for buttons
-    this.buttonXArr;
-    for(let i = 0; i < this.buttons; i++) {
-      this.buttonXArr.push((this.x - this.width / 2) * (i + 1) / (this.buttons + 1));
-    }
+    // Button formatting
+    this.buttonArr = [];
     this.buttonY = this.y + this.height / 2 - this.height * 0.2;
-    this.buttonWidth = this.width / this.buttons;
+    this.buttonWidth = this.width / (this.buttons + 2);
     this.buttonHeight = this.height / 5;
+    // Push new buttons into this.buttonArr
+    for(let i = 0; i < this.buttons; i++) {
+      this.buttonArr.push(new Button(this.x - this.width / 2 + this.width * (i + 1) / (this.buttons + 1), this.buttonY, this.buttonWidth, this.buttonHeight, 
+        this.buttonText[i], calculateTextSize(this.buttonText[i], this.buttonWidth, this.buttonHeight), this.buttonFunctions[i]));
+    }
+    
     
     // y coord for main text dialogText
     this.textY = this.y - this.height / 2 + this.height * 0.15;
 
     this.run = function() {
-      gMouse = true;
       //Formatting
       rectMode(CENTER);
       stroke(0);
@@ -353,6 +389,15 @@ class DialogBox extends GameObject {
       noStroke();
       text(this.dialogText, this.x, this.textY);
 
+      // Run the buttons
+      for(let i = 0; i < this.buttons; i++) {
+        this.buttonClicked = this.buttonArr[i].run();
+        if(this.buttonClicked === true) {
+          closeDialog(1);
+        }
+      }
+
+      gMouseToggle = true;
     };
   }
 }

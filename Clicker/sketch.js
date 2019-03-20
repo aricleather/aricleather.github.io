@@ -8,12 +8,21 @@
 // - My game can successfully handle window resizing, in terms of scaling and canvas
 // - My game incorporates sound effects
 
+let gMouseToggle = false;
 let gMouse = false;
+let currentDialog = [];
 
-function mouseCooldown() {
-  if(!mouseIsPressed) {
+function gMouseControl() {
+  // This function exists so that gMouseToggle can be called at any time in draw loop and
+  // still block clicks. gMouseControl is run at end of draw loop so that if anything 
+  // sets gMouseToggle to true, gMouse will also be true at end of draw loop, blocking clicks
+  if(gMouseToggle) {
+    gMouse = true;
+  }
+  else if(!mouseIsPressed) {
     gMouse = false;
   }
+  gMouseToggle = false;
 }
 
 function cookieIncrement() {
@@ -85,36 +94,8 @@ function setup() {
   textFont(gameFont); // Font used throughout whole game
   imageMode(CENTER);
   initScalarsPositions();
-  initVar();
   initObjects();
-}
-
-function initVar() {
-  // Each element has text, button options, and calls to do on various button presses. Drawn by dialogBox(), the one being drawn tracked by dialogState
-  dialog = [
-    {
-      text: "Are you sure you want to reset?",
-      buttonText: [
-        "Yes", "No"
-      ],
-      buttonCalls: [
-        resetGame,
-        closeDialog,
-      ],
-    },
-    {
-      text: "Go back to main menu?",
-      buttonText: [
-        "Yes", "No"
-      ],
-      buttonCalls: [
-        function() {
-          gameState = 0;
-        },
-        closeDialog
-      ]
-    },
-  ];
+  angleMode(DEGREES);
 }
 
 function initScalarsPositions() {
@@ -161,7 +142,8 @@ function draw() {
   else {
     displayOptions();
   }
-  mouseCooldown();
+  runDialogBoxes();
+  gMouseControl();
 }
 
 function menu() { // gameState 0
@@ -172,7 +154,6 @@ function menu() { // gameState 0
 }
 
 function mainGame() { // gameState 1
-  // testDialog.run();
   incrementCookies();
   displayGame();
   animateCookieGet();
@@ -182,6 +163,7 @@ function mainGame() { // gameState 1
   else {
     openShopButton.run();
   }
+
 }
 
 function displayGame() {
@@ -382,80 +364,23 @@ function cookieFall() {
   }
 }
 
-function newDialogBox(option) {
-  if(typeof dialog[option - 1].formatted === "undefined") {
-    // Prepares variables in dialogBox object for dialogBox(), text formatting and stuff
-    let whichDialog = dialog[option - 1];
-    whichDialog.text = calculateTextSize(whichDialog.text, width * 0.4, scalars.textScalar * 40);
-    for(let i = 0; i < whichDialog.buttonText.length; i++) {
-      whichDialog.buttonText[i] = calculateTextSize(whichDialog.buttonText[i], width * 0.06, scalars.textScalar * 23);
-    }
-    dialog[option - 1].formatted = true;
+function newDialogBox(theDialog) {
+  if (theDialog.constructor.name === "DialogBox") {
+    currentDialog.push(theDialog);
   }
-  messageAlpha = 0;
-  dialogState = option;
 }
 
-function dialogBox(dialogObject) {
-  if(dialogState) {
-    // Takes a dialog object from dialog, displays it's text and it's options, runs option based on user selection
-    // Variables
-    let xPos;
-    let dWidth = width * 0.4;
-    let dHeight = height * 0.2;
-    let options = dialogObject.buttonText.length;
-    let optionHeight = height * 0.045;
-    let optionWidth = width * 0.06;
-    
-
-    //Formatting
-    rectMode(CENTER);
-    stroke(0);
-    strokeWeight(4);
-    fill(186, 211, 252);
-    // Main box
-    rect(width * 0.5, height * 0.2, dWidth, dHeight);
-    // Text in main box
-    textSize(scalars.textScalar * 40);
-    textAlign(CENTER, CENTER);
-    fill(0);
-    noStroke();
-    text(dialogObject.text, width * 0.5, height * 0.17);
-
-    textSize(scalars.textScalar * 23);
-    for(let i = 0; i < options; i++) {
-      // More formatting
-      xPos = width * 0.3 + dWidth * ((i + 1) / (options + 1));
-      if(Math.abs(mouseX - xPos) <= optionWidth / 2 && Math.abs(mouseY - height * 0.26) <= optionHeight / 2) {
-        fill(150);
-      }
-      else {
-        fill(200);
-      }
-      stroke(0);
-      // The smaller boxes
-      rect(xPos, height * 0.26, optionWidth, optionHeight);
-      fill(0);
-      noStroke();
-      text(dialogObject.buttonText[i], xPos, height * 0.26);
-    }
-
-    // If we are clicking on an option, run the function
-    for(let i = 0; i < options; i++) {
-      xPos = width * 0.3 + dWidth * ((i + 1) / (options + 1));
-      if (mouseIsPressed && Math.abs(mouseX - xPos) <= optionWidth / 2 && Math.abs(mouseY - height * 0.26) <= optionHeight / 2) {
-        dialogObject.buttonCalls[i]();
-        dialogState = 0;
-      }
-    }
+function runDialogBoxes() {
+  for(let i = 0; i < currentDialog.length; i++) {
+    currentDialog[i].run();
   }
 }
 
 function closeDialog() {
-  dialogState = 0;
+  currentDialog.shift();
 }
 
-function calculateTextSize(theString, theWidth) {
+function calculateTextSize(theString, theWidth, theHeight = 0) {
   theString = theString.split(" ");
   let longestWord = "";
   for(let i = 0; i < theString.length; i++) {
@@ -463,7 +388,15 @@ function calculateTextSize(theString, theWidth) {
       longestWord = theString[i];
     }
   }
-  return theWidth / longestWord.length * 0.7;
+  tSize = theWidth / longestWord.length * 0.7;
+  textSize(tSize);
+  if(theHeight) {
+    if(textAscent(theString) > theHeight * 0.7) {
+      tSize = theHeight * 0.7;
+    }
+  }
+
+  return tSize;
 }
 
 function formatText(theString, theWidth, tSize) {
@@ -487,15 +420,13 @@ function formatText(theString, theWidth, tSize) {
 }
 
 function keyPressed() {
-  if (dialogState === 0) {
-    if (gameState === 1 || gameState === 2) {
-      if (key === "r" && gameState === 1) {
-        // Resets game upon pressing "r" on keyboard. resetAlpha is used in mainGame() to draw "Game reset!" to screen which fades away
-        newDialogBox(1);
-      }  
-      else if (key === "m") {
-        newDialogBox(2);
-      }
+  if (gameState === 1 || gameState === 2) {
+    if (key === "r" && gameState === 1) {
+      // Resets game upon pressing "r" on keyboard. resetAlpha is used in mainGame() to draw "Game reset!" to screen which fades away
+      void 0;
+    }  
+    else if (key === "m") {
+      newDialogBox(returnToMenuDialog);
     }
   }
 }

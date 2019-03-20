@@ -16,9 +16,10 @@
 // Global button declarations
 let titleStartButton, titleOptionsButton;
 
-// Global image object & image button declarations
+// Global image object, image button and image spinner declarations
 let mainCookie;
 let openShopButton, closeShopButton;
+let cookieSpinner;
 
 // Global shop Object declarations
 let bakeryObj, ovenObj;
@@ -26,8 +27,13 @@ let bakeryObj, ovenObj;
 // Global scroll bar declarations
 let shopScrollBar;
 
+// Global dialog object declarations
+let returnToMenuDialog;
+
 // Global vars used for initializing objects
 let shopNumber = 0;
+
+
 
 function initObjects() {
   // Buttons
@@ -61,7 +67,8 @@ function initObjects() {
     shopState = 0;
   }, 1.05, "Close Shop");
 
-  image(coin, width * 0.97, height * 0.06, scalars.storeCoinScalar * scalars.storeHoverScalar, scalars.storeCoinScalar * scalars.storeHoverScalar);
+  cookieSpinner = new SpinImage(width / 2, height / 2, 500, 500, cookie, 60);
+
   // Scroll bar for shop
   shopScrollBar = new ScrollBar(width * 0.995, 0, width * 0.01, 7, height);
 
@@ -70,5 +77,10 @@ function initObjects() {
   bakeryObj = new ShopObject(bakery.width, bakery.height, bakery, "Bakery", "Mmm, smells good...", 150, 1);
 
   // Dialog objects
-  testDialog = new DialogBox("Test", ["Test1", "function1"]);
+  returnToMenuDialog = new DialogBox("Go back to main menu?", "Yes", "No", function() {
+    gameState = 0;
+  },
+  function() {
+    void 0;
+  });
 }
