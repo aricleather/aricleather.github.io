@@ -86,6 +86,7 @@ function initObjects() {
   // Dialog objects
   returnToMenuDialog = new DialogBox("Go back to main menu?", "Yes", "No", function() {
     gameState = 0;
+    saveGame();
     loadSaveFile();
   },
   function() {
