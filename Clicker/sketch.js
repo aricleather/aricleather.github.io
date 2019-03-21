@@ -36,7 +36,7 @@ function cookieIncrement() {
 }
 
 // Load content used in game
-let cookie, coin, oven, bakery, rightArrow, gameCursor, clickUpgrade; // Images
+let cookie, coin, oven, bakery, factory, rightArrow, gameCursor, clickUpgrade; // Images
 let coinSound, popSound; // Sounds
 let gameFont; // Fonts
 
@@ -77,6 +77,7 @@ function preload() {
   rightArrow = loadImage("assets/rightarrow.png");
   gameCursor = loadImage("assets/cursor.png");
   bakery = loadImage("assets/bakery.png");
+  factory = loadImage("assets/factory.png");
   clickUpgrade = loadImage("assets/clickUpgrade.png");
 
   // Sounds and fonts
@@ -282,6 +283,7 @@ function shop() {
 
   ovenObj.run();
   bakeryObj.run();
+  factoryObj.run();
   
   shopScrollBar.run();
 }
@@ -433,6 +435,7 @@ function resetGame() {
 
   ovenObj.reset();
   bakeryObj.reset();
+  factoryObj.reset();
 
   // Delete save file
   document.cookie = "";
@@ -451,6 +454,7 @@ function mouseWheel(event) {
   shopScrollBar.mouseScroll(event.delta);
   ovenObj.mouseScroll(event.delta);
   bakeryObj.mouseScroll(event.delta);
+  factoryObj.mouseScroll(event.delta);
 }
 
 function windowResized() {

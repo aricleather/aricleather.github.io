@@ -81,6 +81,7 @@ function initObjects() {
   // Shop Objects
   ovenObj = new ShopObject(oven.width, oven.height, oven, "Oven", "Bake more cookies!", 5, 0.1);
   bakeryObj = new ShopObject(bakery.width, bakery.height, bakery, "Bakery", "Mmm, smells good...", 150, 1);
+  factoryObj = new ShopObject(factory.width, factory.height, factory, "Factory", "Autonomous cookie production.", 500, 5);
 
   // Dialog objects
   returnToMenuDialog = new DialogBox("Go back to main menu?", "Yes", "No", function() {
@@ -121,6 +122,7 @@ function resizeObjects() {
   // their extendResize() function called in their resize() function
   ovenObj.resize();
   bakeryObj.resize();
+  factoryObj.resize();
 
   // Scroll bars
   shopScrollBar.resize(width * 0.995, 0, width * 0.01, height);
