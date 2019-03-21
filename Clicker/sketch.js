@@ -210,11 +210,11 @@ function displayGame() {
 
 function incrementCookies() {
   // Increments the cookie amount 4 times a second
-  if (autoCookies > 0 && millis() - lastMillis > 250) {
-    cookies += autoCookies / 4;
+  if (autoCookies > 0 && millis() - lastMillis > 25) {
+    cookies += autoCookies / 40;
     lastMillis = millis();
     increments ++;
-    if (increments % 4 === 0) {
+    if (increments % 40 === 0) {
       cookieGet();
     }
   } 
