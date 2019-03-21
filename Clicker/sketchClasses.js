@@ -1,3 +1,4 @@
+/* eslint-disable indent */
 // Interactive Scene
 // Aric Leather
 // Date: March 4, 2019
@@ -24,7 +25,6 @@ class GameObject {
     this.height = height;
     // Objects in my game check if they are clicked on by themselves. This variable is set to true when the mouse is clicked
     // Which blocks further clicks, until the mouse button is released (this function given in subclasses)
-    this.alreadyClicked = false;
     this.calcMouse = function() {
       this.mouse = Math.abs(mouseX - this.x) <= this.width / 2 && Math.abs(mouseY - this.y) <= this.height / 2;
     };
@@ -35,16 +35,26 @@ class Button extends GameObject {
   constructor(x, y, width, height, buttonText, clicked) {
     super(x, y, width, height);
     // Vars
-    this.buttonText = buttonText;
     this.tSize = this.width / 10;
+    this.buttonText = formatText(buttonText, this.width, this.tSize);
     this.clicked = clicked;
+    this.alreadyClicked = false;
     this.color = 200;
+  }
   
-    this.run = function() {
+    run() {
       // When a Button is run, calculate if mouse is on top, draw the rectangle around it, fill it in with
       // a shade of gray dependent on whether the mouse is inside or not, then the text inside
       this.calcMouse();
-      this.mouseHover(mouseX, mouseY);
+
+      // Darkens button if mouse inside
+      if(this.mouse) {
+        this.color = 150;
+      }
+      else {
+        this.color = 200;
+      }
+      // Formatting and drawing rectangle, text
       stroke(0);
       strokeWeight(3);
       fill(this.color);
@@ -56,43 +66,32 @@ class Button extends GameObject {
       textAlign(CENTER, CENTER);
       text(this.buttonText, this.x, this.y);
   
-      this.checkClicked(mouseX, mouseY);
-      if(!mouseIsPressed) {
-        this.alreadyClicked = false;
-      }
+      this.alreadyClicked = false;
+      this.checkClicked();
 
       return this.alreadyClicked;
-    };
-  
-    this.mouseHover = (mX, mY) => {
-      // Darkens button if mouse inside
-      if(this.mouse) {
-        this.color = 150;
-      }
-      else {
-        this.color = 200;
-      }
-    };
-  
-    this.checkClicked = (mX, mY) => {
-      if(this.mouse && mouseIsPressed && !this.alreadyClicked) { // If the global mouse variable is true DON'T REGISTER CLICK!
+      
+    }
+
+    checkClicked() {
+      if(this.mouse && mouseIsPressed && gMouse < 2) { // If the global mouse variable is true DON'T REGISTER CLICK!
         this.clicked();
-        this.alreadyClicked = true;
-        // After a click, set gMouse to true temporarily to block further clicks until mouse button released
-        gMouseToggle = true;
+        this.alreadyClicked = 1;
+        // After a click, set gMouseToggle to true temporarily to block further clicks until mouse button released
+        gMouseToggle = 1;
       }
-    };
+    }
   
-    this.resize = function(x, y, width, height) {
+    resize(x, y, width, height) {
       this.x = x;
       this.y = y;
       this.width = width;
       this.height = height;
       this.tSize = this.width / 10;
       this.text = formatText(this.buttonText, this.width, this.tSize);
-    };
+    }
   }
-}
+
   
 class ImageObject extends GameObject {
   constructor(x, y, width, height, objImage, clicked, extendRun = 0) {
@@ -101,40 +100,35 @@ class ImageObject extends GameObject {
     this.objImage = objImage;
     this.clicked = clicked;
     this.extendRun = extendRun;
+  }
   
-    this.run = function() {
-      // Image objects when run() draw their image to the screen with specified x, y, width, height
-      this.calcMouse();
-      tint(255, 255);
-      fill(0, 255);
+  run() {
+    // Image objects when run() draw their image to the screen with specified x, y, width, height
+    this.calcMouse();
+    tint(255, 255);
+    fill(0, 255);
   
-      // If ImageObject has extendRun function (passed during construction), run it here before drawing image
-      // Used in classes that want images to have more functionality (ex. ImageButton)
-      if(this.extendRun) {
-        this.extendRun();
+    // If ImageObject has extendRun function (passed during construction), run it here before drawing image
+    // Used in classes that want images to have more functionality (ex. ImageButton)
+    if(this.extendRun) {
+      this.extendRun();
+    }
+    image(this.objImage, this.x, this.y, this.width, this.height);
+  
+    // Again, utilizing calcMouse() and this.alreadyClicked to run this.clicked() on click only *once*
+    if(this.mouse) {
+      if(mouseIsPressed && gMouse < 1) {
+        this.clicked();
+        gMouseToggle = 1;
       }
-      image(this.objImage, this.x, this.y, this.width, this.height);
-  
-      // Again, utilizing calcMouse() and this.alreadyClicked to run this.clicked() on click only *once*
-      if(this.mouse) {
-        if(mouseIsPressed && !this.alreadyClicked && !gMouse) {
-          this.clicked();
-          this.alreadyClicked = true;
-        }
-      }
-  
-      // After click, when mouse released set alreadyClicked back to false to allow for another click
-      if(!mouseIsPressed) {
-        this.alreadyClicked = false;
-      }
-    };
+    }
+  }
       
-    this.resize = function(x, y, width, height) {
-      this.x = x;
-      this.y = y;
-      this.width = width;
-      this.height = height;
-    };
+  resize(x, y, width, height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
   }
 }
 
@@ -166,18 +160,23 @@ class SpinImage extends GameObject {
 }
 
 
-class ImageButton extends ImageObject {
+class ImageButton extends GameObject {
+  // Same as ImageObject but enlarges on hover for a more button-like effect
   constructor(x, y, width, height, objImage, clicked, hoverScalar, objText) {
-    super(x, y, width, height, objImage, clicked, () => this.mouseHover);
+    super(x, y, width, height);
     // Vars
+    this.objImage = objImage;
+    this.clicked = clicked;
     this.hoverScalar = hoverScalar;
+    this.objText = formatText(objText, this.width, this.tSize);
     this.minWidth = this.width;
     this.minHeight = this.height;
     this.tSize = this.width / 6;
-    this.objText = formatText(objText, this.width, this.tSize);
   }
   
-  extendRun() {
+  run() {
+    // Check if mouse is on top then enlarge image based on hoverScalar if mouse hovering
+    this.calcMouse();
     if(this.mouse && !gMouse && this.width === this.minWidth) {
       this.width *= this.hoverScalar;
       this.height *= this.hoverScalar;
@@ -186,9 +185,22 @@ class ImageButton extends ImageObject {
       this.width = this.minWidth;
       this.height = this.minHeight;
     }
+    
+    tint(255, 255);
+    fill(0, 255);
+    image(this.objImage, this.x, this.y, this.width, this.height);
+  
     textAlign(CENTER, TOP);
     textSize(this.tSize);
-    text(this.objText, this.x, this.minHeight * 1.1);
+    text(this.objText, this.x, this.y + this.minHeight * 0.6);
+
+    // Allow clicking only once before releasing mouse
+    if(this.mouse) {
+      if(mouseIsPressed && gMouse < 1) {
+        this.clicked();
+        gMouseToggle = 1;
+      }
+    }
   }
   
   resize(x, y, width, height) {
@@ -199,21 +211,20 @@ class ImageButton extends ImageObject {
     this.minWidth = this.width;
     this.minHeight = this.height;
     this.tSize = this.width / 6;
-    this.objText = formatText(objText, this.width, this.tSize);
+    this.objText = formatText(this.objText, this.width, this.tSize);
   }
 }
   
 class ShopObject extends GameObject {
   constructor(imageWidth, imageHeight, objImage, name, metaText, price, cps) {
-    // Used to construct a more complicated ImageObject. Has a set x coord, set y coord based on order of construction,
-    // image width, image height (objWidth, objHeight), an image, and references to special this.clicked and this.extendRun
-    // functions defined in the constructor
+    // Used to construct an object in the shop
     super(width * 0.76, height * 0.125 * (shopNumber * 2 + 1), width * 0.0002 * imageWidth, width * 0.0002 * imageHeight);
   
-    // All the variables
+    // Vars
     this.objImage = objImage;
     this.name = name;
     this.metaText = metaText;
+    this.basePrice = price;
     this.price = price;
     this.cps = cps;
   
@@ -239,6 +250,7 @@ class ShopObject extends GameObject {
       cookies -= this.price;
       coinSound.play();
       this.owned++;
+      this.price = Math.ceil(this.basePrice * Math.pow(Math.E, this.owned / 4));
       this.updateText();
     }
   }
@@ -260,18 +272,14 @@ class ShopObject extends GameObject {
     image(this.objImage, this.x, this.y, this.width, this.height);
   
     // Again utilizing calcMouse() and alreadyClicked to run this.clicked() on click only once
-    if(this.mouse) {
+    if(this.mouse && gMouse < 1) {
       // If mouseHover exists run when mouse hovering
-      if(this.mouseHover) {
-        this.mouseHover();
-      }
-      if(mouseIsPressed && !this.alreadyClicked && !gMouse) {
+      displayTextBox(this.metaText, mouseX, mouseY);
+      
+      if(mouseIsPressed) {
         this.clicked();
-        this.alreadyClicked = true;
+        gMouseToggle = 1;
       }
-    }
-    if(!mouseIsPressed) {
-      this.alreadyClicked = false;
     }
         
     rectMode(CENTER);
@@ -303,19 +311,30 @@ class ShopObject extends GameObject {
   
   // mouseHover() is run in run() if it exists. Here it uses function displayTextBox() to
   // display the little box over the item with some info
-  mouseHover() {
-    displayTextBox(this.metaText, mouseX, mouseY);
-  }
   
   mouseScroll(event) {
-    if(event > 0) {
-      this.scrollAmount++;
+  if(shopState) {
+      if(event > 0) {
+        this.scrollAmount++;
+      }
+      else {
+        this.scrollAmount--;
+      }
+      this.scrollAmount = constrain(this.scrollAmount, 0, 7);
+      this.y = height * (2 * this.position + 1) * 0.125 - this.scrollPosition * this.scrollAmount;
     }
-    else {
-      this.scrollAmount--;
-    }
-    this.scrollAmount = constrain(this.scrollAmount, 0, 7);
-    this.y = height * (2 * this.position + 1) * 0.125 - this.scrollPosition * this.scrollAmount;  
+  }
+
+  saveLoad(price, owned) {
+    this.price = price;
+    this.owned = owned;
+    this.updateText();
+  }
+
+  reset() {
+    this.price = this.basePrice;
+    this.owned = 0;
+    this.updateText();
   }
 }
 
@@ -338,15 +357,17 @@ class ScrollBar extends GameObject {
   }
   
   mouseScroll(event) {
-    if(event > 0) {
-      this.scrollAmount++;
+    if(shopState) {
+      if(event > 0) {
+        this.scrollAmount++;
+      }
+      else {
+        this.scrollAmount--;
+      }
+      // this.scrollAmount = constrain(this.scrollAmount, 0, this.scrollCount);
+      this.scrollAmount = constrain(this.scrollAmount, 0, this.scrollCount);
+      this.deltaY = this.scrollAmount * (this.scrollDistance / this.scrollCount);
     }
-    else {
-      this.scrollAmount--;
-    }
-    // this.scrollAmount = constrain(this.scrollAmount, 0, this.scrollCount);
-    this.scrollAmount = constrain(this.scrollAmount, 0, this.scrollCount);
-    this.deltaY = this.scrollAmount * (this.scrollDistance / this.scrollCount);
   }
       
   resize(x, y, scrollBarWidth, scrollDistance) {
@@ -409,13 +430,15 @@ class DialogBox extends GameObject {
 
     // Run the buttons
     for(let i = 0; i < this.buttons; i++) {
+      // While clicked, buttons will return a true, which is utilized to close dialog boxes
       this.buttonClicked = this.buttonArr[i].run();
-      if(this.buttonClicked === true) {
+      if(this.buttonClicked) {
         closeDialog(1);
+        this.buttonClicked = false;
       }
     }
 
-    gMouseToggle = true;
+    gMouseToggle = 1;
   }
 
   resize() {
@@ -468,12 +491,12 @@ class GlobalMessage extends GameObject {
     }
   }
     
-  // Call toggle on a GlobalMessage with a duration to have it display for that duration
+  // Call toggle on a GlobalMessage with a duration to have one display for that duration
   toggle(objText, duration) {
     this.objText = formatText(objText, this.width, this.tSize);
     this.textAlpha = 255;
     this.toggled = true;
-    // Will start fading when duration has passed
+    // Will start fading when duration has passed, fadeTime = current time + duration
     this.fadeTime = millis() + duration;
   }
 

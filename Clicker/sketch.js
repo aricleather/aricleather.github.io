@@ -8,8 +8,11 @@
 // - My game can successfully handle window resizing, in terms of scaling and canvas
 // - My game incorporates sound effects
 
-let gMouseToggle = false;
-let gMouse = false;
+window.onbeforeunload = saveGame;
+
+let saveFile;
+let gMouseToggle = 0;
+let gMouse = 0;
 let currentDialog = [];
 
 function gMouseControl() {
@@ -17,21 +20,19 @@ function gMouseControl() {
   // still block clicks. gMouseControl is run at end of draw loop so that if anything 
   // sets gMouseToggle to true, gMouse will also be true at end of draw loop, blocking clicks
   if(gMouseToggle) {
-    gMouse = true;
+    gMouse = gMouseToggle;
   }
   else if(!mouseIsPressed) {
-    gMouse = false;
+    gMouse = 0;
   }
-  gMouseToggle = false;
+  gMouseToggle = 0;
 }
 
 function cookieIncrement() {
-  if(dialogState === 0) {
-    // Increment cookie counter on click and begin "popping" animation
-    cookies += clickPower;
-    popSound.play();
-    newFallingCookie();
-  }
+  // Increment cookie counter on click and begin "popping" animation
+  cookies += clickPower;
+  popSound.play();
+  newFallingCookie();
 }
 
 // Load content used in game
@@ -50,7 +51,6 @@ let scroll = 0;
 // Game states:
 let gameState = 0;
 let shopState = 0;
-let dialogState = 0;
 
 // Clicker game variables:
 let cookies = 0;
@@ -58,8 +58,6 @@ let autoCookies = 0;
 let clickPower = 1;
 let lastMillis = 0;
 let increments = 0;
-let shopItems;
-let dialog;
 
 // Variables used for menu()
 let titleText = "Cookie Clicker"; // strings
@@ -70,8 +68,6 @@ let hoverFillOptions = 200;
 
 let cookieGetText;
 let tempText;
-let globalMessage;
-let globalMessageDecay;
 
 function preload() {
   // Images
@@ -96,6 +92,32 @@ function setup() {
   initScalarsPositions();
   initObjects();
   angleMode(DEGREES);
+  
+  loadSaveFile();
+}
+
+function loadSaveFile() {
+  saveFile = document.cookie;
+  let splitSaveFile = saveFile.split(",");
+  console.log(splitSaveFile);
+  if(splitSaveFile.includes("NaN") || saveFile === "") {
+    saveFile = "";
+  }
+  else {
+    cookies = int(splitSaveFile[0]);
+    autoCookies = float(splitSaveFile[1]);
+    ovenObj.saveLoad(int(splitSaveFile[2]), int(splitSaveFile[3]));
+    bakeryObj.saveLoad(int(splitSaveFile[4]), int(splitSaveFile[5]));
+  }
+}
+
+function saveGame() {
+  // Format: cookies, autoCookies, shop item 1 price, shop item 1 owned, shop item 2 price, shop item 2 owned, etc...
+  if(cookies > 0) {
+    document.cookie = str(cookies) + "," + str(autoCookies) + "," +
+    str(ovenObj.price) + "," + str(ovenObj.owned) + "," +
+    str(bakeryObj.price) + "," + str(bakeryObj.owned);
+  }
 }
 
 function initScalarsPositions() {
@@ -150,8 +172,14 @@ function draw() {
 function menu() { // gameState 0
   displayMenu();
   animateMenu();
-  titleStartButton.run();
+  if(saveFile !== "") {
+    titleLoadButton.run();
+  }
+  else {
+    titleNewGameButton.run();
+  }
   titleOptionsButton.run();
+  // If save file was stored as cookie in browser, show load option
 }
 
 function mainGame() { // gameState 1
@@ -178,12 +206,6 @@ function displayGame() {
   textSize(40 * scalars.textScalar);
   textAlign(CENTER, CENTER);
   text(str(Math.floor(cookies)) + " Cookies" , width / 2, height * 0.9);
-
-  // "Game reset!" text when r clicked on keyboard
-  displayMessage();
-  if(dialogState) {
-    dialogBox(dialog[dialogState - 1]);
-  }
 }
 
 function incrementCookies() {
@@ -221,29 +243,6 @@ function animateCookieGet() {
   }
 }
 
-function shopOpenButton() {
-  shopOpenButtonHover();
-
-  // Draw shop coin + "Store" text underneath
-  tint(255, 255);
-  image(coin, width * 0.97, height * 0.06, scalars.storeCoinScalar * scalars.storeHoverScalar, scalars.storeCoinScalar * scalars.storeHoverScalar);
-  textSize(15 * scalars.textScalar);
-  textAlign(CENTER, CENTER);
-  fill(0, 255);
-  text("Shop", width * 0.97, height * 0.06 + width * 0.035);
-
-}
-
-function shopOpenButtonHover() {
-  // Make shop coin button enlarge upon hovering
-  if (Math.abs(mouseX - width * 0.97) < scalars.storeCoinScalar / 2 && Math.abs(mouseY - height * 0.06) < scalars.storeCoinScalar / 2) {
-    scalars.storeHoverScalar = 1.05;
-  }
-  else {
-    scalars.storeHoverScalar = 1;
-  }
-}
-
 function displayMenu() {
   // Draws everything to screen in menu()
   // Game title text
@@ -253,6 +252,7 @@ function displayMenu() {
   text(titleText , width / 2, height * 0.2);
 
   // Cookies that are next to title text, positions based on length of titleText
+  tint(255, 255);
   image(cookie, width / 2 - textWidth(titleText) / 2 - scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie * scalars.menuAnimScalar, scalars.titleScreenCookie * scalars.menuAnimScalar);
   image(cookie, width / 2 + textWidth(titleText) / 2 + scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie * scalars.menuAnimScalar, scalars.titleScreenCookie * scalars.menuAnimScalar);
 }
@@ -271,45 +271,19 @@ function animateMenu() {
 }
 
 function displayOptions() {
-  textSize(50);
-  text("Nothing here yet!", width * 0.5, height * 0.2);
+  optionsDeleteDataButton.run();
   textSize(25);
-  text("(Press 'm' to go back)", width * 0.5, height * 0.25);
-  if(dialogState) {
-    dialogBox(dialog[dialogState - 1]);
-  }
+  text("(Press 'm' to go back)", width * 0.5, height * 0.9);
 }
 
 function shop() {
-  // Close shop arrow
-  displayShop();
-}
-
-function displayShop() {
-  // Draw "close shop" arrow + text underneath
+  // Run objects for game shop
   closeShopButton.run();
+
   ovenObj.run();
   bakeryObj.run();
-  shopScrollBar.run();
   
-  displayMessage();
-}
-
-function newMessage(message, decay) {
-  globalMessage = message;
-  messageAlpha = 255;
-  globalMessageDecay = millis() + decay * 1000;
-}
-
-function displayMessage() {
-  if (messageAlpha > 0) {
-    textSize(50 * scalars.textScalar);
-    fill(0, messageAlpha);
-    text(globalMessage, width / 2, height * 0.2);
-    if(millis() > globalMessageDecay) {
-      messageAlpha -= 8.5;
-    }
-  }
+  shopScrollBar.run();
 }
 
 function displayTextBox(theText, x, y) {
@@ -364,18 +338,21 @@ function cookieFall() {
 }
 
 function newDialogBox(theDialog) {
+  // If arg is a dialog box, push to currentDialog. Will be run in draw()
   if (theDialog.constructor.name === "DialogBox") {
     currentDialog.push(theDialog);
   }
 }
 
 function runDialogBoxes() {
+  // Run in draw, calls run on all dialog boxes in currentDialog
   for(let i = 0; i < currentDialog.length; i++) {
     currentDialog[i].run();
   }
 }
 
 function closeDialog() {
+  // Called from dialog boxes when a button is clicked, removing itself from currentDialog
   currentDialog.shift();
 }
 
@@ -419,7 +396,12 @@ function formatText(theString, theWidth, tSize) {
 
   // By counting width with textWidth, add new lines in appropiate places
   for(let i = 0; i < theString.length; i++) {
-    widthCounter += textWidth(theString[i] + " ");
+    if(i !== theString.length - 1) {
+      widthCounter += textWidth(theString[i] + " ");
+    }
+    else {
+      widthCounter += textWidth(theString[i]);
+    }
     if(widthCounter >= theWidth) {
       returnString += "\n" + theString[i];
       widthCounter = textWidth(theString[i]);
@@ -448,11 +430,12 @@ function keyPressed() {
 function resetGame() {
   cookies = 0;
   autoCookies = 0;
-  for(let shopItem = 0; shopItem < shopItems.length; shopItem++) {
-    shopItems[shopItem].owned = 0;
-  }
-  messageAlpha = 255; // This is used when drawing "Game Reset!"
-  newMessage("Game reset!", 1);
+
+  ovenObj.reset();
+  bakeryObj.reset();
+
+  // Delete save file
+  document.cookie = "";
 }
 
 function mouseWheel(event) {

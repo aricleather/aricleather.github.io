@@ -36,11 +36,18 @@ let shopNumber = 0;
 // Generate all game objects
 function initObjects() {
   // Buttons
-  titleStartButton = new Button(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH, "Start", function() {
+  titleNewGameButton = new Button(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH, "New Game", function() {
     gameState = 1; // Defines "start" menu button, on click switches to gameState 1 (mainGame())
   });
   titleOptionsButton = new Button(width / 2, height * 0.62, scalars.menuButtonW, scalars.menuButtonH, "Options", function() { // Options button on main menu
     gameState = 2; // Defines "options" menu button, on click switches to gameState 2 (mainGame())
+  });
+  titleLoadButton = new Button(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH, "Load Game", function() {
+    loadSaveFile();
+    gameState = 1;
+  });
+  optionsDeleteDataButton = new Button(width / 2, height * 0.5, scalars.menuButtonW, scalars.menuButtonH * 1.5, "Delete Data", function() {
+    newDialogBox(deleteDataDialog);
   });
 
   // Image objects
@@ -72,12 +79,20 @@ function initObjects() {
   shopScrollBar = new ScrollBar(width * 0.995, 0, width * 0.01, 7, height);
 
   // Shop Objects
-  ovenObj = new ShopObject(oven.width, oven.height, oven, "Oven", "Bake more cookies!", 10, 0.1);
+  ovenObj = new ShopObject(oven.width, oven.height, oven, "Oven", "Bake more cookies!", 5, 0.1);
   bakeryObj = new ShopObject(bakery.width, bakery.height, bakery, "Bakery", "Mmm, smells good...", 150, 1);
 
   // Dialog objects
   returnToMenuDialog = new DialogBox("Go back to main menu?", "Yes", "No", function() {
     gameState = 0;
+    loadSaveFile();
+  },
+  function() {
+    void 0;
+  });
+  deleteDataDialog = new DialogBox("Really delete all data?", "Yes", "No", function() {
+    resetGame();
+    loadSaveFile();
   },
   function() {
     void 0;
@@ -97,8 +112,10 @@ function resizeObjects() {
   closeShopButton.resize(width * 0.67, height * 0.06, scalars.storeCloseScalar, scalars.storeCloseScalar);
 
   // Buttons
-  titleStartButton.resize(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH);
+  titleNewGameButton.resize(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH);
   titleOptionsButton.resize(width / 2, height * 0.62, scalars.menuButtonW, scalars.menuButtonH);
+  titleLoadButton.resize(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH);
+  optionsDeleteDataButton.resize(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH * 1.5);
 
   // Shop objects get resized with no params, taken care of by
   // their extendResize() function called in their resize() function
@@ -110,6 +127,7 @@ function resizeObjects() {
 
   // Dialog objects
   returnToMenuDialog.resize();
+  deleteDataDialog.resize();
 
   // Global message object
   globalMessage.resize(width / 2, height / 5, width * 0.6, height * 0.2);
