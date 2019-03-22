@@ -325,9 +325,9 @@ class ShopObject extends GameObject {
     }
   }
 
-  saveLoad(price, owned) {
-    this.price = price;
-    this.owned = owned;
+  saveLoad(arr) {
+    this.price = int(arr[0]);
+    this.owned = int(arr[1]);
     this.updateText();
   }
 

@@ -92,32 +92,34 @@ function setup() {
   imageMode(CENTER);
   initScalarsPositions();
   initObjects();
+  initAnimations();
   angleMode(DEGREES);
   
   loadSaveFile();
 }
 
 function loadSaveFile() {
-  saveFile = document.cookie;
-  let splitSaveFile = saveFile.split(",");
-  console.log(splitSaveFile);
-  if(splitSaveFile.includes("NaN") || saveFile === "") {
-    saveFile = "";
+  print(window.localStorage.length);
+  if(window.localStorage.length === 0) {
+    void 0;
   }
   else {
-    cookies = int(splitSaveFile[0]);
-    autoCookies = float(splitSaveFile[1]);
-    ovenObj.saveLoad(int(splitSaveFile[2]), int(splitSaveFile[3]));
-    bakeryObj.saveLoad(int(splitSaveFile[4]), int(splitSaveFile[5]));
+    cookies = int(window.localStorage.getItem("cookies"));
+    autoCookies = float(window.localStorage.getItem("autoCookies"));
+    ovenObj.saveLoad(window.localStorage.getItem("oven").split(","));
+    bakeryObj.saveLoad(window.localStorage.getItem("bakery").split(","));
+    factoryObj.saveLoad(window.localStorage.getItem("factory").split(","));
   }
 }
 
 function saveGame() {
   // Format: cookies, autoCookies, shop item 1 price, shop item 1 owned, shop item 2 price, shop item 2 owned, etc...
   if(cookies > 0) {
-    document.cookie = str(cookies) + "," + str(autoCookies) + "," +
-    str(ovenObj.price) + "," + str(ovenObj.owned) + "," +
-    str(bakeryObj.price) + "," + str(bakeryObj.owned);
+    window.localStorage.setItem("cookies", cookies);
+    window.localStorage.setItem("autoCookies", autoCookies);
+    window.localStorage.setItem("oven", [ovenObj.price, ovenObj.owned]);
+    window.localStorage.setItem("bakery", [bakeryObj.price, bakeryObj.owned]);
+    window.localStorage.setItem("factory", [factoryObj.price, factoryObj.owned]);
   }
 }
 
@@ -150,7 +152,9 @@ function initScalarsPositions() {
 }
 
 function draw() {
-  background(30, 144, 255);
+  if(animationState === 0) {
+    background(30, 144, 255);
+  }
   // cursor("assets/cursor.png");
   textSize(15);
   fill(0);
@@ -162,18 +166,22 @@ function draw() {
   else if (gameState === 1) {
     mainGame();
   }
-  else {
+  else if (gameState === 2) {
     displayOptions();
+  }
+  else if (gameState === 3) {
+    displayAnimation();
   }
   runDialogBoxes();
   globalMessage.run();
+  displayAnimation();
   gMouseControl();
 }
 
 function menu() { // gameState 0
   displayMenu();
   animateMenu();
-  if(saveFile !== "") {
+  if(window.localStorage.length > 0) {
     titleLoadButton.run();
   }
   else {
@@ -438,7 +446,7 @@ function resetGame() {
   factoryObj.reset();
 
   // Delete save file
-  document.cookie = "";
+  window.localStorage.clear();
 }
 
 function mouseWheel(event) {
