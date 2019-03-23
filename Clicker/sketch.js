@@ -37,7 +37,7 @@ function cookieIncrement() {
 
 // Load content used in game
 let cookie, coin, oven, bakery, factory, rightArrow, gameCursor, clickUpgrade; // Images
-let coinSound, popSound; // Sounds
+let coinSound, popSound, textBlip; // Sounds
 let gameFont; // Fonts
 
 // Position / scaling variables
@@ -84,6 +84,7 @@ function preload() {
   gameFont = loadFont("assets/gameFont.ttf");
   coinSound = loadSound("assets/coinSound.wav");
   popSound = loadSound("assets/pop.ogg");
+  textBlip = loadSound("assets/textBlip.wav");
 }
 
 function setup() {
@@ -166,7 +167,8 @@ function draw() {
     displayOptions();
   }
   else if (gameState === 3) {
-    displayAnimation();
+    // Gamestate during some animations
+    void 0;
   }
   runDialogBoxes();
   globalMessage.run();
