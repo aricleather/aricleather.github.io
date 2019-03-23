@@ -92,14 +92,12 @@ function setup() {
   imageMode(CENTER);
   initScalarsPositions();
   initObjects();
-  initAnimations();
   angleMode(DEGREES);
   
   loadSaveFile();
 }
 
 function loadSaveFile() {
-  print(window.localStorage.length);
   if(window.localStorage.length === 0) {
     void 0;
   }
@@ -152,9 +150,7 @@ function initScalarsPositions() {
 }
 
 function draw() {
-  if(animationState === 0) {
-    background(30, 144, 255);
-  }
+  background(30, 144, 255);
   // cursor("assets/cursor.png");
   textSize(15);
   fill(0);

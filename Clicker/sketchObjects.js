@@ -37,13 +37,13 @@ let shopNumber = 0;
 function initObjects() {
   // Buttons
   titleNewGameButton = new Button(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH, "New Game", function() {
-    gameState = 1; // Defines "start" menu button, on click switches to gameState 1 (mainGame())
+    startAnimation("newGameAnimation");
+    // gameState = 1; // Defines "start" menu button, on click switches to gameState 1 (mainGame())
   });
   titleOptionsButton = new Button(width / 2, height * 0.62, scalars.menuButtonW, scalars.menuButtonH, "Options", function() { // Options button on main menu
     gameState = 2; // Defines "options" menu button, on click switches to gameState 2 (mainGame())
   });
   titleLoadButton = new Button(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH, "Load Game", function() {
-    loadSaveFile();
     gameState = 1;
   });
   optionsDeleteDataButton = new Button(width / 2, height * 0.5, scalars.menuButtonW, scalars.menuButtonH * 1.5, "Delete Data", function() {

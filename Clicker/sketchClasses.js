@@ -74,7 +74,7 @@ class Button extends GameObject {
     }
 
     checkClicked() {
-      if(this.mouse && mouseIsPressed && gMouse < 2) { // If the global mouse variable is true DON'T REGISTER CLICK!
+      if(this.mouse && mouseIsPressed && gMouse < 2) {
         this.clicked();
         this.alreadyClicked = 1;
         // After a click, set gMouseToggle to true temporarily to block further clicks until mouse button released
