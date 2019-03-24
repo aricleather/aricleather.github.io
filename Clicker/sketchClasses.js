@@ -49,19 +49,19 @@ class Button extends GameObject {
 
       // Darkens button if mouse inside
       if(this.mouse) {
-        this.color = 150;
+        this.color = [80, 80, 80];
       }
       else {
-        this.color = 200;
+        this.color = [40, 40, 40];
       }
       // Formatting and drawing rectangle, text
-      stroke(0);
+      stroke(255);
       strokeWeight(3);
       fill(this.color);
       rectMode(CENTER);
       rect(this.x, this.y, this.width, this.height);
       noStroke();
-      fill(0);
+      fill(255);
       textSize(this.tSize);
       textAlign(CENTER, CENTER);
       text(this.buttonText, this.x, this.y);

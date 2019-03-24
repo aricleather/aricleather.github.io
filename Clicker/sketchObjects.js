@@ -22,7 +22,8 @@ let openShopButton, closeShopButton;
 let cookieSpinner;
 
 // Global shop Object declarations
-let bakeryObj, ovenObj;
+let bakeryObj, ovenObj, factoryObj;
+let shopItems;
 
 // Global scroll bar declarations
 let shopScrollBar;
@@ -82,6 +83,7 @@ function initObjects() {
   ovenObj = new ShopObject(oven.width, oven.height, oven, "Oven", "Bake more cookies!", 5, 0.1);
   bakeryObj = new ShopObject(bakery.width, bakery.height, bakery, "Bakery", "Mmm, smells good...", 150, 1);
   factoryObj = new ShopObject(factory.width, factory.height, factory, "Factory", "Autonomous cookie production.", 500, 5);
+  shopItems = [ovenObj, bakeryObj, factoryObj];
 
   // Dialog objects
   returnToMenuDialog = new DialogBox("Go back to main menu?", "Yes", "No", function() {

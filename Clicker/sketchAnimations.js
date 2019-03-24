@@ -16,8 +16,13 @@ let animation;
 function startAnimation(whichAnimation) {
   // When called, generate the correct animation object and set it to animation,
   // then set animationState to true so that the animation will be run by displayAnimation in draw loop
+  console.log("called");
   if(whichAnimation === "newGameAnimation") {
     animation = new NewGameAnimation;
+    animationState = true;
+  }
+  else if(whichAnimation === "titleScreenAnimation1") {
+    animation = new TitleScreenAnimation1;
     animationState = true;
   }
 }
@@ -129,5 +134,79 @@ class NewGameAnimation {
         }
       }
     }
+  }
+}
+
+class TitleScreenAnimation1 {
+  constructor() {
+    // Vars
+    this.animationPhase = 0;
+    this.titleText = "Cookie Clicker";
+    this.currentText = "";
+    this.tSize = 75 * scalars.textScalar;
+    // This gets the right x value so that, after typing anim is complete, the text is centered
+    this.x = width / 2 - this.tSize * this.titleText.length / 2;
+    this.y = height * 0.2;
+    this.showNextLetter = millis() + 2000;
+    // Toggles that little line where you are currently typing to be blinking or not during the anim
+    this.blinkToggle = true;
+    this.button = titleNewGameButton;
+  }
+
+  run() {
+    gMouseToggle = 1;
+    gameState = 3;
+    if(this.animationPhase === 0) {
+      // First phase
+      // After 2000ms, then after each 125ms, add a letter onto the title text for a typing effect
+      this.formatText();
+      text(this.currentText, this.x, this.y);
+      this.blinkingTextLine();
+      if(millis() > this.showNextLetter) {
+        this.blinkToggle = false;
+        this.currentText = this.currentText + this.titleText[this.currentText.length];
+        random([keyType1, keyType2]).play();
+        this.showNextLetter = millis() + 125;
+        if(this.currentText.length === this.titleText.length) {
+          this.animationPhase = 1;
+          this.showButton = millis() + 2500;
+        }
+      }
+    }
+
+    if(this.animationPhase === 1) {
+      // Keep the text constant and line blinking now, the new game button will come in
+      this.formatText();
+      text(this.titleText, this.x, this.y);
+      this.blinkToggle = true;
+      this.blinkingTextLine();
+      if(millis() > this.showButton) {
+        this.button.run();
+      }
+    }
+  }
+
+  blinkingTextLine() {
+    // If toggled, make the little line blink. If not, make it stay constant
+    if(this.blinkToggle) {
+      if(Math.floor(millis() / 500) % 2 === 0) {
+        fill(255);
+      }
+      else {
+        fill(0);
+      }
+    }
+    else{
+      fill(255);
+    }
+    noStroke();
+    rectMode(CENTER);
+    rect(this.x + textWidth(this.currentText) + 5, this.y, 3, this.tSize);
+  }
+
+  formatText() {
+    textSize(this.tSize);
+    textAlign(LEFT, CENTER);
+    fill(255);
   }
 }

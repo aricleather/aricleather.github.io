@@ -85,6 +85,8 @@ function preload() {
   coinSound = loadSound("assets/coinSound.wav");
   popSound = loadSound("assets/pop.ogg");
   textBlip = loadSound("assets/textBlip.wav");
+  keyType1 = loadSound("assets/keyType1.wav");
+  keyType2 = loadSound("assets/keyType2.wav");
 }
 
 function setup() {
@@ -151,7 +153,7 @@ function initScalarsPositions() {
 }
 
 function draw() {
-  background(30, 144, 255);
+  background(0);
   // cursor("assets/cursor.png");
   textSize(15);
   fill(0);
@@ -253,7 +255,7 @@ function animateCookieGet() {
 function displayMenu() {
   // Draws everything to screen in menu()
   // Game title text
-  fill(0);
+  fill(255);
   textSize(75 * scalars.textScalar);
   textAlign(CENTER, CENTER);
   text(titleText , width / 2, height * 0.2);
