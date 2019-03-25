@@ -527,15 +527,22 @@ class TextInput extends GameObject {
     text(this.currentText, this.x, this.y);
     this.blinkingTextLine();
     if(this.endInput) {
+      buttonSelect1.play();
       return this.currentText;
     }
   }
 
   getInput(key) {
-    if(key.length === 1) {
+    if(key.length === 1 && key.toUpperCase() !== key.toLowerCase()) {
       this.currentText += key;
       this.reToggleBlink = millis() + 500;
       this.blinkToggle = false;
+    }
+    else if(key === "Backspace") {
+      this.currentText = this.currentText.slice(0, -1);
+    }
+    else if(key === " ") {
+      this.currentText += key;
     }
     else if(key === "Enter") {
       this.endInput = true;

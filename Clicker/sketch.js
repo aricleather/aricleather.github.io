@@ -40,6 +40,7 @@ function newInput(whichInput, x, y, width, height) {
 function cookieIncrement() {
   // Increment cookie counter on click and begin "popping" animation
   cookies += clickPower;
+  clicks++;
   popSound.play();
   newFallingCookie();
 }
@@ -68,6 +69,7 @@ let autoCookies = 0;
 let clickPower = 1;
 let lastMillis = 0;
 let increments = 0;
+let clicks = 0;
 
 // Variables used for menu()
 let titleText = "Cookie Clicker"; // strings
@@ -231,7 +233,9 @@ function displayGame() {
   textFont(gameFont);
   textSize(40 * scalars.textScalar);
   textAlign(CENTER, CENTER);
-  text(str(Math.floor(cookies)) + " Cookies" , width / 2, height * 0.9);
+  text(str(Math.floor(cookies)) + " Cookies" , width / 2, height * 0.85);
+
+  displayTrackedAchievment();
 }
 
 function incrementCookies() {

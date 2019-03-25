@@ -40,7 +40,7 @@ function displayAnimation() {
 class NewGameAnimation {
   // Run automatically when new player detected. Introduces player, asks them their name
   constructor() {
-    // Trillions of vars
+    // Vars
     this.animationPhase = 0;
     this.lastAnimationPhase = null;
 
@@ -68,12 +68,13 @@ class NewGameAnimation {
   run() {
     // User cannot make any input during anim
     gMouseToggle = 2;
-
-
-
     background(0);
     
-
+    // What is happening here? messageOnScreenAnim is called in this scope. When it becomes true,
+    // the player name input comes up if animationPhase is 1. If not, setFadeTime() is called,
+    // but it will only set this.fadeOutTime once due to a variable that tracks whether or not it has been done
+    // Once messageOnScreenFade has reduced the alpha to 0, it becomes true, then nextPhase() is run, resetting
+    // the process until all 4 animation phases have occured
     if(animFunctions.messageOnScreenAnim.call(this)) {
       if(this.animationPhase === 1 && !playerName) {
         animFunctions.displayMessageOnScreen(animFunctions.displayMessageOnScreen(this.currentText, this.tSize, this.x, this.y, this.textAlpha));
@@ -85,6 +86,7 @@ class NewGameAnimation {
           input = null;
         }
       }
+
       else {
         this.setFadeTime();
         if(animFunctions.messageOnScreenFade.call(this)) {
@@ -103,6 +105,7 @@ class NewGameAnimation {
 
   nextPhase() {
     if(this.animationPhase === 3) {
+      // Once all 4 are done, end the animation
       animationState = false;
       gameState = 1;
     }
@@ -114,16 +117,20 @@ class NewGameAnimation {
 }
 
 class TitleScreenAnimation1 {
+  // Unlike newGameAnimation, everything going on here only ever happens once,
+  // so there is no need to compact it down into reoccuring functions like I did with newGameAnimation
   constructor() {
     // Vars
     this.animationPhase = 0;
     this.titleText = "Cookie Clicker";
     this.currentText = "";
     this.tSize = 75 * scalars.textScalar;
+
     // This gets the right x value so that, after typing anim is complete, the text is centered
     this.x = width / 2 - this.tSize * this.titleText.length / 2;
     this.y = height * 0.2;
     this.showNextLetter = millis() + 2000;
+
     // Toggles that little line where you are currently typing to be blinking or not during the anim
     this.blinkToggle = true;
     this.button = titleNewGameButton;
@@ -133,19 +140,20 @@ class TitleScreenAnimation1 {
     gMouseToggle = 1;
     gameState = 3;
     background(0);
+
     if(this.animationPhase === 0) {
-      // First phase
       // After 2000ms, then after each 125ms, add a letter onto the title text for a typing effect
       this.formatText();
       text(this.currentText, this.x, this.y);
       this.blinkingTextLine();
+
       if(millis() > this.showNextLetter) {
         this.blinkToggle = false;
         this.currentText = this.currentText + this.titleText[this.currentText.length];
         random([keyType1, keyType2]).play();
         this.showNextLetter = millis() + 125;
+        // Once the whole title is on the screen
         if(this.currentText.length === this.titleText.length) {
-          // Set up for next phase
           this.animationPhase = 1;
           this.showButton = millis() + 2500;
         }
@@ -158,9 +166,10 @@ class TitleScreenAnimation1 {
       text(this.titleText, this.x, this.y);
       this.blinkToggle = true;
       this.blinkingTextLine();
+
       if(millis() > this.showButton) {
+        // When the button is clicked, this if will become true, starting next phase
         if(this.button.run()) {
-          // On click, set up for next phase
           this.animationPhase = 2;
           this.deleteNextLetter = millis() + 1000;
         }
@@ -182,6 +191,7 @@ class TitleScreenAnimation1 {
         }
       }
     }
+    
     else if(this.animationPhase === 3) {
       this.blinkToggle = true;
       this.blinkingTextLine();
@@ -204,6 +214,8 @@ class TitleScreenAnimation1 {
     else{
       fill(255);
     }
+
+    // Formatting and draw the actual line
     noStroke();
     rectMode(CENTER);
     rect(this.x + textWidth(this.currentText) + 5, this.y, 3, this.tSize);
@@ -217,6 +229,7 @@ class TitleScreenAnimation1 {
 }
 
 animFunctions = {
+  // Functions used in this .js file
   displayMessageOnScreen: function(theText, tSize, x, y, alpha) {
     // Displays the white text on black screen in animations
     textAlign(CENTER, TOP);
@@ -240,8 +253,8 @@ animFunctions = {
   },
 
   messageOnScreenAnim: function() {
-    // Simply displays the text and runs characterAdder.
-    // Used with .call(this) inside an animation so it can access necessary data
+    // Simply displays the currentText and runs characterAdder.
+    // Used with .call(this) inside an animation so it can access and change necessary variables
     // Once animFunctions.characterAdder returns "done", this returns true, the animation code may do something then
 
     if(this.currentText.length !== this.fullText.length) {
