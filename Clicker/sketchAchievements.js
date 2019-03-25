@@ -10,26 +10,37 @@
 
 achievements = {
   clicks: {
-    tier1: {
-      text: "Click 10 times.",
-      // completion: clicks / 10,
+    tiers: 3,
+    tier: 0,
+    text: "",
+    goals: [10, 1000, 1000000],
+    completion: 0,
+    update: function() {
+      this.completion = clicks / this.goals[this.tier];
+      if(this.completion >=1 ){ 
+        this.nextTier();
+      }
     },
-    tier2: {
-      text: "Click 1,000 times.",
-      // completion: clicks / 1000,
-
+    nextTier: function() {
+      this.tier++;
+      this.completion = clicks / this.goals[this.tier];
+      this.text = "Click " + this.goals[this.tier] + " times.";
     },
-    tier3: {
-      text: "Click 1,000,000 times.",
-      // completion: clicks / 1000000,
-    },
-  },
+    init: function() {
+      this.text = "Click " + this.goals[this.tier] + " times.";
+      this.completion = clicks / this.goals[this.tier];
+    }
+  }
 };
 
-let trackedAchievement = achievements.clicks.tier1;
+let trackedAchievement = achievements.clicks;
 
 function updateAchievements() {
-  void 0;
+  achievements.clicks.update();
+}
+
+function initAchievements() {
+  achievements.clicks.init();
 }
 
 function displayTrackedAchievment() {
@@ -42,7 +53,7 @@ function displayTrackedAchievment() {
     rectMode(CORNER);
     noStroke();
     fill("green");
-    rect(width / 3, height * 0.93, clicks/10 * width / 3, height * 0.02);
+    rect(width / 3, height * 0.93, trackedAchievement.completion * width / 3, height * 0.02);
 
     stroke(0);
     noFill();

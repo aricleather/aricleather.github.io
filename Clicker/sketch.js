@@ -42,6 +42,7 @@ function cookieIncrement() {
   cookies += clickPower;
   clicks++;
   popSound.play();
+  updateAchievements();
   newFallingCookie();
 }
 
@@ -108,12 +109,13 @@ function setup() {
   imageMode(CENTER);
   initScalarsPositions();
   initObjects();
+
   angleMode(DEGREES);
-  
   loadSaveFile();
   if(window.localStorage.length === 0) {
     startAnimation("titleScreenAnimation1");
   }
+  initAchievements();
 }
 
 function loadSaveFile() {
@@ -123,6 +125,7 @@ function loadSaveFile() {
   else {
     cookies = int(window.localStorage.getItem("cookies"));
     autoCookies = float(window.localStorage.getItem("autoCookies"));
+    clicks = int(window.localStorage.getItem("cookies"));
     ovenObj.saveLoad(window.localStorage.getItem("oven").split(","));
     bakeryObj.saveLoad(window.localStorage.getItem("bakery").split(","));
     factoryObj.saveLoad(window.localStorage.getItem("factory").split(","));
@@ -134,6 +137,7 @@ function saveGame() {
   if(cookies > 0) {
     window.localStorage.setItem("cookies", cookies);
     window.localStorage.setItem("autoCookies", autoCookies);
+    window.localStorage.setItem("clicks", clicks);
     window.localStorage.setItem("oven", [ovenObj.price, ovenObj.owned]);
     window.localStorage.setItem("bakery", [bakeryObj.price, bakeryObj.owned]);
     window.localStorage.setItem("factory", [factoryObj.price, factoryObj.owned]);
