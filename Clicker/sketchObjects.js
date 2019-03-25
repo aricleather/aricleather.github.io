@@ -38,7 +38,7 @@ let shopNumber = 0;
 function initObjects() {
   // Buttons
   titleNewGameButton = new Button(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH, "New Game", function() {
-    startAnimation("newGameAnimation");
+    buttonSelect1.play();
     // gameState = 1; // Defines "start" menu button, on click switches to gameState 1 (mainGame())
   });
   titleOptionsButton = new Button(width / 2, height * 0.62, scalars.menuButtonW, scalars.menuButtonH, "Options", function() { // Options button on main menu
@@ -90,6 +90,9 @@ function initObjects() {
     gameState = 0;
     saveGame();
     loadSaveFile();
+    if(window.localStorage.length === 0) {
+      startAnimation("titleScreenAnimation1");
+    }
   },
   function() {
     void 0;

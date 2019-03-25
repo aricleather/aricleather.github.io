@@ -10,10 +10,13 @@
 
 window.onbeforeunload = saveGame;
 
+let playerName;
+
 let saveFile;
 let gMouseToggle = 0;
 let gMouse = 0;
 let currentDialog = [];
+let input = null;
 
 function gMouseControl() {
   // This function exists so that gMouseToggle can be called at any time in draw loop and
@@ -26,6 +29,12 @@ function gMouseControl() {
     gMouse = 0;
   }
   gMouseToggle = 0;
+}
+
+function newInput(whichInput, x, y, width, height) {
+  if(whichInput === "text") {
+    input = new TextInput(x, y, width, height);
+  }
 }
 
 function cookieIncrement() {
@@ -51,6 +60,7 @@ let scroll = 0;
 // Game states:
 let gameState = 0;
 let shopState = 0;
+let shopTab = 1;
 
 // Clicker game variables:
 let cookies = 0;
@@ -87,6 +97,7 @@ function preload() {
   textBlip = loadSound("assets/textBlip.wav");
   keyType1 = loadSound("assets/keyType1.wav");
   keyType2 = loadSound("assets/keyType2.wav");
+  buttonSelect1 = loadSound("assets/buttonSelect1.wav");
 }
 
 function setup() {
@@ -98,6 +109,9 @@ function setup() {
   angleMode(DEGREES);
   
   loadSaveFile();
+  if(window.localStorage.length === 0) {
+    startAnimation("titleScreenAnimation1");
+  }
 }
 
 function loadSaveFile() {
@@ -153,7 +167,7 @@ function initScalarsPositions() {
 }
 
 function draw() {
-  background(0);
+  background(102, 153, 204);
   // cursor("assets/cursor.png");
   textSize(15);
   fill(0);
@@ -173,6 +187,9 @@ function draw() {
     void 0;
   }
   runDialogBoxes();
+  if(input) {
+    input.run();
+  }
   globalMessage.run();
   displayAnimation();
   gMouseControl();
@@ -287,12 +304,16 @@ function displayOptions() {
 
 function shop() {
   // Run objects for game shop
-  closeShopButton.run();
+  if(shopTab === 1) {
+    ovenObj.run();
+    bakeryObj.run();
+    factoryObj.run();
+  }
+  else{
+    console.log("No weapons yet");
+  }
 
-  ovenObj.run();
-  bakeryObj.run();
-  factoryObj.run();
-  
+  closeShopButton.run();
   shopScrollBar.run();
 }
 
@@ -434,6 +455,9 @@ function keyPressed() {
     else if (key === "m") {
       newDialogBox(returnToMenuDialog);
     }
+  }
+  if(input) {
+    input.getInput(key);
   }
 }
 

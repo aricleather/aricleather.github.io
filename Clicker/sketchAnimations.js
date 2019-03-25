@@ -16,7 +16,7 @@ let animation;
 function startAnimation(whichAnimation) {
   // When called, generate the correct animation object and set it to animation,
   // then set animationState to true so that the animation will be run by displayAnimation in draw loop
-  console.log("called");
+
   if(whichAnimation === "newGameAnimation") {
     animation = new NewGameAnimation;
     animationState = true;
@@ -38,102 +38,78 @@ function displayAnimation() {
 }
 
 class NewGameAnimation {
-  // When the new game animation is called and run, a black box covers the screen before 
-  // giving the player an introduction
+  // Run automatically when new player detected. Introduces player, asks them their name
   constructor() {
+    // Trillions of vars
     this.animationPhase = 0;
-    this.rectWidth = 0;
-    this.dRectWidth = 1;
+    this.lastAnimationPhase = null;
+
     this.tSize = width / 40;
+    this.textAlpha = 255;
     this.x = width / 2;
     this.y = height / 3;
-    this.fullText = "A novice cookie baker,\n" +
-                    "you have but one goal:\n" +
-                    "take over the world.";
+
+    this.texts = 
+    [
+      "A novice cookie baker, hmm...\n" +
+      "Perhaps you can do it:\n" +
+      "win over this world.",
+      "What is your name?",
+      "Well, nice to meet you, ",
+      "Let me guide you."];
+    this.fullText = this.texts[this.animationPhase];
+
+    this.input = new TextInput(width * 0.3, height * 0.8, 100, 100); // Used to ask player's name
+    this.nextLetterTime = millis() + 500;
+    this.fadeOutTime;
+    this.currentText = "";
   }
 
   run() {
     // User cannot make any input during anim
     gMouseToggle = 2;
-    if(this.animationPhase === 0) {
-      // Phase 1: Black rectangle slowly envelops screen, accelerating (dRectWidth)
-      fill(0);
-      rectMode(CORNER);
-      rect(width, 0, this.rectWidth, height);
-      this.rectWidth -= this.dRectWidth;
-      this.dRectWidth += 1;
 
-      // Move to next phase when rectangle covers screen
-      if(-this.rectWidth > width) {
-        this.animationPhase = 1;
-        gameState = 3;
-        // Set up for next phase, initial vals
-        this.nextLetterTime = millis() + 250;
-        this.currentText = "";
-      }
-    }
 
-    else if(this.animationPhase === 1) {
-      // Phase 2, draw intro text to screen before starting game
-      fill(0);
-      rect(0, 0, width, height);
-      textAlign(CENTER, TOP);
-      textSize(this.tSize);
-      fill(255);
-      text(this.currentText, this.x, this.y);
-      if(millis() > this.nextLetterTime) {
-        // Switch to next phase once text is done writing itself out
-        if(this.currentText.length === this.fullText.length){
-          // Set up for next phase
-          this.fadeOutTime = millis() + 3000;
-          this.animationPhase = 2;
-          this.textAlpha = 255;
-        }
-        // Every 50ms add next character to text being drawn
-        this.currentText = this.currentText + this.fullText[this.currentText.length];
-        textBlip.play();
-        // Unless that character is a new line, then wait a full second for emphasis
-        if(this.currentText[this.currentText.length - 1] === "\n") {
-          this.nextLetterTime = millis() + 1000;
-        }
-        else {
-          this.nextLetterTime = millis() + 50;
-        }
-      }
-    }
 
-    else if(this.animationPhase === 2) {
-      // Keep text on screen, fade out after 3 seconds
-      fill(0);
-      rect(0, 0, width, height);
-      textAlign(CENTER, TOP);
-      textSize(this.tSize);
-      fill(255, this.textAlpha);
-      text(this.fullText, this.x, this.y);
-      if(millis() > this.fadeOutTime) {
-        this.textAlpha -= 8.5;
-        if(this.textAlpha <= 0) {
-          // Once text is faded, next phase, set up here
-          this.animationPhase = 3;
-          this.rectWidth = width;
-          this.dRectWidth = 1;
-          this.endTime = millis() + 500;
-          gameState = 1;
+    background(0);
+    
+
+    if(animFunctions.messageOnScreenAnim.call(this)) {
+      if(this.animationPhase === 1 && !playerName) {
+        animFunctions.displayMessageOnScreen(animFunctions.displayMessageOnScreen(this.currentText, this.tSize, this.x, this.y, this.textAlpha));
+        // Links input to this.input so keyPressed can pass its event
+        input = this.input;
+        if(this.input.run()) {
+          playerName = this.input.run();
+          this.texts[2] += playerName + ".";
+          input = null;
+        }
+      }
+      else {
+        this.setFadeTime();
+        if(animFunctions.messageOnScreenFade.call(this)) {
+          this.nextPhase();
         }
       }
     }
-    else {
-      // Black rectangle covering screen pulls away from screen in same fashion it entered
-      fill(0);
-      rect(0, 0, this.rectWidth, height);
-      if(millis() > this.endTime) {
-        this.rectWidth -= this.dRectWidth;
-        this.dRectWidth += 1;
-        if(this.rectWidth <= 0) {
-          animationState = false;
-        }
-      }
+  }
+
+  setFadeTime() {
+    if(this.animationPhase !== this.lastAnimationPhase) {
+      this.fadeOutTime = millis() + 2500;
+      this.lastAnimationPhase = this.animationPhase;
     }
+  }
+
+  nextPhase() {
+    if(this.animationPhase === 3) {
+      animationState = false;
+      gameState = 1;
+    }
+    this.animationPhase += 1;
+    this.fullText = this.texts[this.animationPhase];
+    this.currentText = "";
+    this.textAlpha = 255;
   }
 }
 
@@ -156,6 +132,7 @@ class TitleScreenAnimation1 {
   run() {
     gMouseToggle = 1;
     gameState = 3;
+    background(0);
     if(this.animationPhase === 0) {
       // First phase
       // After 2000ms, then after each 125ms, add a letter onto the title text for a typing effect
@@ -168,20 +145,48 @@ class TitleScreenAnimation1 {
         random([keyType1, keyType2]).play();
         this.showNextLetter = millis() + 125;
         if(this.currentText.length === this.titleText.length) {
+          // Set up for next phase
           this.animationPhase = 1;
           this.showButton = millis() + 2500;
         }
       }
     }
 
-    if(this.animationPhase === 1) {
+    else if(this.animationPhase === 1) {
       // Keep the text constant and line blinking now, the new game button will come in
       this.formatText();
       text(this.titleText, this.x, this.y);
       this.blinkToggle = true;
       this.blinkingTextLine();
       if(millis() > this.showButton) {
-        this.button.run();
+        if(this.button.run()) {
+          // On click, set up for next phase
+          this.animationPhase = 2;
+          this.deleteNextLetter = millis() + 1000;
+        }
+      }
+    }
+
+    else if(this.animationPhase === 2) {
+      // Now erases the letters from the title screen
+      this.formatText();
+      text(this.currentText, this.x, this.y);
+      this.blinkingTextLine();
+      if(millis() > this.deleteNextLetter) {
+        this.blinkToggle = false;
+        this.currentText = this.currentText.substring(0, this.currentText.length - 1);
+        this.deleteNextLetter = millis() + 125;
+        if(this.currentText.length === 0) {
+          this.animationPhase = 3;
+          this.nextAnimation = millis() + 1500;
+        }
+      }
+    }
+    else if(this.animationPhase === 3) {
+      this.blinkToggle = true;
+      this.blinkingTextLine();
+      if(millis() > this.nextAnimation) {
+        startAnimation("newGameAnimation");
       }
     }
   }
@@ -210,3 +215,54 @@ class TitleScreenAnimation1 {
     fill(255);
   }
 }
+
+animFunctions = {
+  displayMessageOnScreen: function(theText, tSize, x, y, alpha) {
+    // Displays the white text on black screen in animations
+    textAlign(CENTER, TOP);
+    textSize(tSize);
+    fill(255, alpha);
+    text(theText, x, y);
+  },
+
+  characterAdder: function(time, textToAddTo, textToAddFrom) {
+    // Used in animations. If strings aren't of equal length, play textBlip and return a string
+    // with one more character along with the time the next character should be added
+    let returnText;
+    if(millis() > time) {
+      textBlip.play();
+      returnText = textToAddTo + textToAddFrom[textToAddTo.length];
+      return [returnText, returnText.substr(-1) === "\n" ? millis() + 1000 : millis() + 50];
+    }
+    else {
+      return false;
+    }
+  },
+
+  messageOnScreenAnim: function() {
+    // Simply displays the text and runs characterAdder.
+    // Used with .call(this) inside an animation so it can access necessary data
+    // Once animFunctions.characterAdder returns "done", this returns true, the animation code may do something then
+
+    if(this.currentText.length !== this.fullText.length) {
+      animFunctions.displayMessageOnScreen(this.currentText, this.tSize, this.x, this.y, 255);
+      let textVar = animFunctions.characterAdder(this.nextLetterTime, this.currentText, this.fullText);
+
+      if(textVar) {
+        this.currentText = textVar[0];
+        this.nextLetterTime = textVar[1];
+        return false;
+      }
+      return false;
+    }
+    return true;
+  },
+
+  messageOnScreenFade: function() {
+    animFunctions.displayMessageOnScreen(this.currentText, this.tSize, this.x, this.y, this.textAlpha);
+    if(millis() > this.fadeOutTime) {
+      this.textAlpha -= 8.5;
+    }
+    return this.textAlpha <= 0;
+  },
+};

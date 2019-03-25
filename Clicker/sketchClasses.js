@@ -509,3 +509,57 @@ class GlobalMessage extends GameObject {
     this.objText = formatText(this.objText, this.width, this.tSize);
   }
 }
+
+class TextInput extends GameObject {
+  constructor(x, y, width, height) {
+    super(x, y, width, height);
+    this.currentText = "";
+    this.tSize = 50;
+    this.blinkToggle = true;
+    this.reToggleBlink = 0;
+    this.endInput = false;
+  }
+
+  run() {
+    textSize(50);
+    fill(255);
+    textAlign(LEFT, CENTER);
+    text(this.currentText, this.x, this.y);
+    this.blinkingTextLine();
+    if(this.endInput) {
+      return this.currentText;
+    }
+  }
+
+  getInput(key) {
+    if(key.length === 1) {
+      this.currentText += key;
+      this.reToggleBlink = millis() + 500;
+      this.blinkToggle = false;
+    }
+    else if(key === "Enter") {
+      this.endInput = true;
+    }
+  }
+
+  blinkingTextLine() {
+    // If toggled, make the little line blink. If not, make it stay constant
+    if(this.blinkToggle) {
+      if(Math.floor((millis() - this.reToggleBlink) / 500) % 2 === 0) {
+        fill(255);
+      }
+      else {
+        fill(0);
+      }
+    }
+    else {
+      fill(255);
+      if(millis() > this.reToggleBlink) {
+        this.blinkToggle = true;
+      }
+    }
+    noStroke();
+    rectMode(CENTER);
+    rect(this.x + textWidth(this.currentText) + 5, this.y, 3, this.tSize);
+  }
+}
