@@ -67,6 +67,7 @@ let scroll = 0;
 let gameState = 0;
 let shopState = 0;
 let shopTab = 1;
+let achievementState = 0;
 
 // Clicker game variables:
 let cookies = 0;

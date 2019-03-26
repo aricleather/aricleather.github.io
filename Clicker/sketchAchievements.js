@@ -62,6 +62,7 @@ function displayTrackedAchievment() {
 }
 
 function displayAchievementsMenu() {
-  void 0;
-  // My next thing to do
+  if(achievementState) {
+    void 0;
+  }
 }

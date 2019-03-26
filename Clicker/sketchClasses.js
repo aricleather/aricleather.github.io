@@ -328,6 +328,23 @@ class ShopObject extends GameObject {
   }
 }
 
+class AchievementObject extends GameObject {
+  constructor(x, y, width, height, image, tiers, init, goals) {
+    super(x, y, width, height);
+    this.image = image;
+    this.tiers = tiers;
+    this.init = init;
+    
+    this.goals = goals;
+    this.position = achievementNumber;
+    achievementNumber++;
+
+    this.text;
+    this.completion;
+
+  }
+}
+
 class ScrollBar extends GameObject {
   constructor(x, y, scrollBarWidth, scrollCount, scrollDistance) {
     // For scroll bars in game, for example in the shop

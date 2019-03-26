@@ -20,6 +20,7 @@ let returnToMenuDialog;
 
 // Global vars used for initializing objects
 let shopNumber = 0;
+let achievementNumber = 0;
 
 // Generate all game objects
 function initObjects() {
