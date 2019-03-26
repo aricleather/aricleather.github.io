@@ -1,14 +1,4 @@
-// Interactive Scene
-// Aric Leather
-// Date: March 4, 2019
-// 
-// Mouse incorporation: clicking on cookie and store stuff, keyboard incorporation: press R key to reset game
-//
-// Extra for Experts:
-// - My game can successfully handle window resizing, in terms of scaling and canvas
-// - My game incorporates sound effects
-
-// Nothing yet
+// Classes that when run play animations, which may be interactive (ex. intro animation, prompting for player name)
 
 let animationState = false;
 let animation;
@@ -43,6 +33,8 @@ class NewGameAnimation {
     // Vars
     this.animationPhase = 0;
     this.lastAnimationPhase = null;
+    this.toggleFadeBackground = false;
+    this.fadeBackgroundAlpha = 255;
 
     this.tSize = width / 40;
     this.textAlpha = 255;
@@ -52,8 +44,8 @@ class NewGameAnimation {
     this.texts = 
     [
       "A novice cookie baker, hmm...\n" +
-      "Perhaps you can do it:\n" +
-      "win over this world.",
+      "Yes, I have been expecting you.\n" +
+      "Come, we must begin.",
       "What is your name?",
       "Well, nice to meet you, ",
       "Let me guide you."];
@@ -68,29 +60,46 @@ class NewGameAnimation {
   run() {
     // User cannot make any input during anim
     gMouseToggle = 2;
-    background(0);
     
-    // What is happening here? messageOnScreenAnim is called in this scope. When it becomes true,
-    // the player name input comes up if animationPhase is 1. If not, setFadeTime() is called,
-    // but it will only set this.fadeOutTime once due to a variable that tracks whether or not it has been done
-    // Once messageOnScreenFade has reduced the alpha to 0, it becomes true, then nextPhase() is run, resetting
-    // the process until all 4 animation phases have occured
-    if(animFunctions.messageOnScreenAnim.call(this)) {
-      if(this.animationPhase === 1 && !playerName) {
-        animFunctions.displayMessageOnScreen(animFunctions.displayMessageOnScreen(this.currentText, this.tSize, this.x, this.y, this.textAlpha));
-        // Links input to this.input so keyPressed can pass its event
-        input = this.input;
-        if(this.input.run()) {
-          playerName = this.input.run();
-          this.texts[2] += playerName + ".";
-          input = null;
-        }
-      }
 
-      else {
-        this.setFadeTime();
-        if(animFunctions.messageOnScreenFade.call(this)) {
-          this.nextPhase();
+    if(this.toggleFadeBackground) {
+
+      // Fade in the game using a rectangle being filled with a lowering alpha value
+      fill(0, this.fadeBackgroundAlpha);
+      rectMode(CORNER);
+      rect(0, 0, width, height);
+      this.fadeBackgroundAlpha -= 4.25;
+      if(this.fadeBackgroundAlpha <= 0) {
+        // Once game faded in, end animation
+        animationState = false;
+      }
+    }
+
+    else {
+      background(0);
+    
+      // What is happening here? messageOnScreenAnim is called in the 'this' scope. When it becomes true (text is fully drawn),
+      // the player name input comes up if animationPhase is 1. If not, setFadeTime() is called,
+      // but it will only set this.fadeOutTime once due to a variable that tracks whether or not it has been done
+      // Once messageOnScreenFade has reduced the alpha to 0, it becomes true, then nextPhase() is run, resetting
+      // the process until all 4 animation phases have occured
+      if(animFunctions.messageOnScreenAnim.call(this)) {
+        if(this.animationPhase === 1 && !playerName) {
+          animFunctions.displayMessageOnScreen(animFunctions.displayMessageOnScreen(this.currentText, this.tSize, this.x, this.y, this.textAlpha));
+          // Links input to this.input so keyPressed can pass its event
+          input = this.input;
+          if(this.input.run()) {
+            playerName = this.input.run();
+            this.texts[2] += playerName + ".";
+            input = null;
+          }
+        }
+
+        else {
+          this.setFadeTime();
+          if(animFunctions.messageOnScreenFade.call(this)) {
+            this.nextPhase();
+          }
         }
       }
     }
@@ -106,8 +115,8 @@ class NewGameAnimation {
   nextPhase() {
     if(this.animationPhase === 3) {
       // Once all 4 are done, end the animation
-      animationState = false;
       gameState = 1;
+      this.toggleFadeBackground = true;
     }
     this.animationPhase += 1;
     this.fullText = this.texts[this.animationPhase];
@@ -184,6 +193,7 @@ class TitleScreenAnimation1 {
       if(millis() > this.deleteNextLetter) {
         this.blinkToggle = false;
         this.currentText = this.currentText.substring(0, this.currentText.length - 1);
+        keyType2.play();
         this.deleteNextLetter = millis() + 125;
         if(this.currentText.length === 0) {
           this.animationPhase = 3;
@@ -272,6 +282,7 @@ animFunctions = {
   },
 
   messageOnScreenFade: function() {
+    // Changes the text alpha of thing called with and draws currentText to screen, returns true if text faded
     animFunctions.displayMessageOnScreen(this.currentText, this.tSize, this.x, this.y, this.textAlpha);
     if(millis() > this.fadeOutTime) {
       this.textAlpha -= 8.5;

@@ -1,18 +1,6 @@
-/* eslint-disable indent */
-// Interactive Scene
-// Aric Leather
-// Date: March 4, 2019
-// 
-// Mouse incorporation: clicking on cookie and store stuff, keyboard incorporation: press R key to reset game
-//
-// Extra for Experts:
-// - My game can successfully handle window resizing, in terms of scaling and canvas
-// - My game incorporates sound effects
-
-// Interactive functions (buttons, dialog boxes)
-
-// GLOBAL VARIABLES
-// Game content
+// All classes used in my game to create clickable, interactive objects on screen
+// Use of mouseClicked() removed due to built in mouse-related functions and global
+// gMouseControl() function to control what can be clicked, how much, and when
 
 class GameObject {
   // Main class used in game. Gives x coord, y coord, width, and height
@@ -42,55 +30,55 @@ class Button extends GameObject {
     this.color = 200;
   }
   
-    run() {
-      // When a Button is run, calculate if mouse is on top, draw the rectangle around it, fill it in with
-      // a shade of gray dependent on whether the mouse is inside or not, then the text inside
-      this.calcMouse();
+  run() {
+    // When a Button is run, calculate if mouse is on top, draw the rectangle around it, fill it in with
+    // a shade of gray dependent on whether the mouse is inside or not, then the text inside
+    this.calcMouse();
 
-      // Darkens button if mouse inside
-      if(this.mouse) {
-        this.color = [80, 80, 80];
-      }
-      else {
-        this.color = [40, 40, 40];
-      }
-      // Formatting and drawing rectangle, text
-      stroke(255);
-      strokeWeight(3);
-      fill(this.color);
-      rectMode(CENTER);
-      rect(this.x, this.y, this.width, this.height);
-      noStroke();
-      fill(255);
-      textSize(this.tSize);
-      textAlign(CENTER, CENTER);
-      text(this.buttonText, this.x, this.y);
+    // Darkens button if mouse inside
+    if(this.mouse) {
+      this.color = [80, 80, 80];
+    }
+    else {
+      this.color = [40, 40, 40];
+    }
+    // Formatting and drawing rectangle, text
+    stroke(255);
+    strokeWeight(3);
+    fill(this.color);
+    rectMode(CENTER);
+    rect(this.x, this.y, this.width, this.height);
+    noStroke();
+    fill(255);
+    textSize(this.tSize);
+    textAlign(CENTER, CENTER);
+    text(this.buttonText, this.x, this.y);
   
-      this.alreadyClicked = false;
-      this.checkClicked();
+    this.alreadyClicked = false;
+    this.checkClicked();
 
-      return this.alreadyClicked;
+    return this.alreadyClicked;
       
-    }
+  }
 
-    checkClicked() {
-      if(this.mouse && mouseIsPressed && gMouse < 2) {
-        this.clicked();
-        this.alreadyClicked = 1;
-        // After a click, set gMouseToggle to true temporarily to block further clicks until mouse button released
-        gMouseToggle = 1;
-      }
-    }
-  
-    resize(x, y, width, height) {
-      this.x = x;
-      this.y = y;
-      this.width = width;
-      this.height = height;
-      this.tSize = this.width / 10;
-      this.text = formatText(this.buttonText, this.width, this.tSize);
+  checkClicked() {
+    if(this.mouse && mouseIsPressed && gMouse < 2) {
+      this.clicked();
+      this.alreadyClicked = 1;
+      // After a click, set gMouseToggle to true temporarily to block further clicks until mouse button released
+      gMouseToggle = 1;
     }
   }
+  
+  resize(x, y, width, height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.tSize = this.width / 10;
+    this.text = formatText(this.buttonText, this.width, this.tSize);
+  }
+}
 
   
 class ImageObject extends GameObject {
@@ -192,6 +180,7 @@ class ImageButton extends GameObject {
   
     textAlign(CENTER, TOP);
     textSize(this.tSize);
+    noStroke();
     text(this.objText, this.x, this.y + this.minHeight * 0.6);
 
     // Allow clicking only once before releasing mouse
@@ -281,9 +270,10 @@ class ShopObject extends GameObject {
         gMouseToggle = 1;
       }
     }
-        
+    
     rectMode(CENTER);
     fill(30, 70);
+    noStroke();
     rect(this.rectX, this.y, width * 0.3, height * 0.2);
     textAlign(LEFT, CENTER);
     fill(0);
@@ -313,7 +303,7 @@ class ShopObject extends GameObject {
   // display the little box over the item with some info
   
   mouseScroll(event) {
-  if(shopState) {
+    if(shopState) {
       if(event > 0) {
         this.scrollAmount++;
       }
@@ -545,6 +535,7 @@ class TextInput extends GameObject {
       this.currentText += key;
     }
     else if(key === "Enter") {
+      buttonSelect1.play();
       this.endInput = true;
     }
   }

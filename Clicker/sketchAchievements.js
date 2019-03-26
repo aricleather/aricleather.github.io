@@ -1,12 +1,4 @@
-// Interactive Scene
-// Aric Leather
-// Date: March 4, 2019
-// 
-// Mouse incorporation: clicking on cookie and store stuff, keyboard incorporation: press R key to reset game
-//
-// Extra for Experts:
-// - My game can successfully handle window resizing, in terms of scaling and canvas
-// - My game incorporates sound effects
+// Where I will store my big JSON with achievement data, and the functions to edit and display it
 
 achievements = {
   clicks: {
@@ -15,18 +7,24 @@ achievements = {
     text: "",
     goals: [10, 1000, 1000000],
     completion: 0,
+    position: 0,
+
     update: function() {
       this.completion = clicks / this.goals[this.tier];
       if(this.completion >=1 ){ 
         this.nextTier();
       }
     },
+
     nextTier: function() {
       this.tier++;
+      playerLevel++;
       this.completion = clicks / this.goals[this.tier];
       this.text = "Click " + this.goals[this.tier] + " times.";
     },
+
     init: function() {
+      this.tier = clicks < 10 ? 0 : clicks < 1000 ? 1 : clicks < 1000000 ? 2 : 3;
       this.text = "Click " + this.goals[this.tier] + " times.";
       this.completion = clicks / this.goals[this.tier];
     }
@@ -50,13 +48,20 @@ function displayTrackedAchievment() {
     textSize(15);
     text(trackedAchievement.text, width / 2, height * 0.98);
 
+    // The green inside
     rectMode(CORNER);
     noStroke();
     fill("green");
     rect(width / 3, height * 0.93, trackedAchievement.completion * width / 3, height * 0.02);
 
+    // The box around
     stroke(0);
     noFill();
     rect(width / 3, height * 0.93, width / 3, height * 0.02);
   }
+}
+
+function displayAchievementsMenu() {
+  void 0;
+  // My next thing to do
 }

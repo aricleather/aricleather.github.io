@@ -1,16 +1,20 @@
-// Interactive Scene
+// State Variables Assignment
 // Aric Leather
-// Date: March 4, 2019
+// Date: March 25, 2019
 // 
-// Mouse incorporation: clicking on cookie and store stuff, keyboard incorporation: press R key to reset game
+// State variables: my game has many state variables. Examples include: gameState (main game, main menu, options menu),
+// shopState (is the shop open or not in mainGame), animationState (my game has an intro animation and will have more, dictates current animation)
 //
 // Extra for Experts:
-// - My game can successfully handle window resizing, in terms of scaling and canvas
 // - My game incorporates sound effects
+// - My game successfully utilizes class notation pretty much everywhere
+// - I have experimented with my index.html (see style.css and my p5_loading div for preLoad())
+// - My game successfully utilizes window.localStorage to load, save, and clear saved data
 
 window.onbeforeunload = saveGame;
 
 let playerName;
+let playerLevel = 1;
 
 let saveFile;
 let gMouseToggle = 0;
@@ -116,6 +120,13 @@ function setup() {
     startAnimation("titleScreenAnimation1");
   }
   initAchievements();
+
+  coinSound.setVolume(0.08);
+  popSound.setVolume(0.15);
+  textBlip.setVolume(0.1);
+  keyType1.setVolume(0.2);
+  keyType2.setVolume(0.2);
+  buttonSelect1.setVolume(0.8);
 }
 
 function loadSaveFile() {
@@ -123,9 +134,12 @@ function loadSaveFile() {
     void 0;
   }
   else {
+    // As long as a save game exists, take data from window.localStorage and import it
     cookies = int(window.localStorage.getItem("cookies"));
     autoCookies = float(window.localStorage.getItem("autoCookies"));
-    clicks = int(window.localStorage.getItem("cookies"));
+    clicks = int(window.localStorage.getItem("clicks"));
+    playerName = window.localStorage.getItem("playerName");
+    playerLevel = window.localStorage.getItem("playerLevel");
     ovenObj.saveLoad(window.localStorage.getItem("oven").split(","));
     bakeryObj.saveLoad(window.localStorage.getItem("bakery").split(","));
     factoryObj.saveLoad(window.localStorage.getItem("factory").split(","));
@@ -133,11 +147,14 @@ function loadSaveFile() {
 }
 
 function saveGame() {
-  // Format: cookies, autoCookies, shop item 1 price, shop item 1 owned, shop item 2 price, shop item 2 owned, etc...
+  // Takes data from game that needs to be saved in order for player to be able to resume
+  // and stores it in window.localStorage
   if(cookies > 0) {
     window.localStorage.setItem("cookies", cookies);
     window.localStorage.setItem("autoCookies", autoCookies);
     window.localStorage.setItem("clicks", clicks);
+    window.localStorage.setItem("playerName", playerName);
+    window.localStorage.setItem("playerLevel", playerLevel);
     window.localStorage.setItem("oven", [ovenObj.price, ovenObj.owned]);
     window.localStorage.setItem("bakery", [bakeryObj.price, bakeryObj.owned]);
     window.localStorage.setItem("factory", [factoryObj.price, factoryObj.owned]);
@@ -178,7 +195,7 @@ function draw() {
   textSize(15);
   fill(0);
   textAlign(CENTER, CENTER);
-  text(frameRate().toFixed(0), 20, 20);
+  text(frameRate().toFixed(0), 20, 60);
   if (gameState === 0) {
     menu();
   } 
@@ -215,7 +232,7 @@ function menu() { // gameState 0
 }
 
 function mainGame() { // gameState 1
-  incrementCookies();
+  incrementAutoCookies();
   displayGame();
   animateCookieGet();
   if (shopState) {
@@ -240,9 +257,26 @@ function displayGame() {
   text(str(Math.floor(cookies)) + " Cookies" , width / 2, height * 0.85);
 
   displayTrackedAchievment();
+  displayPlayerData();
 }
 
-function incrementCookies() {
+function displayPlayerData() {
+  stroke(0);
+  fill(186, 211, 252);
+  rectMode(CENTER);
+  rect(width * 0.125, height * 0.02, width * 0.15, height * 0.04);
+  rect(width * 0.5, height * 0.02, width * 0.6, height * 0.04);
+
+  fill(0);
+  noStroke();
+  textAlign(LEFT, CENTER);
+  text(playerName + " Lvl " + playerLevel, width * 0.055, height * 0.02);
+  text("Exp: 0/0", width * 0.205, height * 0.02);
+  text("(There will be an EXP bar here later)", width * 0.35, height * 0.02);
+  
+}
+
+function incrementAutoCookies() {
   // Increments the cookie amount 4 times a second
   if (autoCookies > 0 && millis() - lastMillis > 25) {
     cookies += autoCookies / 40;
@@ -258,7 +292,7 @@ function cookieGet() {
   // This function creates the effect underneath cookie total showing cookies gained every second
   // Random location somewhere under cookie total text
   cookieGetX = random(width * 0.4, width * 0.6);
-  cookieGetY = height * 0.955;
+  cookieGetY = height * 0.9;
   cookieGetAlpha = 255;
   // Temporary variable for the "+" and cookies just gained in a string
   tempText = "+" + autoCookies.toFixed(1);
@@ -269,6 +303,7 @@ function animateCookieGet() {
   if (cookieGetAlpha > 0) {
     fill(0, cookieGetAlpha);
     textSize(15 * scalars.textScalar);
+    noStroke();
     text(tempText, cookieGetX, cookieGetY);
     tint(255, cookieGetAlpha);
     image(cookie, cookieGetX + textWidth(tempText) , cookieGetY, scalars.cookieGetScalar, scalars.cookieGetScalar);
@@ -312,16 +347,16 @@ function displayOptions() {
 
 function shop() {
   // Run objects for game shop
+  closeShopButton.run();
   if(shopTab === 1) {
     ovenObj.run();
     bakeryObj.run();
     factoryObj.run();
   }
   else{
-    console.log("No weapons yet");
+    console.log("There are no other tabs yet, just keep shopTab set to 1.");
   }
 
-  closeShopButton.run();
   shopScrollBar.run();
 }
 
@@ -472,6 +507,9 @@ function keyPressed() {
 function resetGame() {
   cookies = 0;
   autoCookies = 0;
+  clicks = 0;
+  playerName = "";
+  playerLevel = 1;
 
   ovenObj.reset();
   bakeryObj.reset();
@@ -479,6 +517,7 @@ function resetGame() {
 
   // Delete save file
   window.localStorage.clear();
+  initAchievements();
 }
 
 function mouseWheel(event) {
