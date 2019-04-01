@@ -563,7 +563,7 @@ class TextInput extends GameObject {
 }
 
 class AchievementObject extends GameObject {
-  constructor(imageWidth, imageHeight, objImage, tiers, init, goals, metaText) {
+  constructor(imageWidth, imageHeight, objImage, tiers, init, goals, metaText, achvText) {
     super(width * 0.06, height * 0.125 * (achievementNumber * 2 + 1), width * 0.0002 * imageWidth, width * 0.0002 * imageHeight);
     this.objImage = objImage;
     this.tiers = tiers; 
@@ -575,7 +575,7 @@ class AchievementObject extends GameObject {
     this.position = achievementNumber;
     achievementNumber++;
 
-    this.text;
+    this.achvText = achvText;
     this.metaText = metaText;
     this.rectX = width * 0.15;
     this.textX = width * 0.125;
@@ -613,7 +613,7 @@ class AchievementObject extends GameObject {
     textAlign(LEFT, CENTER);
     fill(0);
     textSize(this.tSize);
-    text(this.text, this.textX, this.y);
+    text(this.achvText, this.textX, this.y);
   }
   
   // Since shopObjects are always in the same relative spot on the screen, resize should be called with no params

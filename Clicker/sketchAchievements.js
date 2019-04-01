@@ -13,8 +13,8 @@ function initAchievements() {
     clicks: {
       tiers: 3,
       tier: 0,
-      text: "",
       goals: [10, 1000, 1000000],
+      text: "Click 10 times.",
       completion: 0,
       position: 0,
   
@@ -38,7 +38,7 @@ function initAchievements() {
         this.completion = clicks / this.goals[this.tier];
       },
   
-      obj: new AchievementObject(oven.width, oven.height, oven, 3, this.init, this.goals, "Don't break mouse"),
+      obj: new AchievementObject(oven.width, oven.height, oven, 3, this.init, this.goals, "Don't break mouse", this.text),
     }
   };
 
