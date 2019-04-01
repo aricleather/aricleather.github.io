@@ -1,44 +1,49 @@
 // Where I will store my big JSON with achievement data, and the functions to edit and display it
 
-achievements = {
-  clicks: {
-    tiers: 3,
-    tier: 0,
-    text: "",
-    goals: [10, 1000, 1000000],
-    completion: 0,
-    position: 0,
-
-    update: function() {
-      this.completion = clicks / this.goals[this.tier];
-      if(this.completion >=1 ){ 
-        this.nextTier();
-      }
-    },
-
-    nextTier: function() {
-      this.tier++;
-      playerLevel++;
-      this.completion = clicks / this.goals[this.tier];
-      this.text = "Click " + this.goals[this.tier] + " times.";
-    },
-
-    init: function() {
-      this.tier = clicks < 10 ? 0 : clicks < 1000 ? 1 : clicks < 1000000 ? 2 : 3;
-      this.text = "Click " + this.goals[this.tier] + " times.";
-      this.completion = clicks / this.goals[this.tier];
-    }
-  }
-};
-
-let trackedAchievement = achievements.clicks;
+let achievements;
+let trackedAchievement;
 
 function updateAchievements() {
   achievements.clicks.update();
 }
 
 function initAchievements() {
+
+  achievements = {
+    clicks: {
+      tiers: 3,
+      tier: 0,
+      text: "",
+      goals: [10, 1000, 1000000],
+      completion: 0,
+      position: 0,
+  
+      update: function() {
+        this.completion = clicks / this.goals[this.tier];
+        if(this.completion >=1 ){ 
+          this.nextTier();
+        }
+      },
+  
+      nextTier: function() {
+        this.tier++;
+        playerLevel++;
+        this.completion = clicks / this.goals[this.tier];
+        this.text = "Click " + this.goals[this.tier] + " times.";
+      },
+  
+      init: function() {
+        this.tier = clicks < 10 ? 0 : clicks < 1000 ? 1 : clicks < 1000000 ? 2 : 3;
+        this.text = "Click " + this.goals[this.tier] + " times.";
+        this.completion = clicks / this.goals[this.tier];
+      },
+  
+      obj: new AchievementObject(oven.width, oven.height, oven, 3, this.init, this.goals, "Don't break mouse"),
+    }
+  };
+
   achievements.clicks.init();
+  trackedAchievement = achievements.clicks;
 }
 
 function displayTrackedAchievment() {
@@ -62,24 +67,5 @@ function displayTrackedAchievment() {
 }
 
 function displayAchievementsMenu() {
-  if(achievementState) {
-    void 0;
-  }
-}
-
-class AchievementObject extends GameObject {
-  constructor(x, y, width, height, image, tiers, init, goals) {
-    super(x, y, width, height);
-    this.image = image;
-    this.tiers = tiers;
-    this.init = init;
-    
-    this.goals = goals;
-    this.position = achievementNumber;
-    achievementNumber++;
-
-    this.text;
-    this.completion;
-
-  }
+  achievements.clicks.obj.run();
 }

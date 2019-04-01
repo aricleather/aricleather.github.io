@@ -561,3 +561,101 @@ class TextInput extends GameObject {
     rect(this.x + textWidth(this.currentText) + 5, this.y, 3, this.tSize);
   }
 }
+
+class AchievementObject extends GameObject {
+  constructor(imageWidth, imageHeight, objImage, tiers, init, goals, metaText) {
+    super(width * 0.06, height * 0.125 * (achievementNumber * 2 + 1), width * 0.0002 * imageWidth, width * 0.0002 * imageHeight);
+    this.objImage = objImage;
+    this.tiers = tiers; 
+    this.tier;
+    this.completion;
+    this.init = init;
+    
+    this.goals = goals;
+    this.position = achievementNumber;
+    achievementNumber++;
+
+    this.text;
+    this.metaText = metaText;
+    this.rectX = width * 0.15;
+    this.textX = width * 0.125;
+    this.tSize = 15 * scalars.textScalar;
+
+  }
+
+  clicked() {
+    void 0;
+  }
+  
+  run() {
+    this.calcMouse();
+      
+    
+    tint(255);
+    fill(0, 255);
+    image(this.objImage, this.x, this.y, this.width, this.height);
+  
+    // Again utilizing calcMouse() and alreadyClicked to run this.clicked() on click only once
+    if(this.mouse && gMouse < 1) {
+      // If mouseHover exists run when mouse hovering
+      displayTextBox(this.metaText, mouseX, mouseY);
+      
+      if(mouseIsPressed) {
+        this.clicked();
+        gMouseToggle = 1;
+      }
+    }
+    
+    rectMode(CENTER);
+    fill(30, 70);
+    noStroke();
+    rect(this.rectX, this.y, width * 0.3, height * 0.2);
+    textAlign(LEFT, CENTER);
+    fill(0);
+    textSize(this.tSize);
+    text(this.text, this.textX, this.y);
+  }
+  
+  // Since shopObjects are always in the same relative spot on the screen, resize should be called with no params
+  // to let this extendResize function reset the scaling and position variables
+  resize() {
+    this.scrollPosition = width * 0.0625;
+    this.x = width * 0.06;
+    this.y = height * (2 * this.position + 1) * 0.125 - this.scrollPosition * this.scrollAmount;
+    this.width = width * this.objImage.width * 0.0002;
+    this.height = width * this.objImage.height * 0.0002;
+    this.textX = width * 0.125;
+    this.tSize = 15 * scalars.textScalar;
+    this.rectX = width * 0.15;
+  }
+  
+  // mouseHover() is run in run() if it exists. Here it uses function displayTextBox() to
+  // display the little box over the item with some info
+  
+  mouseScroll(event) {
+    if(shopState) {
+      if(event > 0) {
+        this.scrollAmount++;
+      }
+      else {
+        this.scrollAmount--;
+      }
+      this.scrollAmount = constrain(this.scrollAmount, 0, 7);
+      this.y = height * (2 * this.position + 1) * 0.125 - this.scrollPosition * this.scrollAmount;
+    }
+  }
+
+  saveLoad(arr) {
+    void 0;
+    // this.price = int(arr[0]);
+    // this.owned = int(arr[1]);
+    // this.updateText();
+  }
+
+  reset() {
+    void 0;
+    // this.price = this.basePrice;
+    // this.owned = 0;
+    // this.updateText();
+  }
+}

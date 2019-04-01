@@ -51,7 +51,7 @@ function cookieIncrement() {
 }
 
 // Load content used in game
-let cookie, coin, oven, bakery, factory, rightArrow, gameCursor, clickUpgrade; // Images
+let cookie, coin, oven, bakery, factory, rightArrow, gameCursor, clickUpgrade, goldStar; // Images
 let coinSound, popSound, textBlip; // Sounds
 let gameFont; // Fonts
 
@@ -97,6 +97,7 @@ function preload() {
   bakery = loadImage("assets/bakery.png");
   factory = loadImage("assets/factory.png");
   clickUpgrade = loadImage("assets/clickUpgrade.png");
+  goldStar = loadImage("assets/goldStar.png");
 
   // Sounds and fonts
   gameFont = loadFont("assets/gameFont.ttf");
@@ -241,6 +242,12 @@ function mainGame() { // gameState 1
   }
   else {
     openShopButton.run();
+  }
+  if(achievementState) {
+    displayAchievementsMenu();
+  }
+  else {
+    void 0;
   }
 
 }
