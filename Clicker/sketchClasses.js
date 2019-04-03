@@ -302,17 +302,15 @@ class ShopObject extends GameObject {
   // mouseHover() is run in run() if it exists. Here it uses function displayTextBox() to
   // display the little box over the item with some info
   
-  mouseScroll(event) {
-    if(shopState) {
-      if(event > 0) {
-        this.scrollAmount++;
-      }
-      else {
-        this.scrollAmount--;
-      }
-      this.scrollAmount = constrain(this.scrollAmount, 0, 7);
-      this.y = height * (2 * this.position + 1) * 0.125 - this.scrollPosition * this.scrollAmount;
+  mouseScroll(event) { 
+    if(event > 0) {
+      this.scrollAmount++;
     }
+    else {
+      this.scrollAmount--;
+    }
+    this.scrollAmount = constrain(this.scrollAmount, 0, 7);
+    this.y = height * (2 * this.position + 1) * 0.125 - this.scrollPosition * this.scrollAmount; 
   }
 
   saveLoad(arr) {
@@ -581,6 +579,8 @@ class AchievementObject extends GameObject {
     this.textX = width * 0.125;
     this.tSize = 15 * scalars.textScalar;
 
+    this.scrollPosition = width * 0.0625;
+    this.scrollAmount = 0;
   }
 
   clicked() {
@@ -591,7 +591,7 @@ class AchievementObject extends GameObject {
     this.calcMouse();
       
     
-    tint(255);
+    tint(255, 255);
     fill(0, 255);
     image(this.objImage, this.x, this.y, this.width, this.height);
   
@@ -611,7 +611,7 @@ class AchievementObject extends GameObject {
     noStroke();
     rect(this.rectX, this.y, width * 0.3, height * 0.2);
     textAlign(LEFT, CENTER);
-    fill(0);
+    fill(0, 255);
     textSize(this.tSize);
     text(this.achvText, this.textX, this.y);
   }
@@ -633,16 +633,14 @@ class AchievementObject extends GameObject {
   // display the little box over the item with some info
   
   mouseScroll(event) {
-    if(shopState) {
-      if(event > 0) {
-        this.scrollAmount++;
-      }
-      else {
-        this.scrollAmount--;
-      }
-      this.scrollAmount = constrain(this.scrollAmount, 0, 7);
-      this.y = height * (2 * this.position + 1) * 0.125 - this.scrollPosition * this.scrollAmount;
+    if(event > 0) {
+      this.scrollAmount++;
     }
+    else {
+      this.scrollAmount--;
+    }
+    this.scrollAmount = constrain(this.scrollAmount, 0, 7);
+    this.y = height * (2 * this.position + 1) * 0.125 - this.scrollPosition * this.scrollAmount;
   }
 
   saveLoad(arr) {

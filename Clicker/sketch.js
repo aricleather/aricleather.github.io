@@ -61,7 +61,6 @@ let cookieGetAlpha; // Alpha / transparency values
 let messageAlpha = 0; 
 let cookieGetX, cookieGetY; // Position values
 let cookiesFalling = [];
-let scroll = 0;
 
 // Game states:
 let gameState = 0;
@@ -93,6 +92,7 @@ function preload() {
   coin = loadImage("assets/coin.png");
   oven = loadImage("assets/oven.png");
   rightArrow = loadImage("assets/rightarrow.png");
+  leftArrow = loadImage("assets/leftarrow.png");
   gameCursor = loadImage("assets/cursor.png");
   bakery = loadImage("assets/bakery.png");
   factory = loadImage("assets/factory.png");
@@ -183,6 +183,8 @@ function initScalarsPositions() {
     titleScreenCookie: width * 0.06,
     storeCoinScalar: width * 0.05,
     storeCloseScalar: width * 0.05,
+    openAchievementsScalar: width * 0.05,
+    closeAchievementsScalar: width * 0.05,
     cookieGetScalar: width * 0.025,
     fallingCookieScalar: 50,
   
@@ -197,7 +199,7 @@ function draw() {
   textSize(15);
   fill(0);
   textAlign(CENTER, CENTER);
-  text(frameRate().toFixed(0), 20, 60);
+  text(frameRate().toFixed(0), 20, height - 60);
   if (gameState === 0) {
     menu();
   } 
@@ -247,7 +249,7 @@ function mainGame() { // gameState 1
     displayAchievementsMenu();
   }
   else {
-    void 0;
+    openAchievementsButton.run();
   }
 
 }
@@ -269,6 +271,7 @@ function displayGame() {
 }
 
 function displayPlayerData() {
+  strokeWeight(3);
   stroke(0);
   fill(186, 211, 252);
   rectMode(CENTER);
@@ -384,13 +387,22 @@ function displayTextBox(theText, x, y) {
   rectMode(CORNERS);
   stroke(0);
   strokeWeight(4);
-  fill(186, 211, 252);
+  fill(186, 211, 252, 255);
   // Draw the rectangle
-  rect(x - rectWidth, y - rectHeight, x, y);
-  noStroke();
-  fill(0);
-  // Text inside
-  text(formattedText, x - rectWidth + 5, y - rectHeight + 5);
+  if(x - rectWidth < 0) {
+    rect(x + rectWidth, y - rectHeight, x, y);
+    noStroke();
+    fill(0);
+    // Text inside
+    text(formattedText, x + 5, y - rectHeight + 5);
+  }
+  else {
+    rect(x - rectWidth, y - rectHeight, x, y);
+    noStroke();
+    fill(0);
+    // Text inside
+    text(formattedText, x - rectWidth + 5, y - rectHeight + 5);
+  }
 }
 
 function newFallingCookie() {
@@ -529,19 +541,17 @@ function resetGame() {
 }
 
 function mouseWheel(event) {
-  if (shopState === 1) {
-    if (event.delta > 0) {
-      scroll++;
-    }
-    else {
-      scroll--;
-    }
-    scroll = constrain(scroll, 0, 3);
+  if(shopState && mouseX >= width * 0.7) {
+    shopScrollBar.mouseScroll(event.delta);
+    ovenObj.mouseScroll(event.delta);
+    bakeryObj.mouseScroll(event.delta);
+    factoryObj.mouseScroll(event.delta);
   }
-  shopScrollBar.mouseScroll(event.delta);
-  ovenObj.mouseScroll(event.delta);
-  bakeryObj.mouseScroll(event.delta);
-  factoryObj.mouseScroll(event.delta);
+
+  if(achievementState && mouseX <= width * 0.3) {
+
+    achievements.clicks.obj.mouseScroll(event.delta);
+  }
 }
 
 function windowResized() {

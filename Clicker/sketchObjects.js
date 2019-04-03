@@ -61,6 +61,12 @@ function initObjects() {
   closeShopButton = new ImageButton(width * 0.67, height * 0.06, scalars.storeCloseScalar, scalars.storeCloseScalar, rightArrow, function() {
     shopState = 0;
   }, 1.05, "Close Shop");
+  openAchievementsButton = new ImageButton(width * 0.03, height * 0.06, scalars.openAchievementsScalar, scalars.openAchievementsScalar, goldStar, function() {
+    achievementState = 1;
+  }, 1.05, "Achieve\nments");
+  closeAchievementsButton = new ImageButton(width * 0.33, height * 0.06, scalars.closeAchievementsScalar, scalars.closeAchievementsScalar, leftArrow, function() {
+    achievementState = 0;
+  }, 1.05, "Close");
 
   cookieSpinner = new SpinImage(width / 2, height / 2, 500, 500, coin, 60);
 
@@ -105,6 +111,7 @@ function resizeObjects() {
   // Image buttons
   openShopButton.resize(width * 0.97, height * 0.06, scalars.storeCoinScalar, scalars.storeCoinScalar);
   closeShopButton.resize(width * 0.67, height * 0.06, scalars.storeCloseScalar, scalars.storeCloseScalar);
+  openAchievementsButton.resize(width * 0.03, height * 0.06, scalars.openAchievementsScalar, scalars.openAchievementsScalar);
 
   // Buttons
   titleNewGameButton.resize(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH);
@@ -112,11 +119,13 @@ function resizeObjects() {
   titleLoadButton.resize(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH);
   optionsDeleteDataButton.resize(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH * 1.5);
 
-  // Shop objects get resized with no params, taken care of by
-  // their extendResize() function called in their resize() function
+  // Shop objects get resized with no params, taken care of by their resize function
   ovenObj.resize();
   bakeryObj.resize();
   factoryObj.resize();
+
+  // Same with achievements
+  achievements.clicks.obj.resize();
 
   // Scroll bars
   shopScrollBar.resize(width * 0.995, 0, width * 0.01, height);

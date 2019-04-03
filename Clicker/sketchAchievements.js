@@ -8,7 +8,6 @@ function updateAchievements() {
 }
 
 function initAchievements() {
-
   achievements = {
     clicks: {
       tiers: 3,
@@ -35,14 +34,18 @@ function initAchievements() {
       init: function() {
         this.tier = clicks < 10 ? 0 : clicks < 1000 ? 1 : clicks < 1000000 ? 2 : 3;
         this.text = "Click " + this.goals[this.tier] + " times.";
-        this.completion = clicks / this.goals[this.tier];
+        this.completion = clicks / this.goals[this.tier]; 
       },
-  
-      obj: new AchievementObject(oven.width, oven.height, oven, 3, this.init, this.goals, "Don't break mouse", this.text),
+
+      buildObj: function() {
+        this.obj = new AchievementObject(clickUpgrade.width, clickUpgrade.height, clickUpgrade, 3, this.init, this.goals, "Don't break mouse", this.text);
+      }
     }
   };
 
   achievements.clicks.init();
+  achievements.clicks.buildObj();
+
   trackedAchievement = achievements.clicks;
 }
 
@@ -54,6 +57,7 @@ function displayTrackedAchievment() {
     text(trackedAchievement.text, width / 2, height * 0.98);
 
     // The green inside
+    strokeWeight(3);
     rectMode(CORNER);
     noStroke();
     fill("green");
@@ -68,4 +72,5 @@ function displayTrackedAchievment() {
 
 function displayAchievementsMenu() {
   achievements.clicks.obj.run();
+  closeAchievementsButton.run();
 }
