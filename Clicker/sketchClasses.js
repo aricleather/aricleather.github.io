@@ -156,10 +156,10 @@ class ImageButton extends GameObject {
     this.objImage = objImage;
     this.clicked = clicked;
     this.hoverScalar = hoverScalar;
+    this.tSize = this.width / 6;
     this.objText = formatText(objText, this.width, this.tSize);
     this.minWidth = this.width;
     this.minHeight = this.height;
-    this.tSize = this.width / 6;
   }
   
   run() {
@@ -589,11 +589,6 @@ class AchievementObject extends GameObject {
   
   run() {
     this.calcMouse();
-      
-    
-    tint(255, 255);
-    fill(0, 255);
-    image(this.objImage, this.x, this.y, this.width, this.height);
   
     // Again utilizing calcMouse() and alreadyClicked to run this.clicked() on click only once
     if(this.mouse && gMouse < 1) {
@@ -607,13 +602,17 @@ class AchievementObject extends GameObject {
     }
     
     rectMode(CENTER);
-    fill(30, 70);
+    fill(212, 175, 55, 150);
     noStroke();
     rect(this.rectX, this.y, width * 0.3, height * 0.2);
     textAlign(LEFT, CENTER);
     fill(0, 255);
     textSize(this.tSize);
     text(this.achvText, this.textX, this.y);
+
+    tint(255, 255);
+    fill(0, 255);
+    image(this.objImage, this.x, this.y, this.width, this.height);
   }
   
   // Since shopObjects are always in the same relative spot on the screen, resize should be called with no params

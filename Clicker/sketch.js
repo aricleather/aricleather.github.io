@@ -251,7 +251,7 @@ function mainGame() { // gameState 1
   else {
     openAchievementsButton.run();
   }
-
+  displayPlayerData();
 }
 
 function displayGame() {
@@ -267,19 +267,19 @@ function displayGame() {
   text(str(Math.floor(cookies)) + " Cookies" , width / 2, height * 0.85);
 
   displayTrackedAchievment();
-  displayPlayerData();
 }
 
 function displayPlayerData() {
   strokeWeight(3);
   stroke(0);
-  fill(186, 211, 252);
+  fill(186, 211, 252, 255);
   rectMode(CENTER);
   rect(width * 0.125, height * 0.02, width * 0.15, height * 0.04);
   rect(width * 0.5, height * 0.02, width * 0.6, height * 0.04);
 
   fill(0);
   noStroke();
+  textSize(width * 0.15 / 20);
   textAlign(LEFT, CENTER);
   text(playerName + " Lvl " + playerLevel, width * 0.055, height * 0.02);
   text("Exp: 0/0", width * 0.205, height * 0.02);
@@ -472,6 +472,12 @@ function calculateTextSize(theString, theWidth, theHeight = 0) {
 function formatText(theString, theWidth, tSize) {
   // Many functions require the ability to break text in the right location so it doesn't go "out of bounds."
   // This function returns an edited string with line breaks that fit into the specified width given the text size and width
+  
+  // In case it's passed an empty string
+  if(!theString) {
+    return theString;
+  }
+
   // Set up data
   theString = theString.split(" ");
   let widthCounter = 0;
@@ -488,20 +494,37 @@ function formatText(theString, theWidth, tSize) {
     }
   }
 
-  // By counting width with textWidth, add new lines in appropiate places
-  for(let i = 0; i < theString.length; i++) {
-    if(i !== theString.length - 1) {
-      widthCounter += textWidth(theString[i] + " ");
-    }
-    else {
+  if(theString.length === 1) {
+    theString = theString[0].split("");
+    // By counting width with textWidth, add new lines in appropiate places, for 1 word strings
+    for(let i = 0; i < theString.length; i++) {
       widthCounter += textWidth(theString[i]);
+      if(widthCounter >= theWidth) {
+        returnString += "\n" + theString[i];
+        widthCounter = textWidth(theString[i]);
+      } 
+      else {
+        returnString += theString[i];
+      }
     }
-    if(widthCounter >= theWidth) {
-      returnString += "\n" + theString[i];
-      widthCounter = textWidth(theString[i]);
-    } 
-    else {
-      returnString += " " + theString[i];
+  }
+
+  else {
+    // By counting width with textWidth, add new lines in appropiate places, for many word strings
+    for(let i = 0; i < theString.length; i++) {
+      if(i !== theString.length - 1) {
+        widthCounter += textWidth(theString[i] + " ");
+      }
+      else {
+        widthCounter += textWidth(theString[i]);
+      }
+      if(widthCounter >= theWidth) {
+        returnString += "\n" + theString[i];
+        widthCounter = textWidth(theString[i]);
+      } 
+      else {
+        returnString += " " + theString[i];
+      }
     }
   }
 
