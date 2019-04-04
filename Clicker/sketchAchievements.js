@@ -1,4 +1,7 @@
 // Where I will store my big JSON with achievement data, and the functions to edit and display it
+// Instead of saving achievement progress, each achievement object in "achievements" will have
+// an init() function to calculate the player's current progress, all of which will be run in
+// setup().
 
 let achievements;
 let trackedAchievement;
@@ -13,6 +16,7 @@ function initAchievements() {
       tiers: 3,
       tier: 0,
       goals: [10, 1000, 1000000],
+      rewards: [5, 25, 100],
       text: "Click 10 times.",
       completion: 0,
       position: 0,
@@ -22,13 +26,15 @@ function initAchievements() {
         if(this.completion >=1 ){ 
           this.nextTier();
         }
+        this.obj.updateCompletion(this.completion);
       },
   
       nextTier: function() {
+        exp += this.rewards[this.tier];
         this.tier++;
-        playerLevel++;
         this.completion = clicks / this.goals[this.tier];
         this.text = "Click " + this.goals[this.tier] + " times.";
+        this.obj.updateTier(this.tier, this.text);
       },
   
       init: function() {
@@ -38,7 +44,7 @@ function initAchievements() {
       },
 
       buildObj: function() {
-        this.obj = new AchievementObject(clickUpgrade.width, clickUpgrade.height, clickUpgrade, 3, this.tier, this.init, this.goals, "Don't break mouse", this.text);
+        this.obj = new AchievementObject(clickUpgrade.width, clickUpgrade.height, clickUpgrade, 3, this.tier, this.goals, "Don't break mouse", this.text);
       }
     }
   };

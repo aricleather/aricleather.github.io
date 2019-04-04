@@ -15,6 +15,8 @@ window.onbeforeunload = saveGame;
 
 let playerName;
 let playerLevel = 1;
+let exp = 0;
+let expToNextLevel = [10, 20, 30, 40, 50];
 
 let saveFile;
 let gMouseToggle = 0;
@@ -270,6 +272,8 @@ function displayGame() {
 }
 
 function displayPlayerData() {
+  // Displays player name, level, exp bar, etc
+  // The two rects at top of screen
   strokeWeight(3);
   stroke(0);
   fill(186, 211, 252, 255);
@@ -277,13 +281,24 @@ function displayPlayerData() {
   rect(width * 0.125, height * 0.02, width * 0.15, height * 0.04);
   rect(width * 0.5, height * 0.02, width * 0.6, height * 0.04);
 
+  // Exp bar itself
+
+  fill("green");
+  noStroke();
+  rectMode(CORNER);
+  rect(width * 0.3, height * 0.01, width * 0.4 * exp / expToNextLevel[playerLevel], height * 0.02);
+  noFill();
+  stroke(0);
+  rectMode(CENTER);
+  rect(width * 0.5, height * 0.02, width * 0.4, height * 0.02);
+  
+  // The text
   fill(0);
   noStroke();
   textSize(width * 0.15 / 20);
   textAlign(LEFT, CENTER);
   text(playerName + " Lvl " + playerLevel, width * 0.055, height * 0.02);
-  text("Exp: 0/0", width * 0.205, height * 0.02);
-  text("(There will be an EXP bar here later)", width * 0.35, height * 0.02);
+  text("Exp: " + str(exp) + "/" + str(expToNextLevel[playerLevel]), width * 0.205, height * 0.02);
   
 }
 

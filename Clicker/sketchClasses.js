@@ -561,13 +561,12 @@ class TextInput extends GameObject {
 }
 
 class AchievementObject extends GameObject {
-  constructor(imageWidth, imageHeight, objImage, tiers, tier, init, goals, metaText, achvText) {
+  constructor(imageWidth, imageHeight, objImage, tiers, tier, goals, metaText, achvText) {
     super(width * 0.06, height * 0.125 * (achievementNumber * 2 + 1), width * 0.0002 * imageWidth, width * 0.0002 * imageHeight);
     this.objImage = objImage;
     this.tiers = tiers; 
     this.tier = tier;
     this.completion;
-    this.init = init;
     
     this.goals = goals;
     this.position = achievementNumber;
@@ -577,8 +576,8 @@ class AchievementObject extends GameObject {
     this.metaText = metaText;
     this.rectX = width * 0.15;
     this.textX = width * 0.125;
-    this.starX = width * 0.13;
-    this.starY = this.y * 1.6;
+    this.starX = width * 0.135;
+    this.starY = this.y + height * 0.07;
     this.starSize = 40;
     this.starDist = this.starSize * 1.4;
     this.tSize = 15 * scalars.textScalar;
@@ -641,6 +640,11 @@ class AchievementObject extends GameObject {
     this.textX = width * 0.125;
     this.tSize = 15 * scalars.textScalar;
     this.rectX = width * 0.15;
+
+    this.starX = width * 0.135;
+    this.starY = this.y + height * 0.07;
+    this.starSize = 40;
+    this.starDist = this.starSize * 1.4;
   }
   
   // mouseHover() is run in run() if it exists. Here it uses function displayTextBox() to
@@ -655,14 +659,16 @@ class AchievementObject extends GameObject {
     }
     this.scrollAmount = constrain(this.scrollAmount, 0, 7);
     this.y = height * (2 * this.position + 1) * 0.125 - this.scrollPosition * this.scrollAmount;
-    this.starY = this.y * 1.6;
+    this.starY = this.y + height * 0.07;
   }
 
-  saveLoad(arr) {
-    void 0;
-    // this.price = int(arr[0]);
-    // this.owned = int(arr[1]);
-    // this.updateText();
+  updateCompletion(completion) {
+    this.completion = completion;
+  }
+
+  updateTier(tier, updatedText) {
+    this.tier = tier;
+    this.achvText = updatedText;
   }
 
   reset() {
