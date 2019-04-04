@@ -55,16 +55,16 @@ function initObjects() {
       this.height = constrain(this.height, scalars.mainCookieScalar, scalars.mainCookieScalar * 1.25);
     });
 
-  openShopButton = new ImageButton(width * 0.97, height * 0.1, scalars.storeCoinScalar, scalars.storeCoinScalar, coin, function() {
+  openShopButton = new ImageButton(width * 0.97, height * 0.105, scalars.storeCoinScalar, scalars.storeCoinScalar, coin, function() {
     shopState = 1;
   }, 1.05, "Open Shop");
-  closeShopButton = new ImageButton(width * 0.67, height * 0.1, scalars.storeCloseScalar, scalars.storeCloseScalar, rightArrow, function() {
+  closeShopButton = new ImageButton(width * 0.67, height * 0.105, scalars.storeCloseScalar, scalars.storeCloseScalar, rightArrow, function() {
     shopState = 0;
   }, 1.05, "Close Shop");
-  openAchievementsButton = new ImageButton(width * 0.03, height * 0.1, scalars.openAchievementsScalar, scalars.openAchievementsScalar, goldStar, function() {
+  openAchievementsButton = new ImageButton(width * 0.03, height * 0.105, scalars.openAchievementsScalar, scalars.openAchievementsScalar, goldStar, function() {
     achievementState = 1;
   }, 1.05, "");
-  closeAchievementsButton = new ImageButton(width * 0.33, height * 0.1, scalars.closeAchievementsScalar, scalars.closeAchievementsScalar, leftArrow, function() {
+  closeAchievementsButton = new ImageButton(width * 0.33, height * 0.105, scalars.closeAchievementsScalar, scalars.closeAchievementsScalar, leftArrow, function() {
     achievementState = 0;
   }, 1.05, "Close");
 
@@ -109,10 +109,10 @@ function resizeObjects() {
   mainCookie.resize(width / 2, height / 2, scalars.mainCookieScalar, scalars.mainCookieScalar);
 
   // Image buttons
-  openShopButton.resize(width * 0.97, height * 0.1, scalars.storeCoinScalar, scalars.storeCoinScalar);
-  closeShopButton.resize(width * 0.67, height * 0.1, scalars.storeCloseScalar, scalars.storeCloseScalar);
-  openAchievementsButton.resize(width * 0.03, height * 0.1, scalars.openAchievementsScalar, scalars.openAchievementsScalar);
-  closeAchievementsButton.resize(width * 0.33, height * 0.1, scalars.closeAchievementsScalar, scalars.closeAchievementsScalar);
+  openShopButton.resize(width * 0.97, height * 0.105, scalars.storeCoinScalar, scalars.storeCoinScalar);
+  closeShopButton.resize(width * 0.67, height * 0.105, scalars.storeCloseScalar, scalars.storeCloseScalar);
+  openAchievementsButton.resize(width * 0.03, height * 0.105, scalars.openAchievementsScalar, scalars.openAchievementsScalar);
+  closeAchievementsButton.resize(width * 0.33, height * 0.105, scalars.closeAchievementsScalar, scalars.closeAchievementsScalar);
 
   // Buttons
   titleNewGameButton.resize(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH);

@@ -561,11 +561,11 @@ class TextInput extends GameObject {
 }
 
 class AchievementObject extends GameObject {
-  constructor(imageWidth, imageHeight, objImage, tiers, init, goals, metaText, achvText) {
+  constructor(imageWidth, imageHeight, objImage, tiers, tier, init, goals, metaText, achvText) {
     super(width * 0.06, height * 0.125 * (achievementNumber * 2 + 1), width * 0.0002 * imageWidth, width * 0.0002 * imageHeight);
     this.objImage = objImage;
     this.tiers = tiers; 
-    this.tier;
+    this.tier = tier;
     this.completion;
     this.init = init;
     
@@ -577,6 +577,10 @@ class AchievementObject extends GameObject {
     this.metaText = metaText;
     this.rectX = width * 0.15;
     this.textX = width * 0.125;
+    this.starX = width * 0.13;
+    this.starY = this.y * 1.6;
+    this.starSize = 40;
+    this.starDist = this.starSize * 1.4;
     this.tSize = 15 * scalars.textScalar;
 
     this.scrollPosition = width * 0.0625;
@@ -591,15 +595,6 @@ class AchievementObject extends GameObject {
     this.calcMouse();
   
     // Again utilizing calcMouse() and alreadyClicked to run this.clicked() on click only once
-    if(this.mouse && gMouse < 1) {
-      // If mouseHover exists run when mouse hovering
-      displayTextBox(this.metaText, mouseX, mouseY);
-      
-      if(mouseIsPressed) {
-        this.clicked();
-        gMouseToggle = 1;
-      }
-    }
     
     rectMode(CENTER);
     fill(212, 175, 55, 150);
@@ -613,6 +608,26 @@ class AchievementObject extends GameObject {
     tint(255, 255);
     fill(0, 255);
     image(this.objImage, this.x, this.y, this.width, this.height);
+
+    for(let i = 0; i < this.tiers; i++) {
+      if(i < this.tier) {
+        tint(255, 255);
+      }
+      else {
+        tint(50, 255);
+      }
+      image(goldStar, this.starX + i * this.starDist, this.starY, this.starSize, this.starSize);
+    }
+
+    if(this.mouse && gMouse < 1) {
+      // If mouseHover exists run when mouse hovering
+      displayTextBox(this.metaText, mouseX, mouseY);
+      
+      if(mouseIsPressed) {
+        this.clicked();
+        gMouseToggle = 1;
+      }
+    }
   }
   
   // Since shopObjects are always in the same relative spot on the screen, resize should be called with no params
@@ -640,6 +655,7 @@ class AchievementObject extends GameObject {
     }
     this.scrollAmount = constrain(this.scrollAmount, 0, 7);
     this.y = height * (2 * this.position + 1) * 0.125 - this.scrollPosition * this.scrollAmount;
+    this.starY = this.y * 1.6;
   }
 
   saveLoad(arr) {

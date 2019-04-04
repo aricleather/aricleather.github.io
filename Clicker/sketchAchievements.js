@@ -38,7 +38,7 @@ function initAchievements() {
       },
 
       buildObj: function() {
-        this.obj = new AchievementObject(clickUpgrade.width, clickUpgrade.height, clickUpgrade, 3, this.init, this.goals, "Don't break mouse", this.text);
+        this.obj = new AchievementObject(clickUpgrade.width, clickUpgrade.height, clickUpgrade, 3, this.tier, this.init, this.goals, "Don't break mouse", this.text);
       }
     }
   };
