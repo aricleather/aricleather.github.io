@@ -203,6 +203,43 @@ class ImageButton extends GameObject {
     this.objText = formatText(this.objText, this.width, this.tSize);
   }
 }
+
+class TabButton extends GameObject {
+  constructor(x, y, width, height, clicked, rgb, buttonText) {
+    super(x, y, width, height);
+    this.clicked = clicked;
+    this.rgb = rgb;
+    this.hoverRgb = lerpColor(color(this.rgb), color([0, 0, 0]), 0.1);
+    this.buttonText = buttonText;
+    this.tSize = this.width / 15;
+  }
+
+  run() {
+    this.calcMouse();
+
+    if(this.mouse && !gMouse) {
+      fill(this.hoverRgb);
+      if(mouseIsPressed) {
+        this.clicked();
+        gMouseToggle = 1;
+      }
+    }
+    else {
+      fill(this.rgb);
+    }
+
+
+    rectMode(CENTER);
+    rect(this.x, this.y, this.width, this.height, 10, 10, 0, 0);
+
+    textAlign(CENTER, CENTER);
+    textSize(this.tSize);
+    fill(0, 200);
+    text(this.buttonText, this.x, this.y);
+
+
+  }
+}
   
 class ShopObject extends GameObject {
   constructor(imageWidth, imageHeight, objImage, name, metaText, price, cps) {
@@ -711,12 +748,20 @@ class ExperienceBar extends GameObject {
     rectMode(CENTER);
     rect(this.x, this.y, this.width, this.height);
 
-    if(this.mouse) {
+    if(this.mouse && !gMouse) {
       displayTextBox("Exp: " + this._exp.toFixed(0) + "/" + str(this.expToNextLevel), this.x, this.y + this.height * 1.5, "center", "small");
+      if(mouseIsPressed) {
+        this.clicked();
+        gMouseToggle = 1;
+      }
     }
 
     // text("Exp: " + exp.toFixed(0) + "/" + str(expToNextLevel[playerLevel - 1]), width * 0.205, height * 0.02);
 
+  }
+
+  clicked() {
+    void 0;
   }
 
   set exp(val) {

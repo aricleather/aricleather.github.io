@@ -55,6 +55,7 @@ function initObjects() {
       this.height = constrain(this.height, scalars.mainCookieScalar, scalars.mainCookieScalar * 1.25);
     });
 
+  // Image buttons
   openShopButton = new ImageButton(width * 0.97, height * 0.105, scalars.storeCoinScalar, scalars.storeCoinScalar, coin, function() {
     shopState = 1;
   }, 1.05, "Open Shop");
@@ -67,6 +68,14 @@ function initObjects() {
   closeAchievementsButton = new ImageButton(width * 0.33, height * 0.105, scalars.closeAchievementsScalar, scalars.closeAchievementsScalar, leftArrow, function() {
     achievementState = 0;
   }, 1.05, "Close");
+
+  // Tab buttons
+  autoCookiesTab = new TabButton(width * 0.775, height * 0.975, width * 0.15, height * 0.05, function() {
+    shopTab = 1;
+  }, [83, 140, 198], "Cookies");
+  weaponsTab = new TabButton(width * 0.925, height * 0.975, width * 0.15, height * 0.05, function() {
+    shopTab = 2;
+  }, [178, 34, 34], "Weapons");
 
   cookieSpinner = new SpinImage(width / 2, height / 2, 500, 500, coin, 60);
 
@@ -103,7 +112,7 @@ function initObjects() {
   globalMessage = new GlobalMessage();
 
   // Exp bars
-  playerExpBar = new ExperienceBar(width * 0.5, height * 0.02, width * 0.4, height * 0.02, 0, 10);
+  playerExpBar = new ExperienceBar(width * 0.25 + 16 * (width * 0.15 / 20), height * 0.02, width * 0.4, height * 0.02, 0, 10);
 }
 
 // Called when window resized to properly resize all game objects

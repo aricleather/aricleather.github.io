@@ -284,8 +284,7 @@ function displayPlayerData() {
   stroke(0);
   fill(186, 211, 252, 255);
   rectMode(CENTER);
-  rect(width * 0.125, height * 0.02, width * 0.15, height * 0.04);
-  rect(width * 0.5, height * 0.02, width * 0.6, height * 0.04);
+  rect(width * 0.425, height * 0.02, width * 0.75, height * 0.04);
 
   // The text player name and level text
   fill(0);
@@ -377,6 +376,9 @@ function shop() {
   else{
     console.log("There are no other tabs yet, just keep shopTab set to 1.");
   }
+
+  autoCookiesTab.run();
+  weaponsTab.run();
 
   shopScrollBar.run();
 }
