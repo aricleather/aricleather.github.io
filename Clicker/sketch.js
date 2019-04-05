@@ -15,6 +15,7 @@ window.onbeforeunload = saveGame;
 
 let playerName;
 let playerLevel = 1;
+let playerExpToNextLevel = [10, 20, 40, 80];
 
 let saveFile;
 let gMouseToggle = 0;
@@ -103,6 +104,7 @@ function preload() {
   gameFont = loadFont("assets/gameFont.ttf");
   coinSound = loadSound("assets/coinSound.wav");
   popSound = loadSound("assets/pop.ogg");
+  expGainSound = loadSound("assets/expGain.wav");
   textBlip = loadSound("assets/textBlip.wav");
   keyType1 = loadSound("assets/keyType1.wav");
   keyType2 = loadSound("assets/keyType2.wav");
@@ -129,6 +131,7 @@ function setup() {
   keyType1.setVolume(0.2);
   keyType2.setVolume(0.2);
   buttonSelect1.setVolume(0.8);
+  expGainSound.setVolume(0.25);
 }
 
 function loadSaveFile() {
@@ -142,7 +145,8 @@ function loadSaveFile() {
     clicks = int(window.localStorage.getItem("clicks"));
     playerName = window.localStorage.getItem("playerName");
     playerLevel = window.localStorage.getItem("playerLevel");
-    playerExpBar.exp = int(window.localStorage.getItem("exp")) || 0;
+    playerExpBar.exp = int(window.localStorage.getItem("playerExp")) || 0;
+    playerExpBar.expToNextLevel = int(playerExpToNextLevel[playerLevel - 1]);
     ovenObj.saveLoad(window.localStorage.getItem("oven").split(","));
     bakeryObj.saveLoad(window.localStorage.getItem("bakery").split(","));
     factoryObj.saveLoad(window.localStorage.getItem("factory").split(","));
@@ -156,9 +160,9 @@ function saveGame() {
     window.localStorage.setItem("cookies", cookies);
     window.localStorage.setItem("autoCookies", autoCookies);
     window.localStorage.setItem("clicks", clicks);
-    window.localStorage.setItem("playerExp", playerExpBar.exp);
     window.localStorage.setItem("playerName", playerName);
     window.localStorage.setItem("playerLevel", playerLevel);
+    window.localStorage.setItem("playerExp", playerExpBar._exp);
     window.localStorage.setItem("oven", [ovenObj.price, ovenObj.owned]);
     window.localStorage.setItem("bakery", [bakeryObj.price, bakeryObj.owned]);
     window.localStorage.setItem("factory", [factoryObj.price, factoryObj.owned]);

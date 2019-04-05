@@ -734,11 +734,12 @@ class ExperienceBar extends GameObject {
     // The function that is actually called to increment the exp bar, will cause animation to take place
     this.expToGain = this._exp + exp;
     this.expToGainCounter = 60;
+    expGainSound.play();
   }
 
   animate() {
     // Animates exp bar by making it move toward where it is supposed to be at a decreasing rate
-    this._exp += (this.expToGain - this._exp) * 1/10;
+    this._exp += (this.expToGain - this._exp) * 1/12;
     this.expToGainCounter--;
 
     // After 60 frames, animation is cut off
