@@ -30,7 +30,7 @@ function initAchievements() {
       },
   
       nextTier: function() {
-        exp += this.rewards[this.tier];
+        playerExpBar.expGain(this.rewards[this.tier]);
         this.tier++;
         this.completion = clicks / this.goals[this.tier];
         this.text = "Click " + this.goals[this.tier] + " times.";

@@ -101,6 +101,9 @@ function initObjects() {
 
   // Global messages
   globalMessage = new GlobalMessage();
+
+  // Exp bars
+  playerExpBar = new ExperienceBar(width * 0.5, height * 0.02, width * 0.4, height * 0.02, 0, 10);
 }
 
 // Called when window resized to properly resize all game objects
@@ -137,4 +140,7 @@ function resizeObjects() {
 
   // Global message object
   globalMessage.resize(width / 2, height / 5, width * 0.6, height * 0.2);
+
+  // Exp bars
+  playerExpBar.resize(width * 0.5, height * 0.02, width * 0.4, height * 0.02);
 }

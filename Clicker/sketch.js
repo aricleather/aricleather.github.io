@@ -15,8 +15,6 @@ window.onbeforeunload = saveGame;
 
 let playerName;
 let playerLevel = 1;
-let exp = 0;
-let expToNextLevel = [10, 20, 30, 40, 50];
 
 let saveFile;
 let gMouseToggle = 0;
@@ -144,6 +142,7 @@ function loadSaveFile() {
     clicks = int(window.localStorage.getItem("clicks"));
     playerName = window.localStorage.getItem("playerName");
     playerLevel = window.localStorage.getItem("playerLevel");
+    playerExpBar.exp = int(window.localStorage.getItem("exp")) || 0;
     ovenObj.saveLoad(window.localStorage.getItem("oven").split(","));
     bakeryObj.saveLoad(window.localStorage.getItem("bakery").split(","));
     factoryObj.saveLoad(window.localStorage.getItem("factory").split(","));
@@ -157,6 +156,7 @@ function saveGame() {
     window.localStorage.setItem("cookies", cookies);
     window.localStorage.setItem("autoCookies", autoCookies);
     window.localStorage.setItem("clicks", clicks);
+    window.localStorage.setItem("playerExp", playerExpBar.exp);
     window.localStorage.setItem("playerName", playerName);
     window.localStorage.setItem("playerLevel", playerLevel);
     window.localStorage.setItem("oven", [ovenObj.price, ovenObj.owned]);
@@ -200,6 +200,7 @@ function draw() {
   // cursor("assets/cursor.png");
   textSize(15);
   fill(0);
+  noStroke();
   textAlign(CENTER, CENTER);
   text(frameRate().toFixed(0), 20, height - 60);
   if (gameState === 0) {
@@ -272,7 +273,8 @@ function displayGame() {
 }
 
 function displayPlayerData() {
-  // Displays player name, level, exp bar, etc
+  // Displays player name and level, and a box for the main player EXP bar
+
   // The two rects at top of screen
   strokeWeight(3);
   stroke(0);
@@ -281,25 +283,14 @@ function displayPlayerData() {
   rect(width * 0.125, height * 0.02, width * 0.15, height * 0.04);
   rect(width * 0.5, height * 0.02, width * 0.6, height * 0.04);
 
-  // Exp bar itself
-
-  fill("green");
-  noStroke();
-  rectMode(CORNER);
-  rect(width * 0.3, height * 0.01, width * 0.4 * exp / expToNextLevel[playerLevel], height * 0.02);
-  noFill();
-  stroke(0);
-  rectMode(CENTER);
-  rect(width * 0.5, height * 0.02, width * 0.4, height * 0.02);
-  
-  // The text
+  // The text player name and level text
   fill(0);
   noStroke();
   textSize(width * 0.15 / 20);
   textAlign(LEFT, CENTER);
   text(playerName + " Lvl " + playerLevel, width * 0.055, height * 0.02);
-  text("Exp: " + str(exp) + "/" + str(expToNextLevel[playerLevel]), width * 0.205, height * 0.02);
-  
+
+  playerExpBar.run();
 }
 
 function incrementAutoCookies() {
@@ -386,36 +377,48 @@ function shop() {
   shopScrollBar.run();
 }
 
-function displayTextBox(theText, x, y) {
+function displayTextBox(theText, x, y, mode = 0, size = 0) {
   // Called from within shop objects in mouseHover() 
   // Displays a shop object's metaText in a box if hovered over
 
   // Position vars
-  let rectWidth = width / 10;
-  let rectHeight = width / 25;
-  let tSize = Math.ceil(rectWidth / 15);
+  let rectWidth = size === "small" ? width / 15 : width / 10;
+  let rectHeight = size === "small" ? height / 40 : height / 15;
+  let tSize = size === "small" ? Math.ceil(rectWidth / theText.length * 0.85) : Math.ceil(rectWidth / 15);
   let formattedText = formatText(theText, rectWidth, tSize);
 
   // Formatting
-  textAlign(LEFT, TOP);
   textSize(tSize);
-  rectMode(CORNERS);
   stroke(0);
-  strokeWeight(4);
+  strokeWeight(3);
   fill(186, 211, 252, 255);
   // Draw the rectangle
-  if(x - rectWidth < 0) {
+  if(mode === "center") {
+    rectMode(CENTER);
+    textAlign(CENTER, CENTER);
+    rect(x, y, rectWidth, rectHeight);
+    noStroke();
+    fill(0);
+    // Text inside
+    text(formattedText, x, y);
+  }
+
+  else if(x - rectWidth < 0) {
+    rectMode(CORNERS);
+    textAlign(LEFT, TOP);
     rect(x + rectWidth, y - rectHeight, x, y);
     noStroke();
     fill(0);
     // Text inside
     text(formattedText, x + 5, y - rectHeight + 5);
   }
+
   else {
+    rectMode(CORNERS);
+    textAlign(LEFT, TOP);
     rect(x - rectWidth, y - rectHeight, x, y);
     noStroke();
     fill(0);
-    // Text inside
     text(formattedText, x - rectWidth + 5, y - rectHeight + 5);
   }
 }
@@ -509,6 +512,7 @@ function formatText(theString, theWidth, tSize) {
     }
   }
 
+  // For one word
   if(theString.length === 1) {
     theString = theString[0].split("");
     // By counting width with textWidth, add new lines in appropiate places, for 1 word strings
@@ -524,6 +528,7 @@ function formatText(theString, theWidth, tSize) {
     }
   }
 
+  // For many words
   else {
     // By counting width with textWidth, add new lines in appropiate places, for many word strings
     for(let i = 0; i < theString.length; i++) {
@@ -572,6 +577,7 @@ function resetGame() {
   ovenObj.reset();
   bakeryObj.reset();
   factoryObj.reset();
+  playerExpBar.exp = 0;
 
   // Delete save file
   window.localStorage.clear();

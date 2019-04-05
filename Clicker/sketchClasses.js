@@ -678,3 +678,88 @@ class AchievementObject extends GameObject {
     // this.updateText();
   }
 }
+
+class ExperienceBar extends GameObject {
+  constructor(x, y, width, height, exp, expToNextLevel) {
+    // Vars
+    super(x, y, width, height);
+    this._exp = exp;
+    this.expToNextLevel = expToNextLevel;
+    this.expToGain = 0;
+    this.expToGainCounter = 0;
+
+    // Special vars for green filling so rectMode can be CORNER
+    this.expGreenX = this.x - this.width / 2;
+    this.expGreenY = this.y - this.height / 2;
+    this.expGreenWidth = this.width * this._exp / this.expToNextLevel || 0;
+  }
+
+  run() {
+    this.calcMouse();
+
+    if(this.expToGain) {
+      this.animate();
+    }
+
+    // Exp bar itself
+    fill("green");
+    noStroke();
+    rectMode(CORNER);
+    rect(this.expGreenX, this.expGreenY, this.expGreenWidth, this.height);
+    noFill();
+    stroke(0);
+    rectMode(CENTER);
+    rect(this.x, this.y, this.width, this.height);
+
+    if(this.mouse) {
+      displayTextBox("Exp: " + this._exp.toFixed(0) + "/" + str(this.expToNextLevel), this.x, this.y + this.height * 1.5, "center", "small");
+    }
+
+    // text("Exp: " + exp.toFixed(0) + "/" + str(expToNextLevel[playerLevel - 1]), width * 0.205, height * 0.02);
+
+  }
+
+  set exp(val) {
+    // For direct setting, used by loadSaveFile();
+    this._exp = val;
+    this.resizeGreen();
+  }
+
+  resizeGreen() {
+    // When called, calculate new width necessary to display current exp amount
+    this.expGreenWidth = this.width * this._exp / this.expToNextLevel || 0;
+  }
+
+  expGain(exp) {
+    // The function that is actually called to increment the exp bar, will cause animation to take place
+    this.expToGain = this._exp + exp;
+    this.expToGainCounter = 60;
+  }
+
+  animate() {
+    // Animates exp bar by making it move toward where it is supposed to be at a decreasing rate
+    this._exp += (this.expToGain - this._exp) * 1/10;
+    this.expToGainCounter--;
+
+    // After 60 frames, animation is cut off
+    if(!this.expToGainCounter) {
+      console.log(this.expToGain);
+      this._exp = this.expToGain;
+      this.expToGain = 0;
+    }
+    this.resizeGreen();
+  }
+
+  resize(x, y, width, height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+
+    this.expGreenX = this.x - this.width / 2;
+    this.expGreenY = this.y - this.height / 2;
+    this.expGreenWidth = this.width * this._exp / this.expToNextLevel || 0;
+  }
+}
+
+// width * 0.5, height * 0.02, width: width * 0.4 height: height * 0.02
