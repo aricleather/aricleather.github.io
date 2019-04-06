@@ -17,6 +17,8 @@ let playerName;
 let playerLevel = 1;
 let playerExpToNextLevel = [10, 20, 40, 80];
 
+let currentInv = null;
+
 let saveFile;
 let gMouseToggle = 0;
 let gMouse = 0;
@@ -99,6 +101,8 @@ function preload() {
   factory = loadImage("assets/factory.png");
   clickUpgrade = loadImage("assets/clickUpgrade.png");
   goldStar = loadImage("assets/goldStar.png");
+  woodenSword = loadImage("assets/woodenSword.png");
+  inventoryButton = loadImage("assets/invButton.png");
 
   // Sounds and fonts
   gameFont = loadFont("assets/gameFont.ttf");
@@ -109,6 +113,8 @@ function preload() {
   keyType1 = loadSound("assets/keyType1.wav");
   keyType2 = loadSound("assets/keyType2.wav");
   buttonSelect1 = loadSound("assets/buttonSelect1.wav");
+  errorSound = loadSound("assets/error.wav");
+  purchaseSound = loadSound("assets/purchase.wav");
 }
 
 function setup() {
@@ -191,6 +197,7 @@ function initScalarsPositions() {
     storeCloseScalar: width * 0.05,
     openAchievementsScalar: width * 0.05,
     closeAchievementsScalar: width * 0.05,
+    inventoryOpenScalar: width * 0.05,
     cookieGetScalar: width * 0.025,
     fallingCookieScalar: 50,
   
@@ -246,6 +253,9 @@ function mainGame() { // gameState 1
   incrementAutoCookies();
   displayGame();
   animateCookieGet();
+  if(currentInv) {
+    currentInv.run();
+  }
   if (shopState) {
     shop();
   }
@@ -265,6 +275,7 @@ function displayGame() {
   cookieFall();
   // cookieSpinner.run();
   mainCookie.run();
+  inventoryOpenButton.run();
 
   // Draws cookie amount text to screen
   noStroke();
@@ -369,18 +380,27 @@ function shop() {
   // Run objects for game shop
   closeShopButton.run();
   if(shopTab === 1) {
+    // Draws background in shop 
+    rectMode(CENTER);
+    fill(83, 140, 198);
+    rect(width * 0.85, height / 2, width * 0.3, height);
+
     ovenObj.run();
     bakeryObj.run();
     factoryObj.run();
+    shopScrollBar.run();
   }
   else{
-    console.log("There are no other tabs yet, just keep shopTab set to 1.");
+    rectMode(CENTER);
+    fill(214, 41, 41);
+
+    rect(width * 0.85, height / 2, width * 0.3, height);
+    woodenSwordObj.run();
+    shopWeaponScrollBar.run();
   }
 
   autoCookiesTab.run();
   weaponsTab.run();
-
-  shopScrollBar.run();
 }
 
 function displayTextBox(theText, x, y, mode = 0, size = 0) {
@@ -389,9 +409,9 @@ function displayTextBox(theText, x, y, mode = 0, size = 0) {
 
   // Position vars
   let rectWidth = size === "small" ? width / 15 : width / 10;
-  let rectHeight = size === "small" ? height / 40 : height / 15;
   let tSize = size === "small" ? Math.ceil(rectWidth / theText.length * 0.85) : Math.ceil(rectWidth / 15);
   let formattedText = formatText(theText, rectWidth, tSize);
+  let rectHeight = size === "small" ? formattedText.split("\n").length * tSize * 1.7 : formattedText.split("\n").length * tSize * 1.5;
 
   // Formatting
   textSize(tSize);
@@ -567,6 +587,9 @@ function keyPressed() {
     else if (key === "m") {
       newDialogBox(returnToMenuDialog);
     }
+    else if(key === "i") {
+      openInventory("player");
+    }
   }
   if(input) {
     input.getInput(key);
@@ -592,10 +615,17 @@ function resetGame() {
 
 function mouseWheel(event) {
   if(shopState && mouseX >= width * 0.7) {
-    shopScrollBar.mouseScroll(event.delta);
-    ovenObj.mouseScroll(event.delta);
-    bakeryObj.mouseScroll(event.delta);
-    factoryObj.mouseScroll(event.delta);
+    if(shopTab === 1) {
+      ovenObj.mouseScroll(event.delta);
+      bakeryObj.mouseScroll(event.delta);
+      factoryObj.mouseScroll(event.delta);
+      shopScrollBar.mouseScroll(event.delta);
+    }
+    else {
+      woodenSwordObj.mouseScroll(event.delta);
+      shopWeaponScrollBar.mouseScroll(event.delta);
+    }
+    
   }
 
   if(achievementState && mouseX <= width * 0.3) {
@@ -608,4 +638,15 @@ function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   initScalarsPositions();
   resizeObjects();
+}
+
+function openInventory(theInventory) {
+  currentInv = theInventory === "player" ? playerInventory : null;
+}
+
+function closeInventory() {
+  // Going along with the comment in the BackgroundBox, this prevents boxes
+  // from being closed unless gMouse is currently their own priority, stopping
+  // unwanted, immediate closing when opening inventories with on-screen buttons
+  currentInv = gMouse === currentInv.priority ? null : currentInv;
 }

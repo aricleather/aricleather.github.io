@@ -236,8 +236,13 @@ class TabButton extends GameObject {
     textSize(this.tSize);
     fill(0, 200);
     text(this.buttonText, this.x, this.y);
+  }
 
-
+  resize(x, y, width, height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
   }
 }
   
@@ -274,10 +279,14 @@ class ShopObject extends GameObject {
     if(cookies >= this.price) {
       autoCookies += this.cps;
       cookies -= this.price;
-      coinSound.play();
+      purchaseSound.play();
       this.owned++;
       this.price = Math.ceil(this.basePrice * Math.pow(Math.E, this.owned / 4));
       this.updateText();
+    }
+    else{
+      // If unable to play, play a little noise
+      errorSound.play();
     }
   }
   
@@ -331,6 +340,132 @@ class ShopObject extends GameObject {
     this.y = height * (2 * this.position + 1) * 0.125 - this.scrollPosition * this.scrollAmount;
     this.width = width * this.objImage.width * 0.0002;
     this.height = width * this.objImage.height * 0.0002;
+    this.textX = width * 0.825;
+    this.tSize = 15 * scalars.textScalar;
+    this.rectX = width * 0.85;
+  }
+  
+  // mouseHover() is run in run() if it exists. Here it uses function displayTextBox() to
+  // display the little box over the item with some info
+  
+  mouseScroll(event) { 
+    if(event > 0) {
+      this.scrollAmount++;
+    }
+    else {
+      this.scrollAmount--;
+    }
+    this.scrollAmount = constrain(this.scrollAmount, 0, 7);
+    this.y = height * (2 * this.position + 1) * 0.125 - this.scrollPosition * this.scrollAmount; 
+  }
+
+  saveLoad(arr) {
+    this.price = int(arr[0]);
+    this.owned = int(arr[1]);
+    this.updateText();
+  }
+
+  reset() {
+    this.price = this.basePrice;
+    this.owned = 0;
+    this.updateText();
+  }
+}
+
+class ShopWeaponObject extends GameObject {
+  constructor(objImage, name, metaText, price, power, powerType) {
+    // Used to construct an object in the shop
+    super(width * 0.76, height * 0.125 * (shopWeaponNumber * 2 + 1), width * 0.06, width * 0.06);
+  
+    // Vars
+    this.objImage = objImage;
+    this.name = name;
+    this.metaText = metaText;
+    this.basePrice = price;
+    this.price = price;
+    this.power = power;
+    this.powerType = powerType;
+  
+    this.position = shopWeaponNumber;
+    this.owned = 0;
+  
+    this.textX = width * 0.825;
+    this.tSize = 15 * scalars.textScalar;
+    this.rectX = width * 0.85;
+    this.scrollAmount = 0;
+    this.scrollPosition = width * 0.0625;
+
+    this.text = this.name + "\nCost: " + str(this.price) + " Cookies\n" + str(this.power) + " " + this.powerType + " Power\nOwned: " + str(this.owned);
+  
+    // shopWeaponNumber just keeps track of order in the shop, so that the next shopWeaponObject construction knows it comes after
+    shopWeaponNumber++;
+  }
+  
+  // The clicked() function here checks if you have enough money then does stuff if you do
+  clicked() {
+    if(cookies >= this.price) {
+      autoCookies += this.cps;
+      cookies -= this.price;
+      purchaseSound.play();
+      this.owned++;
+      // this.price = Math.ceil(this.basePrice * Math.pow(Math.E, this.owned / 4));
+      this.updateText();
+    }
+    else {
+      errorSound.play();
+    }
+  }
+  
+  // The extendRun for ShopObject draws the rectangle behind the ShopObject and it's text
+  // Then, it sets a tint value for when the image is drawn (in ImageObjects run()) based on whether
+  // or not the player has enough cookies. If mouse hovering, call metaTextBox
+  run() {
+    this.calcMouse();
+      
+    // Darken image if player cannot afford item
+    if(cookies < this.price) {
+      tint(50);
+    }
+    else {
+      tint(255);
+    }
+    fill(0, 255);
+    image(this.objImage, this.x, this.y, this.width, this.height);
+  
+    // Again utilizing calcMouse() and alreadyClicked to run this.clicked() on click only once
+    if(this.mouse && gMouse < 1) {
+      // If mouseHover exists run when mouse hovering
+      displayTextBox(this.metaText, mouseX, mouseY);
+      
+      if(mouseIsPressed) {
+        this.clicked();
+        gMouseToggle = 1;
+      }
+    }
+    
+    rectMode(CENTER);
+    fill(30, 70);
+    noStroke();
+    rect(this.rectX, this.y, width * 0.3, height * 0.2);
+    textAlign(LEFT, CENTER);
+    fill(0);
+    textSize(this.tSize);
+    text(this.text, this.textX, this.y);
+  }
+  
+  // Updates the text drawn by this object when called to match current data. Run once on construction and once on purchase
+  updateText() {
+    this.text = this.name + "\nCost: " + str(this.price) + " Cookies\n" + str(this.power) + " " + this.powerType + " Power\nOwned: " + str(this.owned);
+  }
+  
+  // Since shopObjects are always in the same relative spot on the screen, resize should be called with no params
+  // to let this extendResize function reset the scaling and position variables
+  resize() {
+    this.scrollPosition = width * 0.0625;
+    this.x = width * 0.76;
+    this.y = height * (2 * this.position + 1) * 0.125 - this.scrollPosition * this.scrollAmount;
+    this.width = width * 0.06;
+    this.height = width * 0.06;
     this.textX = width * 0.825;
     this.tSize = 15 * scalars.textScalar;
     this.rectX = width * 0.85;
@@ -808,4 +943,103 @@ class ExperienceBar extends GameObject {
   }
 }
 
-// width * 0.5, height * 0.02, width: width * 0.4 height: height * 0.02
+class BackgroundBox extends GameObject {
+  constructor(x, y, width, height, rgb, priority) {
+    super(x, y, width, height);
+    this.rgb = rgb;
+    this.priority = priority;
+    this.close = false;
+  }
+
+  run() {
+    this.calcMouse();
+
+    stroke(0);
+    strokeWeight(4);
+    fill(this.rgb);
+    rectMode(CENTER);
+    rect(this.x, this.y, this.width, this.height);
+
+    if(!this.mouse && gMouse <= this.priority && mouseIsPressed) {
+      this.clicked();
+    }
+
+    // Because of the order in which functions were run, without adding 1 to this toggle,
+    // clicking an on-screen button to open a box would cause immediate closing.
+    // Putting this gMouseToggle at the end of the run prevents this from happening
+    gMouseToggle = mouseIsPressed ? this.priority + 1 : this.priority;
+  }
+
+  
+  
+  clicked() {
+    this.close = true;
+  }
+}
+
+class InventoryScreen extends GameObject {
+  constructor(x, y, width, rgb, priority, cols, rows) {
+    // Vars
+    super(x, y, width, width / cols * rows);
+    this.cols = cols;
+    this.rows = rows;
+    this.mouseXPos = null;
+    this.mouseYPos = null;
+
+    // Somewhere to put the inventory screen
+    this.box = new BackgroundBox(this.x, this.y, this.width, this.height, rgb, priority);
+    this.priority = priority;
+
+    // Corner useful for the for loop drawing the 2d array and checking what box mouse is in
+    this.leftX = this.x - this.width / 2;
+    this.rightX = this.x + this.width / 2;
+    this.topY = this.y - this.height / 2;
+    this.bottomY = this.y + this.height / 2;
+
+    // Box size for calculating what box mouse is in
+    this.boxSize = this.width / cols;
+
+    this.itemArr = [];
+    for(let i = 0; i < rows; i++) {
+      let emptyArr = [];
+      for(let j = 0; j < cols; j++) {
+        emptyArr.push(0);
+      }
+      this.itemArr.push(emptyArr);
+    }
+  }
+
+  run() {
+    this.calcMouse();
+    this.box.run();
+
+    // Draw the lines separating each item box
+    stroke(0);
+    strokeWeight(2);
+    for(let i = 1; i <= this.cols; i++) {
+      let x = this.leftX + i / this.cols * this.width;
+      line(x, this.topY, x, this.bottomY);
+    }
+    for(let j = 1; j <= this.rows; j++) {
+      let y = this.topY + j / this.rows * this.height;
+      line(this.leftX, y, this.rightX, y);
+    }
+
+    if(this.mouse) {
+      // What box is the mouse inside
+      this.mouseXPos = Math.floor((mouseX - this.leftX) / this.boxSize);
+      this.mouseYPos = Math.floor((mouseY - this.topY) / this.boxSize);
+
+      // Give a text box if the player is hovering
+      if(this.itemArr[this.mouseYPos] && this.itemArr[this.mouseYPos][this.mouseXPos] === 0) {
+        displayTextBox("Empty.", mouseX, mouseY, 0, "small");
+      }
+    }
+
+    if(this.box.close) {
+      closeInventory();
+      // So it doesn't auto-close next time
+      this.box.close = false;
+    }
+  }
+}

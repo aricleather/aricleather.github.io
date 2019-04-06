@@ -20,6 +20,7 @@ let returnToMenuDialog;
 
 // Global vars used for initializing objects
 let shopNumber = 0;
+let shopWeaponNumber = 0;
 let achievementNumber = 0;
 
 // Generate all game objects
@@ -68,6 +69,9 @@ function initObjects() {
   closeAchievementsButton = new ImageButton(width * 0.33, height * 0.105, scalars.closeAchievementsScalar, scalars.closeAchievementsScalar, leftArrow, function() {
     achievementState = 0;
   }, 1.05, "Close");
+  inventoryOpenButton = new ImageButton(width * 0.97, height * 0.305, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, inventoryButton, function() {
+    openInventory("player");
+  }, 1.05, "Items");
 
   // Tab buttons
   autoCookiesTab = new TabButton(width * 0.775, height * 0.975, width * 0.15, height * 0.05, function() {
@@ -75,18 +79,22 @@ function initObjects() {
   }, [83, 140, 198], "Cookies");
   weaponsTab = new TabButton(width * 0.925, height * 0.975, width * 0.15, height * 0.05, function() {
     shopTab = 2;
-  }, [178, 34, 34], "Weapons");
+  }, [214, 41, 41], "Weapons");
 
   cookieSpinner = new SpinImage(width / 2, height / 2, 500, 500, coin, 60);
 
-  // Scroll bar for shop
-  shopScrollBar = new ScrollBar(width * 0.995, 0, width * 0.01, 7, height);
+  // Scroll bars for shop
+  shopScrollBar = new ScrollBar(width * 0.995, 0, width * 0.01, 7, height * 0.95);
+  shopWeaponScrollBar = new ScrollBar(width * 0.995, 0, width * 0.01, 7, height * 0.95);
 
   // Shop Objects
   ovenObj = new ShopObject(oven.width, oven.height, oven, "Oven", "Bake more cookies!", 5, 0.1);
   bakeryObj = new ShopObject(bakery.width, bakery.height, bakery, "Bakery", "Mmm, smells good...", 150, 1);
   factoryObj = new ShopObject(factory.width, factory.height, factory, "Factory", "Autonomous cookie production.", 500, 5);
   shopItems = [ovenObj, bakeryObj, factoryObj];
+
+  // Shop weapon objects
+  woodenSwordObj = new ShopWeaponObject(woodenSword, "Wooden Sword", "Breaks easily, but leaves splinters.", 100, 5, "Attack");
 
   // Dialog objects
   returnToMenuDialog = new DialogBox("Go back to main menu?", "Yes", "No", function() {
@@ -113,6 +121,8 @@ function initObjects() {
 
   // Exp bars
   playerExpBar = new ExperienceBar(width * 0.25 + 16 * (width * 0.15 / 20), height * 0.02, width * 0.4, height * 0.02, 0, 10);
+
+  playerInventory = new InventoryScreen(width / 2, height * 0.22, 400, [63, 102, 141, 255], 1, 7, 4);
 }
 
 // Called when window resized to properly resize all game objects
@@ -136,12 +146,18 @@ function resizeObjects() {
   ovenObj.resize();
   bakeryObj.resize();
   factoryObj.resize();
+  woodenSwordObj.resize();
 
   // Same with achievements
   achievements.clicks.obj.resize();
+  
+  // Tab buttons (shop tabs)
+  autoCookiesTab.resize(width * 0.775, height * 0.975, width * 0.15, height * 0.05);
+  weaponsTab.resize(width * 0.925, height * 0.975, width * 0.15, height * 0.05);
 
   // Scroll bars
-  shopScrollBar.resize(width * 0.995, 0, width * 0.01, height);
+  shopScrollBar.resize(width * 0.995, 0, width * 0.01, height * 0.95);
+  shopWeaponScrollBar.resize(width * 0.995, 0, width * 0.01, height * 0.95);
 
   // Dialog objects
   returnToMenuDialog.resize();
