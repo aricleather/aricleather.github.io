@@ -395,7 +395,8 @@ class ShopWeaponObject extends GameObject {
     this.scrollAmount = 0;
     this.scrollPosition = width * 0.0625;
 
-    this.text = this.name + "\nCost: " + str(this.price) + " Cookies\n" + str(this.power) + " " + this.powerType + " Power\nOwned: " + str(this.owned);
+    this.text = this.owned < 1 ? this.name + "\nCost: " + str(this.price) + " Cookies\n" + str(this.power) + " " + this.powerType + " Power"
+      : "Purchased!";
   
     // shopWeaponNumber just keeps track of order in the shop, so that the next shopWeaponObject construction knows it comes after
     shopWeaponNumber++;
@@ -403,13 +404,13 @@ class ShopWeaponObject extends GameObject {
   
   // The clicked() function here checks if you have enough money then does stuff if you do
   clicked() {
-    if(cookies >= this.price) {
-      autoCookies += this.cps;
+    if(cookies >= this.price && this.owned < 1) {
       cookies -= this.price;
       purchaseSound.play();
       this.owned++;
       // this.price = Math.ceil(this.basePrice * Math.pow(Math.E, this.owned / 4));
       this.updateText();
+      playerInventory.addItem(new GameWeapon(this.objImage, "physical", this.name, this.metaText));
     }
     else {
       errorSound.play();
@@ -455,7 +456,8 @@ class ShopWeaponObject extends GameObject {
   
   // Updates the text drawn by this object when called to match current data. Run once on construction and once on purchase
   updateText() {
-    this.text = this.name + "\nCost: " + str(this.price) + " Cookies\n" + str(this.power) + " " + this.powerType + " Power\nOwned: " + str(this.owned);
+    this.text = this.owned < 1 ? this.name + "\nCost: " + str(this.price) + " Cookies\n" + str(this.power) + " " + this.powerType + " Power"
+      : "Purchased!";
   }
   
   // Since shopObjects are always in the same relative spot on the screen, resize should be called with no params
@@ -970,7 +972,12 @@ class BackgroundBox extends GameObject {
     gMouseToggle = mouseIsPressed ? this.priority + 1 : this.priority;
   }
 
-  
+  resize(x, y, width, height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+  }
   
   clicked() {
     this.close = true;
@@ -985,6 +992,7 @@ class InventoryScreen extends GameObject {
     this.rows = rows;
     this.mouseXPos = null;
     this.mouseYPos = null;
+    this.mouseHeldItem = null;
 
     // Somewhere to put the inventory screen
     this.box = new BackgroundBox(this.x, this.y, this.width, this.height, rgb, priority);
@@ -998,6 +1006,7 @@ class InventoryScreen extends GameObject {
 
     // Box size for calculating what box mouse is in
     this.boxSize = this.width / cols;
+    this.boxSizeOffset = this.boxSize / 2;
 
     this.itemArr = [];
     for(let i = 0; i < rows; i++) {
@@ -1025,14 +1034,49 @@ class InventoryScreen extends GameObject {
       line(this.leftX, y, this.rightX, y);
     }
 
+    // Draw the image of the object of there is one in that slot
+    for(let i = 0; i < this.rows; i++) {
+      for(let j = 0; j < this.cols; j++) {
+        if(this.itemArr[i][j].type === "weapon") {
+          image(this.itemArr[i][j].img, j * this.boxSize + this.boxSizeOffset + this.leftX, i * this.boxSize + this.boxSizeOffset + this.topY, this.boxSize * 0.8, this.boxSize * 0.8);
+        }
+      }
+    }
+
+    if(this.mouseHeldItem) {
+      image(this.mouseHeldItem.img, mouseX, mouseY, this.boxSize * 0.8, this.boxSize * 0.8);
+    }
+
     if(this.mouse) {
       // What box is the mouse inside
       this.mouseXPos = Math.floor((mouseX - this.leftX) / this.boxSize);
       this.mouseYPos = Math.floor((mouseY - this.topY) / this.boxSize);
+      if(!mouseIsPressed && !this.mouseHeldItem) {
+        // Gives a text box displaying the item info, or "empty" if there is no item if the user is not holding an item
+        if(this.itemArr[this.mouseYPos]) {
+          let hoveredThing = this.itemArr[this.mouseYPos][this.mouseXPos];
+          if(hoveredThing === 0) {
+            displayTextBox("Empty.", mouseX, mouseY, 0, "small");
+          }
+          else if(hoveredThing.type === "weapon") {
+            displayTextBox(hoveredThing.metaText, mouseX, mouseY);
+          }
+        }
+      }
 
-      // Give a text box if the player is hovering
-      if(this.itemArr[this.mouseYPos] && this.itemArr[this.mouseYPos][this.mouseXPos] === 0) {
-        displayTextBox("Empty.", mouseX, mouseY, 0, "small");
+      // If the user isn't holding an item and the mouse is pressed, pick it up
+      else if(mouseIsPressed && gMouse === this.priority && !this.mouseHeldItem && this.itemArr[this.mouseYPos] && this.itemArr[this.mouseYPos][this.mouseXPos]) {
+        this.mouseHeldItem = this.itemArr[this.mouseYPos][this.mouseXPos];
+        this.mouseHeldItem.pickedUpFrom = [this.mouseYPos, this.mouseXPos];
+        this.itemArr[this.mouseYPos][this.mouseXPos] = 0;
+        gMouseToggle = this.priority + 1;
+      }
+
+      // If the user is holding an item and mouse is pressed, put it where the mouse is
+      else if(mouseIsPressed && gMouse === this.priority && this.mouseHeldItem && this.itemArr[this.mouseYPos]) {
+        this.itemArr[this.mouseYPos][this.mouseXPos] = this.mouseHeldItem;
+        this.mouseHeldItem = 0;
+        gMouseToggle = this.priority + 1;
       }
     }
 
@@ -1040,6 +1084,84 @@ class InventoryScreen extends GameObject {
       closeInventory();
       // So it doesn't auto-close next time
       this.box.close = false;
+
+      // If the user was holding an item when the box was closed, put it back where it was
+      // Possible because when an item is picked up it is given "pickedUpFrom" attribute
+      if(this.mouseHeldItem) {
+        this.itemArr[this.mouseHeldItem.pickedUpFrom[0]][this.mouseHeldItem.pickedUpFrom[1]] = this.mouseHeldItem;
+        this.mouseHeldItem = 0;
+      }
     }
+  }
+
+  addItem(item) {
+    // When called, puts item into first unused slot
+    let slot = this.firstUnusedSlot();
+    this.itemArr[slot[0]][slot[1]] = item;
+  }
+
+  firstUnusedSlot() {
+    // Returns array with [row, column] of first empty slot in this.itemArr
+    for(let i = 0; i < this.rows; i++) {
+      for(let j = 0; j < this.cols; j++) {
+        if(this.itemArr[i][j] === 0) {
+          return [i, j];
+        }
+      }
+    }
+    return false;
+  }
+
+  extractDataForSave() {
+    // Saves as [xpos, ypos, itemName; xpos, ypos, itemName;] etc.. in a string
+    let returnString = "";
+    for(let i = 0; i < this.rows; i++) {
+      for(let j = 0; j < this.cols; j++) {
+        if(this.itemArr[i][j].type === "weapon") {
+          returnString += str(i) + "," + str(j) + "," + this.itemArr[i][j].name + ";";
+        }
+      }
+    }
+    return returnString;
+  }
+
+  saveLoad(data) {
+    // Breaks up data as it is expected from extractDataForSave in a string
+    data = data.split(";");
+    data.pop();
+    let itemCount = data.length;
+    for(let i = 0; i < itemCount; i++) {
+      // Spawn an identical copy of that item given theItem in data
+      let theItem = data[i].split(",");
+      this.itemArr[int(theItem[0])][int(theItem[1])] = spawnItem(theItem[2]);
+    }
+  }
+
+  resize(x, y, width) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = width / this.cols * this.rows;
+
+    this.leftX = this.x - this.width / 2;
+    this.rightX = this.x + this.width / 2;
+    this.topY = this.y - this.height / 2;
+    this.bottomY = this.y + this.height / 2;
+
+    this.boxSize = this.width / this.cols;
+    this.boxSizeOffset = this.boxSize / 2;
+
+    this.box.resize(this.x, this.y, this.width, this.height);
+  }
+}
+
+class GameWeapon {
+  constructor(weaponImage, weaponType, name, metaText) {
+    this.img = weaponImage;
+    this.weaponType = weaponType;
+    this.name = name;
+    this.metaText = metaText;
+
+    this.type = "weapon";
   }
 }

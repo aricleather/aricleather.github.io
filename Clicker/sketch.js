@@ -156,6 +156,9 @@ function loadSaveFile() {
     ovenObj.saveLoad(window.localStorage.getItem("oven").split(","));
     bakeryObj.saveLoad(window.localStorage.getItem("bakery").split(","));
     factoryObj.saveLoad(window.localStorage.getItem("factory").split(","));
+    woodenSwordObj.saveLoad(window.localStorage.getItem("woodenSword").split(","));
+    // Loading the playerInventory
+    playerInventory.saveLoad(window.localStorage.getItem("playerInventory"));
   }
 }
 
@@ -172,6 +175,9 @@ function saveGame() {
     window.localStorage.setItem("oven", [ovenObj.price, ovenObj.owned]);
     window.localStorage.setItem("bakery", [bakeryObj.price, bakeryObj.owned]);
     window.localStorage.setItem("factory", [factoryObj.price, factoryObj.owned]);
+    window.localStorage.setItem("woodenSword", [woodenSwordObj.price, woodenSwordObj.owned]);
+    // Saving the playerInventory
+    window.localStorage.setItem("playerInventory", playerInventory.extractDataForSave());
   }
 }
 
@@ -649,4 +655,10 @@ function closeInventory() {
   // from being closed unless gMouse is currently their own priority, stopping
   // unwanted, immediate closing when opening inventories with on-screen buttons
   currentInv = gMouse === currentInv.priority ? null : currentInv;
+}
+
+function spawnItem(itemToSpawn) {
+  if(itemToSpawn === "Wooden Sword") {
+    return new GameWeapon(woodenSword, "physical", "Wooden Sword", "Breaks easily, but leaves splinters.");
+  }
 }

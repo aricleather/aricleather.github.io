@@ -135,6 +135,7 @@ function resizeObjects() {
   closeShopButton.resize(width * 0.67, height * 0.105, scalars.storeCloseScalar, scalars.storeCloseScalar);
   openAchievementsButton.resize(width * 0.03, height * 0.105, scalars.openAchievementsScalar, scalars.openAchievementsScalar);
   closeAchievementsButton.resize(width * 0.33, height * 0.105, scalars.closeAchievementsScalar, scalars.closeAchievementsScalar);
+  inventoryOpenButton.resize(width * 0.97, height * 0.305, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar);
 
   // Buttons
   titleNewGameButton.resize(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH);
@@ -168,4 +169,6 @@ function resizeObjects() {
 
   // Exp bars
   playerExpBar.resize(width * 0.5, height * 0.02, width * 0.4, height * 0.02);
+
+  playerInventory.resize(width / 2, height * 0.22, 400);
 }
