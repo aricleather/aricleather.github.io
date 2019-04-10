@@ -122,7 +122,9 @@ function initObjects() {
   // Exp bars
   playerExpBar = new ExperienceBar(width * 0.25 + 16 * (width * 0.15 / 20), height * 0.02, width * 0.4, height * 0.02, 0, 10);
 
-  playerInventory = new InventoryScreen(width / 2, height * 0.22, 400, [63, 102, 141, 255], 1, 7, 4);
+  playerInventory = new InventoryScreen(width / 2, height * 0.22, 400, [63, 102, 141, 200], 1, 7, 4);
+
+  testOpt = new OptionsBox(200, 200, 100, 200, 2, ["Test", "Test"]);
 }
 
 // Called when window resized to properly resize all game objects

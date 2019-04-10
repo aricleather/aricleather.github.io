@@ -20,12 +20,15 @@ class GameObject {
 }
   
 class Button extends GameObject {
-  constructor(x, y, width, height, buttonText, clicked) {
+  constructor(x, y, width, height, buttonText, clicked = 0) {
     super(x, y, width, height);
     // Vars
     this.tSize = this.width / 10;
     this.buttonText = formatText(buttonText, this.width, this.tSize);
-    this.clicked = clicked;
+    this.clicked = clicked ? clicked :
+      function(){
+        void 0;
+      };
     this.alreadyClicked = false;
     this.color = 200;
   }
@@ -62,7 +65,7 @@ class Button extends GameObject {
   }
 
   checkClicked() {
-    if(this.mouse && mouseIsPressed && gMouse < 2) {
+    if(this.mouse && mouseIsPressed && gMouse < 3) {
       this.clicked();
       this.alreadyClicked = 1;
       // After a click, set gMouseToggle to true temporarily to block further clicks until mouse button released
@@ -946,24 +949,33 @@ class ExperienceBar extends GameObject {
 }
 
 class BackgroundBox extends GameObject {
-  constructor(x, y, width, height, rgb, priority) {
+  constructor(x, y, width, height, rgb, priority, mode) {
     super(x, y, width, height);
     this.rgb = rgb;
     this.priority = priority;
     this.close = false;
+    this.mode = mode;
   }
 
   run() {
     this.calcMouse();
 
     stroke(0);
-    strokeWeight(4);
+    strokeWeight(3);
     fill(this.rgb);
     rectMode(CENTER);
     rect(this.x, this.y, this.width, this.height);
 
-    if(!this.mouse && gMouse <= this.priority && mouseIsPressed) {
-      this.clicked();
+    if(this.mode === "click" && !this.mouse && gMouse <= this.priority && mouseIsPressed) {
+      this.close = true;
+    }
+    else if(this.mode === "hover") {
+      if(!this.mouse) {
+        this.close = true;
+      }
+      else{
+        this.close = false;
+      }
     }
 
     // Because of the order in which functions were run, without adding 1 to this toggle,
@@ -978,10 +990,6 @@ class BackgroundBox extends GameObject {
     this.width = width;
     this.height = height;
   }
-  
-  clicked() {
-    this.close = true;
-  }
 }
 
 class InventoryScreen extends GameObject {
@@ -995,7 +1003,9 @@ class InventoryScreen extends GameObject {
     this.mouseHeldItem = null;
 
     // Somewhere to put the inventory screen
-    this.box = new BackgroundBox(this.x, this.y, this.width, this.height, rgb, priority);
+    this.box = new BackgroundBox(this.x, this.y, this.width, this.height, rgb, priority, "click");
+    this.optionsBox = new OptionsBox(300, 300, 100, 100, priority + 1, ["Move", "Upgrade"]);
+    this.toggleOptionsBox = false;
     this.priority = priority;
 
     // Corner useful for the for loop drawing the 2d array and checking what box mouse is in
@@ -1023,7 +1033,7 @@ class InventoryScreen extends GameObject {
     this.box.run();
 
     // Draw the lines separating each item box
-    stroke(0);
+    stroke(0, 200);
     strokeWeight(2);
     for(let i = 1; i <= this.cols; i++) {
       let x = this.leftX + i / this.cols * this.width;
@@ -1049,9 +1059,9 @@ class InventoryScreen extends GameObject {
 
     if(this.mouse) {
       // What box is the mouse inside
-      this.mouseXPos = Math.floor((mouseX - this.leftX) / this.boxSize);
-      this.mouseYPos = Math.floor((mouseY - this.topY) / this.boxSize);
-      if(!mouseIsPressed && !this.mouseHeldItem) {
+      this.mouseXPos = constrain(Math.floor((mouseX - this.leftX) / this.boxSize), 0, this.cols - 1);
+      this.mouseYPos = constrain(Math.floor((mouseY - this.topY) / this.boxSize), 0, this.rows - 1);
+      if(!mouseIsPressed && !this.mouseHeldItem && !this.toggleOptionsBox) {
         // Gives a text box displaying the item info, or "empty" if there is no item if the user is not holding an item
         if(this.itemArr[this.mouseYPos]) {
           let hoveredThing = this.itemArr[this.mouseYPos][this.mouseXPos];
@@ -1063,20 +1073,21 @@ class InventoryScreen extends GameObject {
           }
         }
       }
-
-      // If the user isn't holding an item and the mouse is pressed, pick it up
-      else if(mouseIsPressed && gMouse === this.priority && !this.mouseHeldItem && this.itemArr[this.mouseYPos] && this.itemArr[this.mouseYPos][this.mouseXPos]) {
-        this.mouseHeldItem = this.itemArr[this.mouseYPos][this.mouseXPos];
-        this.mouseHeldItem.pickedUpFrom = [this.mouseYPos, this.mouseXPos];
-        this.itemArr[this.mouseYPos][this.mouseXPos] = 0;
-        gMouseToggle = this.priority + 1;
+      else if(!this.toggleOptionsBox && this.itemArr[this.mouseYPos][this.mouseXPos]) {
+        // this.optionsBox;
+        this.optionsBox.moveBox(this.leftX + this.boxSize * (this.mouseXPos + 1), this.topY + this.boxSize * this.mouseYPos);
+        this.toggleOptionsBox = 1;
       }
 
-      // If the user is holding an item and mouse is pressed, put it where the mouse is
-      else if(mouseIsPressed && gMouse === this.priority && this.mouseHeldItem && this.itemArr[this.mouseYPos]) {
-        this.itemArr[this.mouseYPos][this.mouseXPos] = this.mouseHeldItem;
-        this.mouseHeldItem = 0;
-        gMouseToggle = this.priority + 1;
+      else if(this.toggleOptionsBox && !this.optionsBox.close) {
+        this.optionsBox.run();
+        console.log("/");
+      }
+      
+      else {
+        this.toggleOptionsBox = 0;
+        this.optionsBox.mouseHasEnteredBox = false;
+        this.optionsBox.close = false;
       }
     }
 
@@ -1091,6 +1102,23 @@ class InventoryScreen extends GameObject {
         this.itemArr[this.mouseHeldItem.pickedUpFrom[0]][this.mouseHeldItem.pickedUpFrom[1]] = this.mouseHeldItem;
         this.mouseHeldItem = 0;
       }
+    }
+  }
+
+  mouseMoveItem() {
+    // If the user isn't holding an item and the mouse is pressed, pick it up
+    if(mouseIsPressed && gMouse === this.priority && !this.mouseHeldItem && this.itemArr[this.mouseYPos][this.mouseXPos]) {
+      this.mouseHeldItem = this.itemArr[this.mouseYPos][this.mouseXPos];
+      this.mouseHeldItem.pickedUpFrom = [this.mouseYPos, this.mouseXPos];
+      this.itemArr[this.mouseYPos][this.mouseXPos] = 0;
+      gMouseToggle = this.priority + 1;
+    }
+
+    // If the user is holding an item and mouse is pressed, put it where the mouse is
+    else if(mouseIsPressed && gMouse === this.priority && this.mouseHeldItem) {
+      this.itemArr[this.mouseYPos][this.mouseXPos] = this.mouseHeldItem;
+      this.mouseHeldItem = 0;
+      gMouseToggle = this.priority + 1;
     }
   }
 
@@ -1163,5 +1191,78 @@ class GameWeapon {
     this.metaText = metaText;
 
     this.type = "weapon";
+  }
+}
+
+class OptionsBox extends GameObject {
+  constructor(x, y, width, height, priority, buttonText, buttonFunctions = 0) {
+    super(x, y, width, height);
+    // Vars
+    this.priority = priority;
+    this.buttonText = buttonText;
+    // Funcs can be passed in or handled by something that created an instance of OptionsBox through this.buttonPressed
+    this.buttonFunctions = buttonFunctions;
+    this.buttonCount = this.buttonText.length;
+
+    this.mouseHasEnteredBox = false;
+    this.topY = this.y - this.height / 2;
+    this.buttonHeight = this.height / this.buttonText.length;
+    this.buttonOffset = this.buttonHeight / 2;
+
+    // Spawn a button with appropriate text for each element in buttonText array passed in
+    this.buttons = [];
+    for(let i = 0; i < this.buttonCount; i++) {
+      this.buttons.push(new Button(this.x, this.topY + this.buttonHeight * i + this.buttonOffset, this.width, this.buttonHeight, this.buttonText[i]));
+    }
+
+    this.close = false;
+    this.buttonPressed = null;
+  }
+
+  run() {
+    this.calcMouse();
+    if(!this.mouseHasEnteredBox && this.mouse) {
+      this.mouseHasEnteredBox = true;
+    }
+    if(this.mouseHasEnteredBox && !this.mouse) {
+      this.close = true;
+    }
+
+    for(let i = 0; i < this.buttonCount; i++) {
+      this.buttons[i].run();
+      if(this.buttons[i].alreadyClicked) {
+        if(this.buttonFunctions) {
+          this.buttonFunctions[i]();
+        }
+        else {
+          this.buttonPressed = i;
+        }
+      }
+    }
+  }
+
+  moveBox(x, y) {
+    this.x = x;
+    this.y = y;
+    this.topY = this.y - this.height / 2;
+
+    for(let i = 0; i < this.buttons.length; i++) {
+      this.buttons[i].resize(this.x, this.topY + this.buttonHeight * i + this.buttonOffset, this.width, this.buttonHeight, this.buttonText[i]);
+    }
+  }
+  
+  resize() {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+
+    this.topY = this.y - this.height / 2;
+    this.buttonHeight = this.height / this.buttonText.length;
+    this.buttonOffset = this.buttonHeight / 2;
+
+    for(let i = 0; i < this.buttons.length; i++) {
+      this.buttons[i].resize(this.x, this.topY + this.buttonHeight * i + this.buttonOffset, this.width, this.buttonHeight, this.buttonText[i]);
+    }
   }
 }
