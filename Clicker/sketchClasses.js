@@ -973,7 +973,7 @@ class BackgroundBox extends GameObject {
       if(!this.mouse) {
         this.close = true;
       }
-      else{
+      else {
         this.close = false;
       }
     }
@@ -1005,6 +1005,7 @@ class InventoryScreen extends GameObject {
     // Somewhere to put the inventory screen
     this.box = new BackgroundBox(this.x, this.y, this.width, this.height, rgb, priority, "click");
     this.optionsBox = new OptionsBox(300, 300, 100, 100, priority + 1, ["Move", "Upgrade"]);
+    let clickedItemCoords = null;
     this.toggleOptionsBox = false;
     this.priority = priority;
 
@@ -1053,16 +1054,12 @@ class InventoryScreen extends GameObject {
       }
     }
 
-    if(this.mouseHeldItem) {
-      image(this.mouseHeldItem.img, mouseX, mouseY, this.boxSize * 0.8, this.boxSize * 0.8);
-    }
-
     if(this.mouse) {
       // What box is the mouse inside
       this.mouseXPos = constrain(Math.floor((mouseX - this.leftX) / this.boxSize), 0, this.cols - 1);
       this.mouseYPos = constrain(Math.floor((mouseY - this.topY) / this.boxSize), 0, this.rows - 1);
       if(!mouseIsPressed && !this.mouseHeldItem && !this.toggleOptionsBox) {
-        // Gives a text box displaying the item info, or "empty" if there is no item if the user is not holding an item
+        // If no options box is open and no item is held, shows a text box displaying the item info
         if(this.itemArr[this.mouseYPos]) {
           let hoveredThing = this.itemArr[this.mouseYPos][this.mouseXPos];
           if(hoveredThing === 0) {
@@ -1073,53 +1070,89 @@ class InventoryScreen extends GameObject {
           }
         }
       }
-      else if(!this.toggleOptionsBox && this.itemArr[this.mouseYPos][this.mouseXPos]) {
-        // this.optionsBox;
-        this.optionsBox.moveBox(this.leftX + this.boxSize * (this.mouseXPos + 1), this.topY + this.boxSize * this.mouseYPos);
-        this.toggleOptionsBox = 1;
-      }
 
-      else if(this.toggleOptionsBox && !this.optionsBox.close) {
-        this.optionsBox.run();
-        console.log("/");
-      }
-      
-      else {
-        this.toggleOptionsBox = 0;
-        this.optionsBox.mouseHasEnteredBox = false;
-        this.optionsBox.close = false;
+      else if(!this.toggleOptionsBox && this.itemArr[this.mouseYPos][this.mouseXPos] && mouseIsPressed && gMouse === this.priority) {
+        this.optionsBox.moveBox(this.leftX + this.boxSize * (this.mouseXPos + 1) + 50, this.topY + this.boxSize * this.mouseYPos);
+        this.toggleOptionsBox = 1;
+        console.log("toggled");
+        // So that the item that was clicked is still known, mouse may move off of it
+        this.clickedItemCoords = [this.mouseYPos, this.mouseXPos];
       }
     }
 
-    if(this.box.close) {
+    if(this.mouseHeldItem) {
+      image(this.mouseHeldItem.img, mouseX, mouseY, this.boxSize * 0.8, this.boxSize * 0.8);
+      if(this.mouse && mouseIsPressed && gMouse === this.priority) {
+        this.mouseDropItem(this.mouseYPos, this.mouseXPos);
+        gMouseToggle = this.priority + 1;
+      }
+    }
+    
+    // If an item is clicked on, move the options box to said item with its built in function moveBox() and "toggle" it on
+      
+
+    // If options box is toggled and it isn't being closed, run the optionsBox
+    if(this.box.close && !this.toggleOptionsBox) {
+      console.log(1 + " " + frameCount);
       closeInventory();
       // So it doesn't auto-close next time
       this.box.close = false;
 
       // If the user was holding an item when the box was closed, put it back where it was
       // Possible because when an item is picked up it is given "pickedUpFrom" attribute
-      if(this.mouseHeldItem) {
+      if(this.mouseHeldItem && gMouse === this.priority) {
         this.itemArr[this.mouseHeldItem.pickedUpFrom[0]][this.mouseHeldItem.pickedUpFrom[1]] = this.mouseHeldItem;
         this.mouseHeldItem = 0;
       }
+
+      // Close open dialog boxes
+      // this.toggleOptionsBox = 0;
+      // this.optionsBox.mouseHasEnteredBox = false;
+      // this.optionsBox.close = false;
+    }
+    
+    if(this.toggleOptionsBox) {
+      this.runOptionsBox();
     }
   }
 
-  mouseMoveItem() {
-    // If the user isn't holding an item and the mouse is pressed, pick it up
-    if(mouseIsPressed && gMouse === this.priority && !this.mouseHeldItem && this.itemArr[this.mouseYPos][this.mouseXPos]) {
-      this.mouseHeldItem = this.itemArr[this.mouseYPos][this.mouseXPos];
-      this.mouseHeldItem.pickedUpFrom = [this.mouseYPos, this.mouseXPos];
-      this.itemArr[this.mouseYPos][this.mouseXPos] = 0;
+  runOptionsBox() {
+    this.optionsBox.run();
+    if(this.optionsBox.buttonPressed === 0) {
+      this.mousePickUpItem(this.clickedItemCoords[0], this.clickedItemCoords[1]);
+      this.toggleOptionsBox = 0;
+      this.optionsBox.mouseHasEnteredBox = false;
+      this.optionsBox.close = false;
+      this.optionsBox.buttonPressed = null;
       gMouseToggle = this.priority + 1;
+      console.log(1 + " " + frameCount);
+    }
+    else if(this.optionsBox.buttonPressed === 1) {
+      void 0;
     }
 
-    // If the user is holding an item and mouse is pressed, put it where the mouse is
-    else if(mouseIsPressed && gMouse === this.priority && this.mouseHeldItem) {
-      this.itemArr[this.mouseYPos][this.mouseXPos] = this.mouseHeldItem;
-      this.mouseHeldItem = 0;
-      gMouseToggle = this.priority + 1;
+    // Once options box is closed due to whatever reason, un-toggle it and reset it
+    if(this.optionsBox.close) {
+      this.toggleOptionsBox = 0;
+      this.optionsBox.mouseHasEnteredBox = false;
+      this.optionsBox.close = false;
+      this.optionsBox.buttonPressed = null;
     }
+  }
+
+  mousePickUpItem(row, col) {
+    // If the user isn't holding an item and the mouse is pressed, pick it up
+    this.mouseHeldItem = this.itemArr[row][col];
+    this.mouseHeldItem.pickedUpFrom = [row, col];
+    this.itemArr[row][col] = 0;
+    gMouseToggle = this.priority + 1;
+  }
+
+  mouseDropItem() {
+    // If the user is holding an item and mouse is pressed, put it where the mouse is
+    this.itemArr[this.mouseYPos][this.mouseXPos] = this.mouseHeldItem;
+    this.mouseHeldItem = 0;
+    gMouseToggle = this.priority + 1;
   }
 
   addItem(item) {
@@ -1227,6 +1260,8 @@ class OptionsBox extends GameObject {
     if(this.mouseHasEnteredBox && !this.mouse) {
       this.close = true;
     }
+
+    console.log(this.buttonPressed);
 
     for(let i = 0; i < this.buttonCount; i++) {
       this.buttons[i].run();

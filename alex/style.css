@@ -1,0 +1,17 @@
+.alex {   
+  background: blue;
+  text-align: center;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  display: table;
+}
+
+.alextext {
+  font-size: 40px;
+  color: white;
+  max-width: 600px;
+  margin: 0 auto;
+  vertical-align: middle;
+  display: table-cell;
+}
