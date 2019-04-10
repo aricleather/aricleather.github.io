@@ -1120,15 +1120,13 @@ class InventoryScreen extends GameObject {
     this.optionsBox.run();
     if(this.optionsBox.buttonPressed === 0) {
       this.mousePickUpItem(this.clickedItemCoords[0], this.clickedItemCoords[1]);
-      this.toggleOptionsBox = 0;
-      this.optionsBox.mouseHasEnteredBox = false;
-      this.optionsBox.close = false;
-      this.optionsBox.buttonPressed = null;
+      this.resetOptionsBox();
       gMouseToggle = this.priority + 1;
-      console.log(1 + " " + frameCount);
     }
+
     else if(this.optionsBox.buttonPressed === 1) {
-      void 0;
+      this.resetOptionsBox();
+      gMouseToggle = this.priority + 1;
     }
 
     // Once options box is closed due to whatever reason, un-toggle it and reset it
@@ -1138,6 +1136,13 @@ class InventoryScreen extends GameObject {
       this.optionsBox.close = false;
       this.optionsBox.buttonPressed = null;
     }
+  }
+
+  resetOptionsBox() {
+    this.toggleOptionsBox = 0;
+    this.optionsBox.mouseHasEnteredBox = false;
+    this.optionsBox.close = false;
+    this.optionsBox.buttonPressed = null;
   }
 
   mousePickUpItem(row, col) {
@@ -1260,8 +1265,6 @@ class OptionsBox extends GameObject {
     if(this.mouseHasEnteredBox && !this.mouse) {
       this.close = true;
     }
-
-    console.log(this.buttonPressed);
 
     for(let i = 0; i < this.buttonCount; i++) {
       this.buttons[i].run();
