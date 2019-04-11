@@ -20,7 +20,7 @@ class GameObject {
 }
   
 class Button extends GameObject {
-  constructor(x, y, width, height, buttonText, clicked = 0) {
+  constructor(x, y, width, height, buttonText, clicked = 0, rgb = 0) {
     super(x, y, width, height);
     // Vars
     this.tSize = this.width / 10;
@@ -30,7 +30,13 @@ class Button extends GameObject {
         void 0;
       };
     this.alreadyClicked = false;
-    this.color = 200;
+    this.color;
+
+    this.rgb = rgb || [40, 40, 40];
+
+    this.hoverRgb = rgb ? lerpColor(color(this.rgb), color([0, 0, 0]), 0.1) : [80, 80, 80];
+
+    this.hoverOverride = false;
   }
   
   run() {
@@ -39,11 +45,11 @@ class Button extends GameObject {
     this.calcMouse();
 
     // Darkens button if mouse inside
-    if(this.mouse) {
-      this.color = [80, 80, 80];
+    if(this.mouse && !this.hoverOverride) {
+      this.color = this.hoverRgb;
     }
     else {
-      this.color = [40, 40, 40];
+      this.color = this.rgb;
     }
     // Formatting and drawing rectangle, text
     stroke(255);
@@ -895,9 +901,6 @@ class ExperienceBar extends GameObject {
         gMouseToggle = 1;
       }
     }
-
-    // text("Exp: " + exp.toFixed(0) + "/" + str(expToNextLevel[playerLevel - 1]), width * 0.205, height * 0.02);
-
   }
 
   clicked() {
@@ -924,12 +927,11 @@ class ExperienceBar extends GameObject {
 
   animate() {
     // Animates exp bar by making it move toward where it is supposed to be at a decreasing rate
-    this._exp += (this.expToGain - this._exp) * 1/12;
+    this._exp += (this.expToGain - this._exp) * 1/10;
     this.expToGainCounter--;
 
     // After 60 frames, animation is cut off
     if(!this.expToGainCounter) {
-      console.log(this.expToGain);
       this._exp = this.expToGain;
       this.expToGain = 0;
     }
@@ -1005,7 +1007,8 @@ class InventoryScreen extends GameObject {
     // Somewhere to put the inventory screen
     this.box = new BackgroundBox(this.x, this.y, this.width, this.height, rgb, priority, "click");
     this.optionsBox = new OptionsBox(300, 300, 100, 100, priority + 1, ["Move", "Upgrade"]);
-    let clickedItemCoords = null;
+    this.upgradeBox;
+    this.clickedItemCoords = null;
     this.toggleOptionsBox = false;
     this.priority = priority;
 
@@ -1049,6 +1052,7 @@ class InventoryScreen extends GameObject {
     for(let i = 0; i < this.rows; i++) {
       for(let j = 0; j < this.cols; j++) {
         if(this.itemArr[i][j].type === "weapon") {
+          tint(255, 255);
           image(this.itemArr[i][j].img, j * this.boxSize + this.boxSizeOffset + this.leftX, i * this.boxSize + this.boxSizeOffset + this.topY, this.boxSize * 0.8, this.boxSize * 0.8);
         }
       }
@@ -1058,8 +1062,8 @@ class InventoryScreen extends GameObject {
       // What box is the mouse inside
       this.mouseXPos = constrain(Math.floor((mouseX - this.leftX) / this.boxSize), 0, this.cols - 1);
       this.mouseYPos = constrain(Math.floor((mouseY - this.topY) / this.boxSize), 0, this.rows - 1);
-      if(!mouseIsPressed && !this.mouseHeldItem && !this.toggleOptionsBox) {
-        // If no options box is open and no item is held, shows a text box displaying the item info
+      if(!mouseIsPressed && !this.mouseHeldItem && !this.toggleOptionsBox & !this.upgradeBox) {
+        // If no options box or upgrade box is open and no item is held, shows a text box displaying the item info
         if(this.itemArr[this.mouseYPos]) {
           let hoveredThing = this.itemArr[this.mouseYPos][this.mouseXPos];
           if(hoveredThing === 0) {
@@ -1071,12 +1075,13 @@ class InventoryScreen extends GameObject {
         }
       }
 
-      else if(!this.toggleOptionsBox && this.itemArr[this.mouseYPos][this.mouseXPos] && mouseIsPressed && gMouse === this.priority) {
+      else if(!this.toggleOptionsBox && !this.upgradeBox && this.itemArr[this.mouseYPos][this.mouseXPos] && mouseIsPressed && gMouse === this.priority) {
         this.optionsBox.moveBox(this.leftX + this.boxSize * (this.mouseXPos + 1) + 50, this.topY + this.boxSize * this.mouseYPos);
         this.toggleOptionsBox = 1;
         console.log("toggled");
         // So that the item that was clicked is still known, mouse may move off of it
         this.clickedItemCoords = [this.mouseYPos, this.mouseXPos];
+        gMouseToggle = this.priority + 1;
       }
     }
 
@@ -1104,13 +1109,12 @@ class InventoryScreen extends GameObject {
         this.itemArr[this.mouseHeldItem.pickedUpFrom[0]][this.mouseHeldItem.pickedUpFrom[1]] = this.mouseHeldItem;
         this.mouseHeldItem = 0;
       }
-
-      // Close open dialog boxes
-      // this.toggleOptionsBox = 0;
-      // this.optionsBox.mouseHasEnteredBox = false;
-      // this.optionsBox.close = false;
     }
     
+    if(this.upgradeBox) {
+      this.runUpgradeBox();
+    }
+
     if(this.toggleOptionsBox) {
       this.runOptionsBox();
     }
@@ -1125,6 +1129,7 @@ class InventoryScreen extends GameObject {
     }
 
     else if(this.optionsBox.buttonPressed === 1) {
+      this.upgradeBox = new UpgradeMenu(this.x, this.y, this.width * 0.8, this.height * 0.8, [63, 102, 141, 255], this.priority + 1, this.itemArr[this.clickedItemCoords[0]][this.clickedItemCoords[1]]);
       this.resetOptionsBox();
       gMouseToggle = this.priority + 1;
     }
@@ -1135,6 +1140,13 @@ class InventoryScreen extends GameObject {
       this.optionsBox.mouseHasEnteredBox = false;
       this.optionsBox.close = false;
       this.optionsBox.buttonPressed = null;
+    }
+  }
+
+  runUpgradeBox() {
+    this.upgradeBox.run();
+    if(this.upgradeBox.close) {
+      this.upgradeBox = null;
     }
   }
 
@@ -1302,5 +1314,72 @@ class OptionsBox extends GameObject {
     for(let i = 0; i < this.buttons.length; i++) {
       this.buttons[i].resize(this.x, this.topY + this.buttonHeight * i + this.buttonOffset, this.width, this.buttonHeight, this.buttonText[i]);
     }
+  }
+}
+
+class UpgradeMenu extends GameObject {
+  constructor(x, y, width, height, backgroundRgb, priority, upgItem) {
+    super(x, y, width, height);
+    this.upgItem = upgItem;
+    this.box = new BackgroundBox(x, y, width, height, backgroundRgb, priority, "click");
+
+    this.buttonX = this.x + this.width / 5;
+    this.buttonY = this.y + this.height * 0.3;
+    this.upgradeButton = new Button(this.buttonX, this.buttonY, 125, 30, "Upgrade!", 0, [76, 187, 23]);
+
+    this.imageX = this.x - this.width / 4;
+    this.imageSize = this.width / 4;
+
+    this.close = false;
+  }
+
+  run() {
+    if(this.upgItem) {
+      this.box.run();
+      this.upgradeButton.run();
+
+      if(this.box.close) {
+        this.close = true;
+      }
+
+      this.calcMouse();
+      tint(255, 255);
+      image(this.upgItem.img, this.imageX, this.y, this.imageSize, this.imageSize);
+
+      if(this.upgradeButton.alreadyClicked) {
+        this.doUpgradeAndClose();
+      }
+    }
+
+    else {
+      console.log("Running");
+    }
+  }
+
+  doUpgradeAndClose() {
+    this.close = true;
+  }
+}
+
+class NumberCounter extends GameObject {
+  constructor(x, y, width, height, priority, startingVal = 0) {
+    super(x, y, width, height);
+    this.val = startingVal || 0;
+    this.priority = priority;
+  }
+
+  run() {
+    this.calcMouse();
+    text(str(this.val), this.x, this.y);
+
+    if(mouseIsPressed && gMouse <= this.priority) {
+      this.clicked();
+      gMouseToggle = this.priority + 1;
+    }
+
+  }
+
+  clicked() {
+    this.val++;
   }
 }

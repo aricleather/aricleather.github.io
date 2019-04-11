@@ -50,7 +50,7 @@ function cookieIncrement() {
   clicks++;
   popSound.play();
   updateAchievements();
-  newFallingCookie();
+  // newFallingCookie();
 }
 
 // Load content used in game
