@@ -657,8 +657,8 @@ function closeInventory() {
   currentInv = gMouse === currentInv.priority ? null : currentInv;
 }
 
-function spawnItem(itemToSpawn) {
+function spawnItem(itemToSpawn, levelOfItem = 2) {
   if(itemToSpawn === "Wooden Sword") {
-    return new GameWeapon(woodenSword, "physical", "Wooden Sword", "Breaks easily, but leaves splinters.");
+    return new GameWeapon(woodenSword, "physical", "Wooden Sword", "Breaks easily, but leaves splinters.", levelOfItem);
   }
 }

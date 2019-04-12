@@ -1006,7 +1006,7 @@ class InventoryScreen extends GameObject {
 
     // Somewhere to put the inventory screen
     this.box = new BackgroundBox(this.x, this.y, this.width, this.height, rgb, priority, "click");
-    this.optionsBox = new OptionsBox(300, 300, 100, 100, priority + 1, ["Move", "Upgrade"]);
+    this.optionsBox = new OptionsBox(300, 300, 100, 150, priority + 1, ["Info", "Move", "Upgrade"]);
     this.upgradeBox;
     this.clickedItemCoords = null;
     this.toggleOptionsBox = false;
@@ -1078,7 +1078,6 @@ class InventoryScreen extends GameObject {
       else if(!this.toggleOptionsBox && !this.upgradeBox && this.itemArr[this.mouseYPos][this.mouseXPos] && mouseIsPressed && gMouse === this.priority) {
         this.optionsBox.moveBox(this.leftX + this.boxSize * (this.mouseXPos + 1) + 50, this.topY + this.boxSize * this.mouseYPos);
         this.toggleOptionsBox = 1;
-        console.log("toggled");
         // So that the item that was clicked is still known, mouse may move off of it
         this.clickedItemCoords = [this.mouseYPos, this.mouseXPos];
         gMouseToggle = this.priority + 1;
@@ -1092,13 +1091,9 @@ class InventoryScreen extends GameObject {
         gMouseToggle = this.priority + 1;
       }
     }
-    
-    // If an item is clicked on, move the options box to said item with its built in function moveBox() and "toggle" it on
-      
 
     // If options box is toggled and it isn't being closed, run the optionsBox
     if(this.box.close && !this.toggleOptionsBox) {
-      console.log(1 + " " + frameCount);
       closeInventory();
       // So it doesn't auto-close next time
       this.box.close = false;
@@ -1123,12 +1118,16 @@ class InventoryScreen extends GameObject {
   runOptionsBox() {
     this.optionsBox.run();
     if(this.optionsBox.buttonPressed === 0) {
+      console.log("Not yet");
+    }
+
+    else if(this.optionsBox.buttonPressed === 1) {
       this.mousePickUpItem(this.clickedItemCoords[0], this.clickedItemCoords[1]);
       this.resetOptionsBox();
       gMouseToggle = this.priority + 1;
     }
 
-    else if(this.optionsBox.buttonPressed === 1) {
+    else if(this.optionsBox.buttonPressed === 2) {
       this.upgradeBox = new UpgradeMenu(this.x, this.y, this.width * 0.8, this.height * 0.8, [63, 102, 141, 255], this.priority + 1, this.itemArr[this.clickedItemCoords[0]][this.clickedItemCoords[1]]);
       this.resetOptionsBox();
       gMouseToggle = this.priority + 1;
@@ -1234,11 +1233,12 @@ class InventoryScreen extends GameObject {
 }
 
 class GameWeapon {
-  constructor(weaponImage, weaponType, name, metaText) {
+  constructor(weaponImage, weaponType, name, metaText, weaponLevel) {
     this.img = weaponImage;
     this.weaponType = weaponType;
     this.name = name;
     this.metaText = metaText;
+    this.weaponlevel = weaponLevel;
 
     this.type = "weapon";
   }
@@ -1320,39 +1320,55 @@ class OptionsBox extends GameObject {
 class UpgradeMenu extends GameObject {
   constructor(x, y, width, height, backgroundRgb, priority, upgItem) {
     super(x, y, width, height);
+    // Vars from input
     this.upgItem = upgItem;
-    this.box = new BackgroundBox(x, y, width, height, backgroundRgb, priority, "click");
-
+  
+    // Positioning and scaling of elements in upgrade menu
     this.buttonX = this.x + this.width / 5;
-    this.buttonY = this.y + this.height * 0.3;
-    this.upgradeButton = new Button(this.buttonX, this.buttonY, 125, 30, "Upgrade!", 0, [76, 187, 23]);
-
+    this.buttonY = this.y + this.height * 0.35;
+    this.counterWidth = this.width * 0.4;
+    this.counterHeight = this.height / 6;
+    this.levelsToUpgradeCounterY = this.y - this.height * 0.35;
+    this.displayPriceY = this.y;
     this.imageX = this.x - this.width / 4;
     this.imageSize = this.width / 4;
+    
+    // Generating all the stuff needed to run in menu
+    this.box = new BackgroundBox(x, y, width, height, backgroundRgb, priority, "click");
+    this.levelsToUpgradeCounter = new NumberCounter(this.buttonX, this.levelsToUpgradeCounterY, this.counterWidth, this.counterHeight, "Level", 0, [79, 128, 176], true, priority, 0);
+    this.displayPrice = new NumberCounter(this.buttonX, this.displayPriceY, this.counterWidth, this.counterHeight, "Price", 1000, [79, 128, 176], false);
+    this.upgradeButton = new Button(this.buttonX, this.buttonY, 125, 30, "Upgrade!", 0, [76, 187, 23]);
 
     this.close = false;
   }
 
   run() {
+    // Do upgrade if this.upgItem is valid, else set close to true
     if(this.upgItem) {
+      // Run the background box and our "upgrade" button
       this.box.run();
       this.upgradeButton.run();
+      this.levelsToUpgradeCounter.run();
+      this.displayPrice.run();
 
+      // In this case, if user clicks outside of box, set close to true
       if(this.box.close) {
         this.close = true;
       }
 
+      // Draw image of upgItem
       this.calcMouse();
       tint(255, 255);
       image(this.upgItem.img, this.imageX, this.y, this.imageSize, this.imageSize);
 
+      // If upgradeButton clicked, run doUpgradeAndClose
       if(this.upgradeButton.alreadyClicked) {
         this.doUpgradeAndClose();
       }
     }
 
     else {
-      console.log("Running");
+      this.close = true;
     }
   }
 
@@ -1361,25 +1377,105 @@ class UpgradeMenu extends GameObject {
   }
 }
 
-class NumberCounter extends GameObject {
-  constructor(x, y, width, height, priority, startingVal = 0) {
+class ItemInfoMenu extends GameObject {
+  constructor(x, y, width, height, backgroundRgb, priority, theItem) {
     super(x, y, width, height);
+    // Vars from input
+    this.theItem = theItem;
+  
+    // Positioning and scaling of elements in upgrade menu
+    this.counterWidth = this.width * 0.4;
+    this.counterHeight = this.height / 6;
+
+    this.levelDisplayY = this.y - this.height * 0.35;
+    this.damageDisplayY = this.y;
+    this.somethingDisplayY = this.y + this.height * 0.35;
+    this.imageX = this.x - this.width / 4;
+    this.imageSize = this.width / 4;
+    
+    // Generating all the stuff needed to run in menu
+    this.box = new BackgroundBox(x, y, width, height, backgroundRgb, priority, "click");
+    this.levelsToUpgradeCounter = new NumberCounter(this.buttonX, this.levelsToUpgradeCounterY, this.counterWidth, this.counterHeight, "Level", 0, [79, 128, 176], true, priority, 0);
+    this.displayPrice = new NumberCounter(this.buttonX, this.displayPriceY, this.counterWidth, this.counterHeight, "Price", 1000, [79, 128, 176], false);
+    this.upgradeButton = new Button(this.buttonX, this.buttonY, 125, 30, "Upgrade!", 0, [76, 187, 23]);
+
+    this.close = false;
+  }
+}
+
+class NumberCounter extends GameObject {
+  constructor(x, y, width, height, counterText = 0, startingVal = 0, rgb = 0, enabled, priority = 0) {
+    super(x, y, width, height);
+    // Vals from input
+    this.enabled = enabled;
     this.val = startingVal || 0;
     this.priority = priority;
+    this.rgb = rgb || [40, 40, 40];
+    this.counterText = counterText || null;
+
+    // Formatting, positioning, scaling
+    this.tSize = this.width / 10;
+    this.counterTSize = this.height / 2;
+    this.textY = this.y + this.height * 0.5 + this.tSize;
+    this.leftX = this.x - this.width / 4;
+    this.rightX = this.x + this.width / 4;
   }
 
   run() {
     this.calcMouse();
+
+    // Draw a box around
+    strokeWeight(3);
+    stroke(0);
+    fill(this.rgb);
+    rect(this.x, this.y, this.width, this.height);
+
+    // Show the current value
+    noStroke();
+    fill(0);
+    textSize(this.counterTSize);
     text(str(this.val), this.x, this.y);
 
-    if(mouseIsPressed && gMouse <= this.priority) {
-      this.clicked();
-      gMouseToggle = this.priority + 1;
+    rectMode(CENTER);
+    fill(0);
+    if(this.enabled) {
+      rect(this.leftX, this.y, 5, 5);
+      rect(this.rightX, this.y, 5, 5);
     }
 
+    if(this.counterText) {
+      textSize(this.tSize);
+      textAlign(CENTER, CENTER);
+      text(this.counterText, this.x, this.textY);
+    }
+
+    if(this.enabled && this.mouse && gMouse <= this.priority) {
+      // I can perform this simple check to see what side the mouse is on because
+      // this.mouse prevents anything from happening if the mouse isn't inside the box 
+      let side = mouseX < this.x ? "left" : "right";
+      if(mouseIsPressed) {
+        if(side === "left") {
+          this.clicked(-1);
+        }
+        else{
+          this.clicked(1);
+        }
+        gMouseToggle = this.priority + 1;
+      }
+
+      else {
+        fill(0, 50);
+        if(side === "left") {
+          rect(this.leftX, this.y, this.width / 2, this.height);
+        }
+        else {
+          rect(this.rightX, this.y, this.width / 2, this.height);
+        }
+      }
+    }
   }
 
-  clicked() {
-    this.val++;
+  clicked(inc) {
+    this.val += inc;
   }
 }
