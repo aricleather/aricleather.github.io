@@ -26,17 +26,17 @@ let achievementNumber = 0;
 // Generate all game objects
 function initObjects() {
   // Buttons
-  titleNewGameButton = new Button(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH, "New Game", function() {
+  titleNewGameButton = new Button(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH, 0, "New Game", function() {
     buttonSelect1.play();
     // gameState = 1; // Defines "start" menu button, on click switches to gameState 1 (mainGame())
   });
-  titleOptionsButton = new Button(width / 2, height * 0.62, scalars.menuButtonW, scalars.menuButtonH, "Options", function() { // Options button on main menu
+  titleOptionsButton = new Button(width / 2, height * 0.62, scalars.menuButtonW, scalars.menuButtonH, 0, "Options", function() { // Options button on main menu
     gameState = 2; // Defines "options" menu button, on click switches to gameState 2 (mainGame())
   });
-  titleLoadButton = new Button(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH, "Load Game", function() {
+  titleLoadButton = new Button(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH, 0, "Load Game", function() {
     gameState = 1;
   });
-  optionsDeleteDataButton = new Button(width / 2, height * 0.5, scalars.menuButtonW, scalars.menuButtonH * 1.5, "Delete Data", function() {
+  optionsDeleteDataButton = new Button(width / 2, height * 0.5, scalars.menuButtonW, scalars.menuButtonH * 1.5, 0, "Delete Data", function() {
     newDialogBox(deleteDataDialog);
   });
 
@@ -97,7 +97,7 @@ function initObjects() {
   woodenSwordObj = new ShopWeaponObject(woodenSword, "Wooden Sword", "Breaks easily, but leaves splinters.", 100, 5, "Attack");
 
   // Dialog objects
-  returnToMenuDialog = new DialogBox("Go back to main menu?", "Yes", "No", function() {
+  returnToMenuDialog = new DialogBox("Go back to main menu?", 1, "Yes", "No", function() {
     gameState = 0;
     saveGame();
     loadSaveFile();
@@ -108,7 +108,7 @@ function initObjects() {
   function() {
     void 0;
   });
-  deleteDataDialog = new DialogBox("Really delete all data?", "Yes", "No", function() {
+  deleteDataDialog = new DialogBox("Really delete all data?", 1, "Yes", "No", function() {
     resetGame();
     loadSaveFile();
   },

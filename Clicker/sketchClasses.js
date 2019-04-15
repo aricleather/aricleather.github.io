@@ -20,9 +20,10 @@ class GameObject {
 }
   
 class Button extends GameObject {
-  constructor(x, y, width, height, buttonText, clicked = 0, rgb = 0) {
+  constructor(x, y, width, height, priority, buttonText, clicked = 0, rgb = 0) {
     super(x, y, width, height);
     // Vars
+    this.priority = priority;
     this.tSize = this.width / 10;
     this.buttonText = formatText(buttonText, this.width, this.tSize);
     this.clicked = clicked ? clicked :
@@ -33,9 +34,7 @@ class Button extends GameObject {
     this.color;
 
     this.rgb = rgb || [40, 40, 40];
-
     this.hoverRgb = rgb ? lerpColor(color(this.rgb), color([0, 0, 0]), 0.1) : [80, 80, 80];
-
     this.hoverOverride = false;
   }
   
@@ -51,6 +50,7 @@ class Button extends GameObject {
     else {
       this.color = this.rgb;
     }
+
     // Formatting and drawing rectangle, text
     stroke(255);
     strokeWeight(3);
@@ -71,11 +71,11 @@ class Button extends GameObject {
   }
 
   checkClicked() {
-    if(this.mouse && mouseIsPressed && gMouse < 3) {
+    if(this.mouse && mouseIsPressed && gMouse <= this.priority) {
       this.clicked();
       this.alreadyClicked = 1;
       // After a click, set gMouseToggle to true temporarily to block further clicks until mouse button released
-      gMouseToggle = 1;
+      gMouseToggle.val = this.priority + 1;
     }
   }
   
@@ -116,7 +116,7 @@ class ImageObject extends GameObject {
     if(this.mouse) {
       if(mouseIsPressed && gMouse < 1) {
         this.clicked();
-        gMouseToggle = 1;
+        gMouseToggle.val = 1;
       }
     }
   }
@@ -196,7 +196,7 @@ class ImageButton extends GameObject {
     if(this.mouse) {
       if(mouseIsPressed && gMouse < 1) {
         this.clicked();
-        gMouseToggle = 1;
+        gMouseToggle.val = 2;
       }
     }
   }
@@ -230,7 +230,7 @@ class TabButton extends GameObject {
       fill(this.hoverRgb);
       if(mouseIsPressed) {
         this.clicked();
-        gMouseToggle = 1;
+        gMouseToggle.val = 1;
       }
     }
     else {
@@ -322,7 +322,7 @@ class ShopObject extends GameObject {
       
       if(mouseIsPressed) {
         this.clicked();
-        gMouseToggle = 1;
+        gMouseToggle.val = 1;
       }
     }
     
@@ -449,7 +449,7 @@ class ShopWeaponObject extends GameObject {
       
       if(mouseIsPressed) {
         this.clicked();
-        gMouseToggle = 1;
+        gMouseToggle.val = 1;
       }
     }
     
@@ -555,7 +555,7 @@ class ScrollBar extends GameObject {
 
 class DialogBox extends GameObject {
   // When constructing, first send x strings then x functions
-  constructor(dialogText, ...textAndFunctions) {
+  constructor(dialogText, priority, ...textAndFunctions) {
     super(width / 2, height * 0.25, width / 2, height * 0.3);
 
     // Take in args, first half of rest param is text on buttons, second half is functions to run on button press
@@ -564,6 +564,8 @@ class DialogBox extends GameObject {
     this.buttonFunctions = textAndFunctions.slice(textAndFunctions.length / 2);
     this.buttons = this.buttonText.length;
     this.buttonClicked = false;
+
+    this.priority = priority;
 
     // Text formatting
     this.textY = this.y - this.height / 2 + this.height * 0.1; // Y coord text drawn at
@@ -577,7 +579,7 @@ class DialogBox extends GameObject {
     this.buttonHeight = this.height / 5;
     // Push new buttons into this.buttonArr
     for(let i = 0; i < this.buttons; i++) {
-      this.buttonArr.push(new Button(this.x - this.width / 2 + this.width * (i + 1) / (this.buttons + 1), this.buttonY, this.buttonWidth, this.buttonHeight, 
+      this.buttonArr.push(new Button(this.x - this.width / 2 + this.width * (i + 1) / (this.buttons + 1), this.buttonY, this.buttonWidth, this.buttonHeight, this.priority,
         this.buttonText[i], this.buttonFunctions[i]));
     }
   }
@@ -609,7 +611,7 @@ class DialogBox extends GameObject {
       }
     }
 
-    gMouseToggle = 1;
+    gMouseToggle.val = this.priority;
   }
 
   resize() {
@@ -807,7 +809,7 @@ class AchievementObject extends GameObject {
       
       if(mouseIsPressed) {
         this.clicked();
-        gMouseToggle = 1;
+        gMouseToggle.val = 1;
       }
     }
   }
@@ -898,7 +900,7 @@ class ExperienceBar extends GameObject {
       displayTextBox("Exp: " + this._exp.toFixed(0) + "/" + str(this.expToNextLevel), this.x, this.y + this.height * 1.5, "center", "small");
       if(mouseIsPressed) {
         this.clicked();
-        gMouseToggle = 1;
+        gMouseToggle.val = 1;
       }
     }
   }
@@ -983,7 +985,7 @@ class BackgroundBox extends GameObject {
     // Because of the order in which functions were run, without adding 1 to this toggle,
     // clicking an on-screen button to open a box would cause immediate closing.
     // Putting this gMouseToggle at the end of the run prevents this from happening
-    gMouseToggle = mouseIsPressed ? this.priority + 1 : this.priority;
+    gMouseToggle.bound = this.priority;
   }
 
   resize(x, y, width, height) {
@@ -1080,7 +1082,7 @@ class InventoryScreen extends GameObject {
         this.toggleOptionsBox = 1;
         // So that the item that was clicked is still known, mouse may move off of it
         this.clickedItemCoords = [this.mouseYPos, this.mouseXPos];
-        gMouseToggle = this.priority + 1;
+        gMouseToggle.val = this.priority + 1;
       }
     }
 
@@ -1088,7 +1090,7 @@ class InventoryScreen extends GameObject {
       image(this.mouseHeldItem.img, mouseX, mouseY, this.boxSize * 0.8, this.boxSize * 0.8);
       if(this.mouse && mouseIsPressed && gMouse === this.priority) {
         this.mouseDropItem(this.mouseYPos, this.mouseXPos);
-        gMouseToggle = this.priority + 1;
+        gMouseToggle.val = this.priority + 1;
       }
     }
 
@@ -1124,13 +1126,13 @@ class InventoryScreen extends GameObject {
     else if(this.optionsBox.buttonPressed === 1) {
       this.mousePickUpItem(this.clickedItemCoords[0], this.clickedItemCoords[1]);
       this.resetOptionsBox();
-      gMouseToggle = this.priority + 1;
+      gMouseToggle.val = this.priority + 1;
     }
 
     else if(this.optionsBox.buttonPressed === 2) {
       this.upgradeBox = new UpgradeMenu(this.x, this.y, this.width * 0.8, this.height * 0.8, [63, 102, 141, 255], this.priority + 1, this.itemArr[this.clickedItemCoords[0]][this.clickedItemCoords[1]]);
       this.resetOptionsBox();
-      gMouseToggle = this.priority + 1;
+      gMouseToggle.val = this.priority + 1;
     }
 
     // Once options box is closed due to whatever reason, un-toggle it and reset it
@@ -1161,14 +1163,14 @@ class InventoryScreen extends GameObject {
     this.mouseHeldItem = this.itemArr[row][col];
     this.mouseHeldItem.pickedUpFrom = [row, col];
     this.itemArr[row][col] = 0;
-    gMouseToggle = this.priority + 1;
+    gMouseToggle.val = this.priority + 1;
   }
 
   mouseDropItem() {
     // If the user is holding an item and mouse is pressed, put it where the mouse is
     this.itemArr[this.mouseYPos][this.mouseXPos] = this.mouseHeldItem;
     this.mouseHeldItem = 0;
-    gMouseToggle = this.priority + 1;
+    gMouseToggle.val = this.priority + 1;
   }
 
   addItem(item) {
@@ -1262,7 +1264,7 @@ class OptionsBox extends GameObject {
     // Spawn a button with appropriate text for each element in buttonText array passed in
     this.buttons = [];
     for(let i = 0; i < this.buttonCount; i++) {
-      this.buttons.push(new Button(this.x, this.topY + this.buttonHeight * i + this.buttonOffset, this.width, this.buttonHeight, this.buttonText[i]));
+      this.buttons.push(new Button(this.x, this.topY + this.buttonHeight * i + this.buttonOffset, this.width, this.buttonHeight, this.priority, this.buttonText[i]));
     }
 
     this.close = false;
@@ -1337,7 +1339,7 @@ class UpgradeMenu extends GameObject {
     this.box = new BackgroundBox(x, y, width, height, backgroundRgb, priority, "click");
     this.levelsToUpgradeCounter = new NumberCounter(this.buttonX, this.levelsToUpgradeCounterY, this.counterWidth, this.counterHeight, "Level", 0, [79, 128, 176], true, priority, 0);
     this.displayPrice = new NumberCounter(this.buttonX, this.displayPriceY, this.counterWidth, this.counterHeight, "Price", 1000, [79, 128, 176], false);
-    this.upgradeButton = new Button(this.buttonX, this.buttonY, 125, 30, "Upgrade!", 0, [76, 187, 23]);
+    this.upgradeButton = new Button(this.buttonX, this.buttonY, 125, 30, priority, "Upgrade!", 0, [76, 187, 23]);
 
     this.close = false;
   }
@@ -1460,7 +1462,7 @@ class NumberCounter extends GameObject {
         else{
           this.clicked(1);
         }
-        gMouseToggle = this.priority + 1;
+        gMouseToggle.val = this.priority + 1;
       }
 
       else {

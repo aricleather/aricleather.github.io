@@ -20,22 +20,49 @@ let playerExpToNextLevel = [10, 20, 40, 80];
 let currentInv = null;
 
 let saveFile;
-let gMouseToggle = 0;
+let gMouseToggle = {
+  _val: 0,
+  _bound: 0,
+
+  set val(x) {
+    this._val = x;
+    if(this._val) {
+      gMouseControl(false);
+    }
+  },
+  set bound(x) {
+    this._bound = x > this._bound ? x : this._bound;
+  },
+  end: function() {
+    this._bound = 0;
+  },
+  get val() {
+    return this._val;
+  },
+  get bound() {
+    return this._bound;
+  },
+};
 let gMouse = 0;
 let currentDialog = [];
 let input = null;
 
-function gMouseControl() {
+function gMouseControl(end) {
   // This function exists so that gMouseToggle can be called at any time in draw loop and
   // still block clicks. gMouseControl is run at end of draw loop so that if anything 
   // sets gMouseToggle to true, gMouse will also be true at end of draw loop, blocking clicks
-  if(gMouseToggle) {
-    gMouse = gMouseToggle;
+  if(gMouseToggle.val && !end) {
+    // If something toggles two different priorities, always keep the higher
+    gMouse = gMouseToggle.val > gMouse ? gMouseToggle.val : gMouse;
+    console.log("Non-end: ", gMouse);
   }
-  else if(!mouseIsPressed) {
-    gMouse = 0;
+
+  if(!mouseIsPressed) {
+    gMouse = gMouseToggle.bound;
   }
-  gMouseToggle = 0;
+  if(end) {
+    gMouseToggle.end();
+  }
 }
 
 function newInput(whichInput, x, y, width, height) {
@@ -239,7 +266,7 @@ function draw() {
   }
   globalMessage.run();
   displayAnimation();
-  gMouseControl();
+  gMouseControl(true);
 }
 
 function menu() { // gameState 0
@@ -654,7 +681,8 @@ function closeInventory() {
   // Going along with the comment in the BackgroundBox, this prevents boxes
   // from being closed unless gMouse is currently their own priority, stopping
   // unwanted, immediate closing when opening inventories with on-screen buttons
-  currentInv = gMouse === currentInv.priority ? null : currentInv;
+  // currentInv = gMouse === currentInv.priority ? null : currentInv;
+  currentInv = null;
 }
 
 function spawnItem(itemToSpawn, levelOfItem = 2) {
