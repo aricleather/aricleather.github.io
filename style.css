@@ -1,0 +1,17 @@
+body,html {
+    background-color: #000000;
+    color: #FFFFFF;
+    margin: 0px;
+    padding: 0px;
+}
+
+.parent {
+    line-height: calc(100vh - 80px);
+}
+
+.center-text {
+    text-align: center;
+    margin: 0px;
+    padding: 0px;
+    font-size: 40px;
+}
