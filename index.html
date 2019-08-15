@@ -2,12 +2,28 @@
 <html lang="en">
 <head>
     <style>@import url('style.css');</style>
+    <script src="jelanye.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Comp Sci 30 Project</title>
+    <title>Jelanye</title>
 </head>
 <body>
+    <table id="logo">
+        <tr>
+            <td id="logo">Jelanye</td>
+        </tr>
+    </table>
+    <table id="nav">
+        <tr>
+            <td id="nav">
+                <button class="buttonnav" id="nav1" onmouseover="navHover(1)" onmouseout="navUnhover(1)" onclick="goToTic()">Games</button>
+            </td>
+            <td id="nav">
+                <button class="buttonnav" id="nav2" onmouseover="navHover(2)" onmouseout="navUnhover(2)" onClick="goToGoogle()">Google</button>
+            </td>
+        </tr>
+    </table>
     <div class=parent>
         <div class=center-text>
             <p>Hi.</p>
